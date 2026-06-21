@@ -8,8 +8,11 @@ import 'package:flutter/material.dart';
 class AppColors {
   AppColors._();
 
-  /// Primary brand blue. TODO: confirm exact hex with client / brand guide.
-  static const Color primary = Color(0xFF2D6BFF);
+  /// Primary brand blue, from the Mercury brand color (#1F3E97).
+  static const Color primary = Color(0xFF1F3E97);
+
+  /// Secondary brand accent (orange), sampled from the Mercury logo.
+  static const Color accent = Color(0xFFFF7A00);
 
   /// Pure surface used for cards and the bottom navigation bar.
   static const Color surface = Color(0xFFFFFFFF);

@@ -3,6 +3,7 @@ import 'package:iconsax_plus/iconsax_plus.dart';
 
 import '../theme/app_colors.dart';
 import '../widgets/mercury_bottom_nav_bar.dart';
+import 'home_screen.dart';
 
 /// Hosts the primary app sections behind the bottom navigation bar.
 class MainNavigationScreen extends StatefulWidget {
@@ -44,7 +45,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   ];
 
   static const _pages = <Widget>[
-    _PlaceholderPage(title: 'Home'),
+    HomeScreen(),
     _PlaceholderPage(title: 'Shop'),
     _PlaceholderPage(title: 'Rewards'),
     _PlaceholderPage(title: 'Cart'),
