@@ -15,6 +15,7 @@ class Category {
     required this.color,
     required this.image,
     required this.subcategories,
+    this.photo,
     this.imageScale = 1.0,
     this.imageScaleX,
     this.imageRotationDeg = 0,
@@ -23,6 +24,11 @@ class Category {
   final String name;
   final Color color;
   final String image;
+
+  /// Optional full-bleed background photo for the shop category card.
+  /// When present, the card shows this photo (cover) with a centered label
+  /// instead of the colored placeholder card.
+  final String? photo;
 
   /// Subcategory filters (the first entry is typically "All").
   final List<Subcategory> subcategories;

@@ -9,6 +9,7 @@ const List<Category> kShopCategories = [
     name: 'Computers',
     color: Color(0xFF1F3E97),
     image: 'assets/images/computers-removebg-preview.png',
+    photo: 'assets/images/cat-computers.jpeg',
     imageScale: 1.8,
     imageScaleX: 2.15,
     imageRotationDeg: -90,
@@ -25,6 +26,7 @@ const List<Category> kShopCategories = [
     name: 'Printers & Office',
     color: Color(0xFFD9620E),
     image: 'assets/images/printers___power-removebg-preview.png',
+    photo: 'assets/images/cat-office.jpeg',
     imageScale: 1.3,
     subcategories: [
       Subcategory('All', IconsaxPlusBold.category_2),
@@ -38,6 +40,7 @@ const List<Category> kShopCategories = [
     name: 'Components & Power',
     color: Color(0xFF1E293B),
     image: 'assets/images/components___power-removebg-preview.png',
+    photo: 'assets/images/cat-components.jpeg',
     subcategories: [
       Subcategory('All', IconsaxPlusBold.category_2),
       Subcategory('Graphics Cards', IconsaxPlusBold.component),
@@ -51,6 +54,7 @@ const List<Category> kShopCategories = [
     name: 'Networking & Security',
     color: Color(0xFF0E7490),
     image: 'assets/images/networking___security-removebg-preview.png',
+    photo: 'assets/images/cat-networking.jpeg',
     imageScale: 1.45,
     subcategories: [
       Subcategory('All', IconsaxPlusBold.category_2),
@@ -64,6 +68,7 @@ const List<Category> kShopCategories = [
     name: 'Phones, TV & Audio',
     color: Color(0xFF5B21B6),
     image: 'assets/images/phones_tv___audio-removebg-preview.png',
+    photo: 'assets/images/cat-phones.jpeg',
     imageScale: 1.3,
     imageScaleX: 1.5,
     subcategories: [
@@ -78,6 +83,7 @@ const List<Category> kShopCategories = [
     name: 'Accessories',
     color: Color(0xFF9F1239),
     image: 'assets/images/accessories-removebg-preview.png',
+    photo: 'assets/images/cat-accessories.jpeg',
     imageScale: 1.45,
     subcategories: [
       Subcategory('All', IconsaxPlusBold.category_2),

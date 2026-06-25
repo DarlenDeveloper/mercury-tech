@@ -1,5 +1,3 @@
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 import 'package:iconsax_plus/iconsax_plus.dart';
 
@@ -37,7 +35,7 @@ class ShopScreen extends StatelessWidget {
             crossAxisCount: 2,
             mainAxisSpacing: 14,
             crossAxisSpacing: 14,
-            childAspectRatio: 1.12,
+            childAspectRatio: 1.5,
             children: [
               for (final category in kShopCategories)
                 _CategoryCard(
@@ -101,65 +99,59 @@ class _CategoryCard extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
-          child: Ink(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [category.color, _darker],
-              ),
-            ),
-            child: Stack(
-              children: [
-                // Transparent product image, enlarged and bottom-anchored.
-                Positioned.fill(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(4, 30, 4, 0),
-                    child: Align(
-                      alignment: Alignment.bottomCenter,
-                      child: Transform.rotate(
-                        angle: category.imageRotationDeg * math.pi / 180,
-                        child: Transform.scale(
-                          scaleX: category.imageScaleX ?? category.imageScale,
-                          scaleY: category.imageScale,
-                          child: Image.asset(
-                            category.image,
-                            fit: BoxFit.contain,
-                          ),
-                        ),
-                      ),
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              // Background: full-bleed photo when available, otherwise a
+              // colored placeholder until the photo is added.
+              if (category.photo != null)
+                Image.asset(category.photo!, fit: BoxFit.cover)
+              else
+                DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [category.color, _darker],
                     ),
                   ),
                 ),
-                // Category name (up to two lines so long names don't clip).
-                Positioned(
-                  top: 14,
-                  left: 14,
-                  right: 40,
+              // Dark scrim so the centered label stays legible on any image.
+              const DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [Color(0x33000000), Color(0x59000000)],
+                  ),
+                ),
+              ),
+              // Centered category name.
+              Center(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
                   child: Text(
                     category.name,
+                    textAlign: TextAlign.center,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
-                      fontSize: 14.5,
+                      fontSize: 16,
                       height: 1.15,
                       fontWeight: FontWeight.w700,
                       color: Colors.white,
+                      shadows: [
+                        Shadow(
+                          color: Color(0x99000000),
+                          blurRadius: 8,
+                          offset: Offset(0, 1),
+                        ),
+                      ],
                     ),
                   ),
                 ),
-                // Explore affordance.
-                const Positioned(
-                  top: 14,
-                  right: 12,
-                  child: Icon(
-                    IconsaxPlusLinear.arrow_right_3,
-                    size: 18,
-                    color: Colors.white,
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
