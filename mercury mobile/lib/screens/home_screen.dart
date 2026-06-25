@@ -64,14 +64,21 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     final products = _visibleProducts;
 
-    return SafeArea(
-      bottom: false,
-      child: CustomScrollView(
-        slivers: [
-          const SliverToBoxAdapter(child: _HomeHeader()),
-          const SliverToBoxAdapter(child: _SearchField()),
-          const SliverToBoxAdapter(child: SizedBox(height: 18)),
-          const SliverToBoxAdapter(child: _PromoCarousel()),
+    return Stack(
+      children: [
+        // Soft blue gradient that fades into the page background behind the
+        // header, search field and quick actions.
+        const _HomeGradientBackdrop(),
+        SafeArea(
+          bottom: false,
+          child: CustomScrollView(
+            slivers: [
+              const SliverToBoxAdapter(child: _HomeHeader()),
+              const SliverToBoxAdapter(child: _SearchField()),
+              const SliverToBoxAdapter(child: SizedBox(height: 20)),
+              const SliverToBoxAdapter(child: _QuickActions()),
+              const SliverToBoxAdapter(child: SizedBox(height: 22)),
+              const SliverToBoxAdapter(child: _PromoCarousel()),
           const SliverToBoxAdapter(child: SizedBox(height: 18)),
           SliverToBoxAdapter(
             child: _CategoryChips(
@@ -92,8 +99,10 @@ class _HomeScreenState extends State<HomeScreen> {
             child: _ProductRail(products: products.reversed.toList()),
           ),
           const SliverToBoxAdapter(child: SizedBox(height: 120)),
-        ],
-      ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }
@@ -458,6 +467,142 @@ class _ProductRail extends StatelessWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// A soft blue gradient backdrop that sits behind the header, search field
+/// and quick actions, fading into the page background color.
+class _HomeGradientBackdrop extends StatelessWidget {
+  const _HomeGradientBackdrop();
+
+  @override
+  Widget build(BuildContext context) {
+    return const SizedBox(
+      height: 340,
+      width: double.infinity,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Color(0xFFCFE4FB), // soft sky blue
+              Color(0xFFE3EEFB),
+              Color(0xFFF5F7FB), // page background
+            ],
+            stops: [0.0, 0.55, 1.0],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Definition for a single quick-action shortcut tile.
+class _QuickAction {
+  const _QuickAction({
+    required this.label,
+    required this.icon,
+    required this.color,
+  });
+
+  final String label;
+  final IconData icon;
+
+  /// Base tile color (matching the shop screen category palette). The tile
+  /// gradient blends this toward black, the same way shop cards do.
+  final Color color;
+}
+
+/// Horizontal row of shortcut tiles shown under the search field.
+class _QuickActions extends StatelessWidget {
+  const _QuickActions();
+
+  static const _actions = <_QuickAction>[
+    _QuickAction(
+      label: 'Deals',
+      icon: IconsaxPlusBold.shopping_bag,
+      color: Color(0xFFD9620E), // Printers & Office orange
+    ),
+    _QuickAction(
+      label: 'Flash',
+      icon: IconsaxPlusBold.flash,
+      color: Color(0xFF9F1239), // Accessories maroon
+    ),
+    _QuickAction(
+      label: 'Rewards',
+      icon: IconsaxPlusBold.gift,
+      color: Color(0xFF1F3E97), // Computers blue
+    ),
+    _QuickAction(
+      label: 'Coupons',
+      icon: IconsaxPlusBold.ticket_discount,
+      color: Color(0xFF5B21B6), // Phones, TV & Audio purple
+    ),
+    _QuickAction(
+      label: 'Support',
+      icon: IconsaxPlusBold.headphone,
+      color: Color(0xFF0E7490), // Networking & Security teal
+    ),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          for (final action in _actions)
+            _QuickActionTile(action: action, onTap: () {}),
+        ],
+      ),
+    );
+  }
+}
+
+class _QuickActionTile extends StatelessWidget {
+  const _QuickActionTile({required this.action, required this.onTap});
+
+  final _QuickAction action;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 54,
+            height: 54,
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.55),
+              borderRadius: BorderRadius.circular(18),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.08),
+                  blurRadius: 12,
+                  offset: const Offset(0, 6),
+                ),
+              ],
+            ),
+            child: Icon(action.icon, size: 26, color: action.color),
+          ),
+          const SizedBox(height: 7),
+          Text(
+            action.label,
+            style: const TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF1F2937),
+            ),
+          ),
+        ],
       ),
     );
   }
