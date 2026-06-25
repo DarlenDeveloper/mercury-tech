@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:iconsax_plus/iconsax_plus.dart';
 
 import '../data/sample_products.dart';
@@ -49,19 +48,24 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           SliverPadding(
             padding: const EdgeInsets.fromLTRB(20, 4, 20, 120),
-            sliver: SliverMasonryGrid.count(
-              crossAxisCount: 2,
-              mainAxisSpacing: 16,
-              crossAxisSpacing: 16,
-              childCount: products.length,
-              itemBuilder: (context, index) => ProductCard(
-                product: products[index],
-                onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) =>
-                        ProductDetailScreen(product: products[index]),
+            sliver: SliverGrid(
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                mainAxisSpacing: 16,
+                crossAxisSpacing: 16,
+                childAspectRatio: 0.66,
+              ),
+              delegate: SliverChildBuilderDelegate(
+                (context, index) => ProductCard(
+                  product: products[index],
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) =>
+                          ProductDetailScreen(product: products[index]),
+                    ),
                   ),
                 ),
+                childCount: products.length,
               ),
             ),
           ),
