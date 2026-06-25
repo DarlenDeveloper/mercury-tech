@@ -2,9 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:iconsax_plus/iconsax_plus.dart';
 
 import '../data/categories.dart';
+import '../data/sample_products.dart';
 import '../models/category.dart';
 import '../theme/app_colors.dart';
+import '../widgets/product_card.dart';
 import 'category_screen.dart';
+import 'product_detail_screen.dart';
 
 class ShopScreen extends StatelessWidget {
   const ShopScreen({super.key});
@@ -48,8 +51,8 @@ class ShopScreen extends StatelessWidget {
                 ),
             ],
           ),
-          const SizedBox(height: 16),
-          const _MoreButton(),
+          const SizedBox(height: 8),
+          const _RecommendedSection(),
         ],
       ),
     );
@@ -159,34 +162,68 @@ class _CategoryCard extends StatelessWidget {
   }
 }
 
-class _MoreButton extends StatelessWidget {
-  const _MoreButton();
+/// "Recommended for you" — a horizontal rail of suggested products shown
+/// below the category grid.
+class _RecommendedSection extends StatelessWidget {
+  const _RecommendedSection();
+
+  static const _ink = Color(0xFF1F2937);
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: AppColors.surface,
-      borderRadius: BorderRadius.circular(30),
-      child: InkWell(
-        onTap: () {},
-        borderRadius: BorderRadius.circular(30),
-        child: Container(
-          height: 52,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(30),
-            border: Border.all(color: const Color(0xFFE5E7EB)),
-          ),
-          child: const Text(
-            'More',
-            style: TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.w600,
-              color: ShopScreen._ink,
+    final products = kSampleProducts;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text(
+              'Recommended for you',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
+                color: _ink,
+              ),
+            ),
+            GestureDetector(
+              onTap: () {},
+              behavior: HitTestBehavior.opaque,
+              child: const Text(
+                'See all',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.primary,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        SizedBox(
+          height: 252,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            physics: const BouncingScrollPhysics(),
+            clipBehavior: Clip.none,
+            itemCount: products.length,
+            separatorBuilder: (_, __) => const SizedBox(width: 14),
+            itemBuilder: (context, i) => SizedBox(
+              width: 160,
+              child: ProductCard(
+                product: products[i],
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => ProductDetailScreen(product: products[i]),
+                  ),
+                ),
+              ),
             ),
           ),
         ),
-      ),
+      ],
     );
   }
 }

@@ -53,31 +53,17 @@ class _CartScreenState extends State<CartScreen> {
       child: ListView(
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 130),
         children: [
-          // Header: title + delivery location.
+          // Header: title.
           Row(
             children: [
               const Text(
                 'My Cart',
                 style: TextStyle(
-                  fontSize: 17,
-                  fontWeight: FontWeight.w700,
+                  fontSize: 22,
+                  fontWeight: FontWeight.w800,
                   color: _ink,
                 ),
               ),
-              const Spacer(),
-              const Icon(IconsaxPlusLinear.location,
-                  size: 18, color: AppColors.primary),
-              const SizedBox(width: 4),
-              const Text(
-                'Kampala, UG',
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: _ink,
-                ),
-              ),
-              const Icon(Icons.keyboard_arrow_down,
-                  size: 18, color: AppColors.inactive),
             ],
           ),
           const SizedBox(height: 18),
