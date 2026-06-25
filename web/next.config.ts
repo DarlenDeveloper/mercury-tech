@@ -7,6 +7,10 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: path.join(__dirname),
   },
+  images: {
+    // Allow the higher quality used on the hero carousel images.
+    qualities: [75, 90],
+  },
 };
 
 export default nextConfig;
