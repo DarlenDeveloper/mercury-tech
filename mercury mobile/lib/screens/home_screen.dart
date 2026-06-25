@@ -6,8 +6,42 @@ import 'package:iconsax_plus/iconsax_plus.dart';
 import '../data/sample_products.dart';
 import '../models/product.dart';
 import '../theme/app_colors.dart';
+import '../widgets/mercury_filter_chip.dart';
 import '../widgets/product_card.dart';
 import 'product_detail_screen.dart';
+
+/// Image + circle color for each Home filter chip.
+({String image, Color color}) _chipStyle(String label) {
+  switch (label) {
+    case 'Laptops':
+      return (
+        image: 'assets/images/computers-removebg-preview.png',
+        color: const Color(0xFF1F3E97),
+      );
+    case 'Printers':
+      return (
+        image: 'assets/images/printers___power-removebg-preview.png',
+        color: const Color(0xFFD9620E),
+      );
+    case 'Monitors':
+      return (
+        image: 'assets/images/Dell E2020H.jpeg',
+        color: const Color(0xFF0E7490),
+      );
+    case 'Desktops':
+      return (
+        image: 'assets/images/Dell OptiPlex 7020 MT (desktop + monitor).jpeg',
+        color: const Color(0xFF1E293B),
+      );
+    case 'Accessories':
+      return (
+        image: 'assets/images/accessories-removebg-preview.png',
+        color: const Color(0xFF9F1239),
+      );
+    default:
+      return (image: 'assets/images/logo.png', color: AppColors.primary);
+  }
+}
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -41,36 +75,23 @@ class _HomeScreenState extends State<HomeScreen> {
           const SliverToBoxAdapter(child: SizedBox(height: 18)),
           SliverToBoxAdapter(
             child: _CategoryChips(
-              selected: _selectedCategory,
               onSelected: (c) => setState(() => _selectedCategory = c),
             ),
           ),
           const SliverToBoxAdapter(
-            child: _SectionHeader(title: 'New Arrival'),
+            child: _SectionHeader(title: 'Top rated'),
           ),
-          SliverPadding(
-            padding: const EdgeInsets.fromLTRB(20, 4, 20, 120),
-            sliver: SliverGrid(
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                mainAxisSpacing: 16,
-                crossAxisSpacing: 16,
-                childAspectRatio: 0.66,
-              ),
-              delegate: SliverChildBuilderDelegate(
-                (context, index) => ProductCard(
-                  product: products[index],
-                  onTap: () => Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) =>
-                          ProductDetailScreen(product: products[index]),
-                    ),
-                  ),
-                ),
-                childCount: products.length,
-              ),
-            ),
+          SliverToBoxAdapter(
+            child: _ProductRail(products: products),
           ),
+          const SliverToBoxAdapter(child: SizedBox(height: 10)),
+          const SliverToBoxAdapter(
+            child: _SectionHeader(title: "What's new"),
+          ),
+          SliverToBoxAdapter(
+            child: _ProductRail(products: products.reversed.toList()),
+          ),
+          const SliverToBoxAdapter(child: SizedBox(height: 120)),
         ],
       ),
     );
@@ -349,9 +370,8 @@ class _PromoCard extends StatelessWidget {
 }
 
 class _CategoryChips extends StatelessWidget {
-  const _CategoryChips({required this.selected, required this.onSelected});
+  const _CategoryChips({required this.onSelected});
 
-  final String selected;
   final ValueChanged<String> onSelected;
 
   @override
@@ -365,26 +385,12 @@ class _CategoryChips extends StatelessWidget {
         separatorBuilder: (_, __) => const SizedBox(width: 10),
         itemBuilder: (context, i) {
           final category = kCategories[i];
-          final isSelected = category == selected;
-          return GestureDetector(
+          final style = _chipStyle(category);
+          return MercuryFilterChip(
+            label: category,
+            image: style.image,
+            accent: style.color,
             onTap: () => onSelected(category),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              alignment: Alignment.center,
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              decoration: BoxDecoration(
-                color: isSelected ? AppColors.primary : AppColors.surface,
-                borderRadius: BorderRadius.circular(24),
-              ),
-              child: Text(
-                category,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: isSelected ? Colors.white : const Color(0xFF1F2937),
-                ),
-              ),
-            ),
           );
         },
       ),
@@ -402,7 +408,6 @@ class _SectionHeader extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 22, 20, 12),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
             title,
@@ -412,15 +417,47 @@ class _SectionHeader extends StatelessWidget {
               color: Color(0xFF1F2937),
             ),
           ),
-          Text(
-            'See All',
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: AppColors.inactive,
+          const SizedBox(width: 8),
+          Container(
+            width: 26,
+            height: 26,
+            decoration: const BoxDecoration(
+              color: Color(0xFFEDF1F7),
+              shape: BoxShape.circle,
             ),
+            child: const Icon(Icons.chevron_right, size: 18, color: Color(0xFF1F2937)),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _ProductRail extends StatelessWidget {
+  const _ProductRail({required this.products});
+
+  final List<Product> products;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 256,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        itemCount: products.length,
+        separatorBuilder: (_, __) => const SizedBox(width: 14),
+        itemBuilder: (context, i) => SizedBox(
+          width: 160,
+          child: ProductCard(
+            product: products[i],
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => ProductDetailScreen(product: products[i]),
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }

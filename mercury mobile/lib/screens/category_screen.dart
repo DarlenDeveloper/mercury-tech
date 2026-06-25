@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../data/sample_products.dart';
 import '../models/category.dart';
 import '../models/product.dart';
+import '../widgets/mercury_filter_chip.dart';
 import '../widgets/product_card.dart';
 import 'product_detail_screen.dart';
 
@@ -71,16 +72,16 @@ class _CategoryScreenState extends State<CategoryScreen> {
             // Section B — subcategory filters.
             SliverToBoxAdapter(
               child: SizedBox(
-                height: 44,
+                height: 40,
                 child: ListView.separated(
                   scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.fromLTRB(20, 6, 20, 6),
+                  padding: const EdgeInsets.fromLTRB(20, 4, 20, 4),
                   itemCount: category.subcategories.length,
                   separatorBuilder: (_, __) => const SizedBox(width: 10),
-                  itemBuilder: (context, i) => _FilterPill(
-                    subcategory: category.subcategories[i],
-                    color: category.color,
-                    selected: i == _selected,
+                  itemBuilder: (context, i) => MercuryFilterChip(
+                    label: category.subcategories[i].label,
+                    icon: category.subcategories[i].icon,
+                    accent: category.color,
                     onTap: () => setState(() => _selected = i),
                   ),
                 ),
@@ -117,57 +118,3 @@ class _CategoryScreenState extends State<CategoryScreen> {
   }
 }
 
-class _FilterPill extends StatelessWidget {
-  const _FilterPill({
-    required this.subcategory,
-    required this.color,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final Subcategory subcategory;
-  final Color color;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
-        padding: const EdgeInsets.fromLTRB(6, 6, 16, 6),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(
-            color: selected ? color : const Color(0xFFE5E7EB),
-            width: selected ? 1.6 : 1,
-          ),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 30,
-              height: 30,
-              decoration: BoxDecoration(
-                color: color,
-                shape: BoxShape.circle,
-              ),
-              child: Icon(subcategory.icon, size: 16, color: Colors.white),
-            ),
-            const SizedBox(width: 8),
-            Text(
-              subcategory.label,
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: selected ? color : const Color(0xFF1F2937),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
