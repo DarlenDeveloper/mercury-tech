@@ -15,6 +15,8 @@ class Product {
     required this.icon,
     required this.accent,
     this.oldPrice,
+    this.isNew = false,
+    this.specifications = const {},
   });
 
   final String id;
@@ -34,6 +36,12 @@ class Product {
 
   /// Pastel background behind the placeholder glyph.
   final Color accent;
+
+  /// Marks the product with a "New" badge.
+  final bool isNew;
+
+  /// Ordered label -> value specification rows.
+  final Map<String, String> specifications;
 
   bool get isOnSale => oldPrice != null && oldPrice! > price;
 }

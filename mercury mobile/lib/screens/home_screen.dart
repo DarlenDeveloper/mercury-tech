@@ -6,6 +6,7 @@ import '../data/sample_products.dart';
 import '../models/product.dart';
 import '../theme/app_colors.dart';
 import '../widgets/product_card.dart';
+import 'product_detail_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -53,8 +54,15 @@ class _HomeScreenState extends State<HomeScreen> {
               mainAxisSpacing: 16,
               crossAxisSpacing: 16,
               childCount: products.length,
-              itemBuilder: (context, index) =>
-                  ProductCard(product: products[index]),
+              itemBuilder: (context, index) => ProductCard(
+                product: products[index],
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) =>
+                        ProductDetailScreen(product: products[index]),
+                  ),
+                ),
+              ),
             ),
           ),
         ],
