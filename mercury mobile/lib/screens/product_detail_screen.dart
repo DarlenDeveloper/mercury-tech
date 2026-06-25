@@ -178,13 +178,21 @@ class _ImageArea extends StatelessWidget {
         ),
         child: Stack(
           children: [
-            Center(
-              child: Icon(
-                product.icon,
-                size: 140,
-                color: AppColors.primary.withValues(alpha: 0.85),
+            if (product.image != null)
+              Positioned.fill(
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(24),
+                  child: Image.asset(product.image!, fit: BoxFit.cover),
+                ),
+              )
+            else
+              Center(
+                child: Icon(
+                  product.icon,
+                  size: 140,
+                  color: AppColors.primary.withValues(alpha: 0.85),
+                ),
               ),
-            ),
             if (product.isOnSale)
               Positioned(
                 top: 14,

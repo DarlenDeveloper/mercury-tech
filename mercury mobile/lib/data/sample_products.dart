@@ -25,6 +25,7 @@ const List<Product> kSampleProducts = [
     category: 'Laptops',
     icon: IconsaxPlusBold.monitor,
     accent: Color(0xFFE8EEFF),
+    image: 'assets/images/HP 250 G9 Laptop.jpeg',
     isNew: true,
     specifications: {
       'Condition': 'Brand New, Sealed',
@@ -49,6 +50,7 @@ const List<Product> kSampleProducts = [
     category: 'Laptops',
     icon: IconsaxPlusBold.monitor,
     accent: Color(0xFFFDEEE7),
+    image: 'assets/images/Lenovo IdeaPad 1.jpeg',
     isNew: true,
     specifications: {
       'Condition': 'Brand New, Sealed',
@@ -69,6 +71,7 @@ const List<Product> kSampleProducts = [
     category: 'Printers',
     icon: IconsaxPlusBold.printer,
     accent: Color(0xFFE7F6EF),
+    image: 'assets/images/HP DeskJet 2320.jpeg',
     specifications: {
       'Condition': 'Brand New, Sealed',
       'Functions': 'Print, Scan, Copy',
@@ -86,6 +89,7 @@ const List<Product> kSampleProducts = [
     category: 'Monitors',
     icon: IconsaxPlusBold.monitor_mobbile,
     accent: Color(0xFFF1ECFB),
+    image: 'assets/images/Dell E2020H.jpeg',
     specifications: {
       'Condition': 'Brand New, Sealed',
       'Screen Size': '20 inch',
@@ -104,6 +108,7 @@ const List<Product> kSampleProducts = [
     category: 'Desktops',
     icon: IconsaxPlusBold.devices,
     accent: Color(0xFFFFF3DC),
+    image: 'assets/images/Dell OptiPlex 7020 MT (desktop + monitor).jpeg',
     specifications: {
       'Condition': 'Brand New, Sealed',
       'Processor': 'Intel Core i5',
@@ -123,6 +128,7 @@ const List<Product> kSampleProducts = [
     category: 'Printers',
     icon: IconsaxPlusBold.printer,
     accent: Color(0xFFE8EEFF),
+    image: 'assets/images/HP Smart Tank 581 (printer).jpeg',
     specifications: {
       'Condition': 'Brand New, Sealed',
       'Functions': 'Print, Scan, Copy',

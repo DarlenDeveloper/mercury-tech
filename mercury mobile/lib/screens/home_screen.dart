@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:iconsax_plus/iconsax_plus.dart';
 
@@ -180,45 +182,56 @@ class _PromoSlide {
   const _PromoSlide({
     required this.title,
     required this.subtitle,
-    required this.icon,
-    required this.background,
+    required this.image,
   });
 
   final String title;
   final String subtitle;
-  final IconData icon;
-  final Color background;
+  final String image;
 }
 
 class _PromoCarouselState extends State<_PromoCarousel> {
   final _controller = PageController();
+  Timer? _timer;
   int _page = 0;
 
   static const _slides = [
     _PromoSlide(
-      title: 'Up to 20% off\nLaptops',
+      title: 'Gaming & PC',
       subtitle: 'Build your dream setup.',
-      icon: IconsaxPlusBold.monitor,
-      background: Color(0xFFEDE7DD),
+      image: 'assets/carousel images/GAMING PC.jpeg',
     ),
     _PromoSlide(
-      title: 'Printers\nUp to 50% off',
-      subtitle: 'Official & brand new.',
-      icon: IconsaxPlusBold.printer,
-      background: Color(0xFFE3EEF7),
+      title: 'Phones, TV & Audio',
+      subtitle: 'The latest tech, in stock.',
+      image: 'assets/carousel images/phones.jpeg',
     ),
     _PromoSlide(
-      title: 'Best Selling\nDesktops',
-      subtitle: 'Free delivery in Kampala.',
-      icon: IconsaxPlusBold.devices,
-      background: Color(0xFFE9E6F6),
+      title: 'Top Accessories',
+      subtitle: 'Complete your setup.',
+      image: 'assets/carousel images/accessories landscape.jpeg',
     ),
   ];
 
   @override
   void dispose() {
+    _timer?.cancel();
     _controller.dispose();
     super.dispose();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _timer = Timer.periodic(const Duration(seconds: 4), (_) {
+      if (!mounted || !_controller.hasClients) return;
+      final next = (_page + 1) % _slides.length;
+      _controller.animateToPage(
+        next,
+        duration: const Duration(milliseconds: 450),
+        curve: Curves.easeInOut,
+      );
+    });
   }
 
   @override
@@ -267,14 +280,27 @@ class _PromoCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 20),
-      padding: const EdgeInsets.all(20),
+      clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
-        color: slide.background,
         borderRadius: BorderRadius.circular(22),
       ),
-      child: Row(
+      child: Stack(
+        fit: StackFit.expand,
         children: [
-          Expanded(
+          Image.asset(slide.image, fit: BoxFit.cover),
+          // Dark scrim on the left for text legibility.
+          const DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.centerLeft,
+                end: Alignment.centerRight,
+                colors: [Color(0xCC000000), Color(0x33000000), Colors.transparent],
+                stops: [0.0, 0.55, 1.0],
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(20),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -285,7 +311,7 @@ class _PromoCard extends StatelessWidget {
                     fontSize: 20,
                     fontWeight: FontWeight.w800,
                     height: 1.1,
-                    color: Color(0xFF1F2937),
+                    color: Colors.white,
                   ),
                 ),
                 const SizedBox(height: 6),
@@ -293,7 +319,7 @@ class _PromoCard extends StatelessWidget {
                   slide.subtitle,
                   style: const TextStyle(
                     fontSize: 13,
-                    color: Color(0xFF4B5563),
+                    color: Color(0xFFE5E7EB),
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -316,7 +342,6 @@ class _PromoCard extends StatelessWidget {
               ],
             ),
           ),
-          Icon(slide.icon, size: 76, color: Colors.white.withValues(alpha: 0.9)),
         ],
       ),
     );

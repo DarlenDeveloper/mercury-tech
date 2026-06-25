@@ -42,13 +42,24 @@ class ProductCard extends StatelessWidget {
                         width: 1,
                       ),
                     ),
-                    child: Center(
-                      child: Icon(
-                        product.icon,
-                        size: 48,
-                        color: AppColors.primary.withValues(alpha: 0.85),
-                      ),
-                    ),
+                    child: product.image != null
+                        ? ClipRRect(
+                            borderRadius: BorderRadius.circular(17),
+                            child: Image.asset(
+                              product.image!,
+                              fit: BoxFit.cover,
+                              width: double.infinity,
+                              height: double.infinity,
+                            ),
+                          )
+                        : Center(
+                            child: Icon(
+                              product.icon,
+                              size: 48,
+                              color:
+                                  AppColors.primary.withValues(alpha: 0.85),
+                            ),
+                          ),
                   ),
                 ),
                 if (product.isOnSale)

@@ -14,6 +14,7 @@ class Product {
     required this.category,
     required this.icon,
     required this.accent,
+    this.image,
     this.oldPrice,
     this.isNew = false,
     this.specifications = const {},
@@ -31,11 +32,14 @@ class Product {
 
   final String category;
 
-  /// Placeholder glyph used in the product image area.
+  /// Placeholder glyph used when no [image] is available.
   final IconData icon;
 
   /// Pastel background behind the placeholder glyph.
   final Color accent;
+
+  /// Optional product photo asset path.
+  final String? image;
 
   /// Marks the product with a "New" badge.
   final bool isNew;

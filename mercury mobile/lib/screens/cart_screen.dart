@@ -164,8 +164,11 @@ class _CartItemCard extends StatelessWidget {
               color: const Color(0xFFF0F1F4),
               borderRadius: BorderRadius.circular(14),
             ),
-            child: Icon(product.icon,
-                size: 30, color: AppColors.primary.withValues(alpha: 0.85)),
+            clipBehavior: Clip.antiAlias,
+            child: product.image != null
+                ? Image.asset(product.image!, fit: BoxFit.cover)
+                : Icon(product.icon,
+                    size: 30, color: AppColors.primary.withValues(alpha: 0.85)),
           ),
           const SizedBox(width: 12),
           Expanded(
