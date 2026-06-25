@@ -3,6 +3,7 @@ import 'package:iconsax_plus/iconsax_plus.dart';
 
 import '../theme/app_colors.dart';
 import '../widgets/mercury_bottom_nav_bar.dart';
+import 'cart_screen.dart';
 import 'home_screen.dart';
 import 'profile_screen.dart';
 import 'shop_screen.dart';
@@ -50,7 +51,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     HomeScreen(),
     ShopScreen(),
     _PlaceholderPage(title: 'Rewards'),
-    _PlaceholderPage(title: 'Cart'),
+    CartScreen(),
     ProfileScreen(),
   ];
 
