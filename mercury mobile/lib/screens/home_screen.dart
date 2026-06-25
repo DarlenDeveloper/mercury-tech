@@ -504,16 +504,13 @@ class _HomeGradientBackdrop extends StatelessWidget {
 class _QuickAction {
   const _QuickAction({
     required this.label,
-    required this.icon,
-    required this.color,
+    required this.image,
   });
 
   final String label;
-  final IconData icon;
 
-  /// Base tile color (matching the shop screen category palette). The tile
-  /// gradient blends this toward black, the same way shop cards do.
-  final Color color;
+  /// 3D icon asset shown on the tile.
+  final String image;
 }
 
 /// Horizontal row of shortcut tiles shown under the search field.
@@ -521,31 +518,11 @@ class _QuickActions extends StatelessWidget {
   const _QuickActions();
 
   static const _actions = <_QuickAction>[
-    _QuickAction(
-      label: 'Deals',
-      icon: IconsaxPlusBold.shopping_bag,
-      color: Color(0xFFD9620E), // Printers & Office orange
-    ),
-    _QuickAction(
-      label: 'Flash',
-      icon: IconsaxPlusBold.flash,
-      color: Color(0xFF9F1239), // Accessories maroon
-    ),
-    _QuickAction(
-      label: 'Rewards',
-      icon: IconsaxPlusBold.gift,
-      color: Color(0xFF1F3E97), // Computers blue
-    ),
-    _QuickAction(
-      label: 'Coupons',
-      icon: IconsaxPlusBold.ticket_discount,
-      color: Color(0xFF5B21B6), // Phones, TV & Audio purple
-    ),
-    _QuickAction(
-      label: 'Support',
-      icon: IconsaxPlusBold.headphone,
-      color: Color(0xFF0E7490), // Networking & Security teal
-    ),
+    _QuickAction(label: 'Deals', image: 'assets/images/qa-deals.png'),
+    _QuickAction(label: 'Flash', image: 'assets/images/qa-flash.png'),
+    _QuickAction(label: 'Rewards', image: 'assets/images/qa-rewards.png'),
+    _QuickAction(label: 'Coupons', image: 'assets/images/qa-coupons.png'),
+    _QuickAction(label: 'Support', image: 'assets/images/qa-support.png'),
   ];
 
   @override
@@ -553,10 +530,9 @@ class _QuickActions extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           for (final action in _actions)
-            _QuickActionTile(action: action, onTap: () {}),
+            Expanded(child: _QuickActionTile(action: action, onTap: () {})),
         ],
       ),
     );
@@ -578,8 +554,9 @@ class _QuickActionTile extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            width: 54,
-            height: 54,
+            width: 52,
+            height: 52,
+            padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
               color: Colors.white.withValues(alpha: 0.55),
               borderRadius: BorderRadius.circular(18),
@@ -591,11 +568,14 @@ class _QuickActionTile extends StatelessWidget {
                 ),
               ],
             ),
-            child: Icon(action.icon, size: 26, color: action.color),
+            child: Image.asset(action.image, fit: BoxFit.contain),
           ),
           const SizedBox(height: 7),
           Text(
             action.label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
             style: const TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w600,

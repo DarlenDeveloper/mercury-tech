@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:iconsax_plus/iconsax_plus.dart';
 
-import '../theme/app_colors.dart';
 import '../widgets/mercury_bottom_nav_bar.dart';
+import 'ai_agent_screen.dart';
 import 'cart_screen.dart';
 import 'home_screen.dart';
 import 'profile_screen.dart';
@@ -31,9 +31,9 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       activeIcon: IconsaxPlusBold.search_status_1,
     ),
     MercuryNavItem(
-      label: 'Rewards',
-      icon: IconsaxPlusLinear.gift,
-      activeIcon: IconsaxPlusBold.gift,
+      label: 'AI',
+      icon: IconsaxPlusLinear.sms_star,
+      activeIcon: IconsaxPlusBold.sms_star,
     ),
     MercuryNavItem(
       label: 'Cart',
@@ -50,7 +50,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   static const _pages = <Widget>[
     HomeScreen(),
     ShopScreen(),
-    _PlaceholderPage(title: 'Rewards'),
+    AiAgentScreen(),
     CartScreen(),
     ProfileScreen(),
   ];
@@ -65,27 +65,6 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         currentIndex: _currentIndex,
         items: _items,
         onTap: (index) => setState(() => _currentIndex = index),
-      ),
-    );
-  }
-}
-
-/// Temporary placeholder until each real section is built.
-class _PlaceholderPage extends StatelessWidget {
-  const _PlaceholderPage({required this.title});
-
-  final String title;
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Text(
-        '$title — coming soon',
-        style: const TextStyle(
-          fontSize: 22,
-          fontWeight: FontWeight.w600,
-          color: AppColors.primary,
-        ),
       ),
     );
   }
