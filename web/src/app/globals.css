@@ -1,0 +1,27 @@
+@import "tailwindcss";
+
+@theme {
+  /* Mercury brand tokens (mirrors the mobile app's AppColors). */
+  --color-mercury: #1f3e97;
+  --color-mercury-dark: #16306f;
+  --color-mercury-accent: #ff7a00;
+  --color-ink: #1f2937;
+  --color-muted: #6b7280;
+  --color-line: #e5e7eb;
+  --color-surface-soft: #f5f7fb;
+
+  --font-sans: var(--font-poppins), ui-sans-serif, system-ui, sans-serif;
+}
+
+:root {
+  --background: #ffffff;
+  --foreground: #1f2937;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  /* Slight global scale-down for a more compact feel. */
+  zoom: 0.75;
+}
