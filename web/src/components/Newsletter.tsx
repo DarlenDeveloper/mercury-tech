@@ -1,7 +1,22 @@
+import Image from "next/image";
+
 export default function Newsletter() {
   return (
-    <section className="w-full px-4 py-8 lg:px-6">
-      <div className="rounded-3xl bg-mercury px-8 py-9 lg:px-12 lg:py-10">
+    <section className="relative w-full px-4 pt-24 pb-8 lg:px-6">
+      <div className="relative rounded-3xl bg-mercury px-8 py-9 lg:px-12 lg:py-10">
+        {/* Floating product that pops out of the top edge, far right */}
+        <div className="absolute right-[2%] top-0 hidden -translate-y-[26%] lg:block">
+          <div className="relative h-[340px] w-[250px]">
+            <Image
+              src="/float-product.png"
+              alt="Featured Mercury product"
+              fill
+              sizes="250px"
+              className="object-contain drop-shadow-[0_30px_45px_rgba(0,0,0,0.45)]"
+            />
+          </div>
+        </div>
+
         <div className="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
           {/* Left: heading + email capture */}
           <div className="max-w-xl">
@@ -26,8 +41,8 @@ export default function Newsletter() {
             </form>
           </div>
 
-          {/* Right: supporting copy */}
-          <div className="max-w-sm">
+          {/* Right: supporting copy (shifted left of the floating product) */}
+          <div className="max-w-sm lg:mr-64">
             <h3 className="text-sm font-bold text-white">
               Mercury for Homes &amp; Businesses
             </h3>
