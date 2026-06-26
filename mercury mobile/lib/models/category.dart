@@ -2,10 +2,14 @@ import 'package:flutter/material.dart';
 
 /// A subcategory filter shown on the category screen.
 class Subcategory {
-  const Subcategory(this.label, this.icon);
+  const Subcategory(this.label, this.icon, {this.image});
 
   final String label;
   final IconData icon;
+
+  /// Optional image asset shown in the filter chip avatar. When present it is
+  /// used instead of [icon], matching the Home page filter chips.
+  final String? image;
 }
 
 /// A top-level shop category.

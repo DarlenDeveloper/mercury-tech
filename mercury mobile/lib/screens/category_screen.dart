@@ -85,6 +85,7 @@ class _CategoryScreenState extends State<CategoryScreen> {
                   itemBuilder: (context, i) => MercuryFilterChip(
                     label: category.subcategories[i].label,
                     icon: category.subcategories[i].icon,
+                    image: category.subcategories[i].image,
                     accent: category.color,
                     onTap: () => setState(() => _selected = i),
                   ),
