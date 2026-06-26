@@ -13,7 +13,7 @@ const NAV_LINKS = [
   { label: "Blog", active: false },
 ];
 
-const SLIDES = ["/hero-1.jpg", "/hero-2.jpg", "/hero-3.jpg"];
+const SLIDES = ["/carousel-1.jpg", "/carousel-2.jpg", "/carousel-3.jpg"];
 
 export default function Hero() {
   const [index, setIndex] = useState(0);
@@ -28,7 +28,7 @@ export default function Hero() {
   return (
     <section className="px-4 pt-4 lg:px-6">
       {/* Hero image block */}
-      <div className="relative h-[460px] overflow-hidden rounded-3xl">
+      <div className="relative h-[520px] overflow-hidden rounded-3xl">
         {/* Background carousel (sliding track) */}
         <div
           className="absolute inset-0 flex transition-transform duration-700 ease-in-out"
@@ -41,7 +41,7 @@ export default function Hero() {
                 alt="Mercury tech showcase"
                 fill
                 priority={i === 0}
-                quality={90}
+                quality={100}
                 sizes="100vw"
                 className="object-cover"
               />
@@ -63,6 +63,7 @@ export default function Hero() {
             />
             <span className="text-lg font-extrabold tracking-tight text-ink">
               Mercury
+              <span className="font-semibold text-mercury"> Computers</span>
             </span>
           </a>
 

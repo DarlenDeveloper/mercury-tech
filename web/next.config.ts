@@ -9,7 +9,7 @@ const nextConfig: NextConfig = {
   },
   images: {
     // Allow the higher quality used on the hero carousel images.
-    qualities: [75, 90],
+    qualities: [75, 90, 100],
   },
 };
 
