@@ -70,9 +70,13 @@ class _HomeScreenState extends State<HomeScreen> {
         // header, search field and quick actions.
         const _HomeGradientBackdrop(),
         SafeArea(
+          top: false,
           bottom: false,
           child: CustomScrollView(
             slivers: [
+              SliverToBoxAdapter(
+                child: SizedBox(height: MediaQuery.of(context).padding.top),
+              ),
               const SliverToBoxAdapter(child: _HomeHeader()),
               const SliverToBoxAdapter(child: _SearchField()),
               const SliverToBoxAdapter(child: SizedBox(height: 20)),

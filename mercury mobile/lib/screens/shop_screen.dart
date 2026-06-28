@@ -17,9 +17,15 @@ class ShopScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SafeArea(
+      top: false,
       bottom: false,
       child: ListView(
-        padding: const EdgeInsets.fromLTRB(20, 12, 20, 130),
+        padding: EdgeInsets.fromLTRB(
+          20,
+          MediaQuery.of(context).padding.top + 12,
+          20,
+          130,
+        ),
         children: [
           const _SearchField(),
           const SizedBox(height: 22),

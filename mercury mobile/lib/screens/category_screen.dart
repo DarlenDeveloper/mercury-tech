@@ -39,9 +39,13 @@ class _CategoryScreenState extends State<CategoryScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
+        top: false,
         bottom: false,
         child: CustomScrollView(
           slivers: [
+            SliverToBoxAdapter(
+              child: SizedBox(height: MediaQuery.of(context).padding.top),
+            ),
             // Section A — title with back button.
             SliverToBoxAdapter(
               child: Padding(

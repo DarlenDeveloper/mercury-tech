@@ -29,9 +29,11 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       backgroundColor: _bg,
       extendBody: true,
       body: SafeArea(
+        top: false,
         bottom: false,
         child: Column(
           children: [
+            SizedBox(height: MediaQuery.of(context).padding.top),
             _TopBar(
               onBack: () => Navigator.of(context).maybePop(),
             ),

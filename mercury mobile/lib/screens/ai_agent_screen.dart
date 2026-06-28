@@ -70,9 +70,11 @@ class _AiAgentScreenState extends State<AiAgentScreen> {
   @override
   Widget build(BuildContext context) {
     return SafeArea(
+      top: false,
       bottom: false,
       child: Column(
         children: [
+          SizedBox(height: MediaQuery.of(context).padding.top),
           Expanded(
             child: _hasConversation
                 ? ListView(

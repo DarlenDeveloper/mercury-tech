@@ -16,9 +16,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return SafeArea(
+      top: false,
       bottom: false,
       child: ListView(
-        padding: const EdgeInsets.fromLTRB(20, 8, 20, 120),
+        padding: EdgeInsets.fromLTRB(
+          20,
+          MediaQuery.of(context).padding.top + 8,
+          20,
+          120,
+        ),
         children: [
           // Header.
           Row(
