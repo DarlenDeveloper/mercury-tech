@@ -206,15 +206,15 @@ class _RecommendedSection extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         SizedBox(
-          height: 252,
+          height: 214,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             physics: const BouncingScrollPhysics(),
             clipBehavior: Clip.none,
             itemCount: products.length,
-            separatorBuilder: (_, __) => const SizedBox(width: 14),
+            separatorBuilder: (_, __) => const SizedBox(width: 12),
             itemBuilder: (context, i) => SizedBox(
-              width: 160,
+              width: 136,
               child: ProductCard(
                 product: products[i],
                 onTap: () => Navigator.of(context).push(

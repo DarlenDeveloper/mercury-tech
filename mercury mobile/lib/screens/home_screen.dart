@@ -463,14 +463,14 @@ class _ProductRail extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 256,
+      height: 218,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 20),
         itemCount: products.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 14),
+        separatorBuilder: (_, __) => const SizedBox(width: 12),
         itemBuilder: (context, i) => SizedBox(
-          width: 160,
+          width: 136,
           child: ProductCard(
             product: products[i],
             onTap: () => Navigator.of(context).push(
