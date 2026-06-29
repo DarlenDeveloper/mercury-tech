@@ -118,28 +118,28 @@ class ProductCard extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              Flexible(
-                child: Text(
-                  formatUgx(product.price),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    color: _ink,
-                  ),
+              Text(
+                formatUgx(product.price),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: _ink,
                 ),
               ),
               if (product.isOnSale) ...[
                 const SizedBox(width: 6),
-                Text(
-                  formatUgx(product.oldPrice!),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 8.5,
-                    color: Color(0xFFE11D2A),
-                    decoration: TextDecoration.lineThrough,
+                Flexible(
+                  child: Text(
+                    formatUgx(product.oldPrice!),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 8.5,
+                      color: Color(0xFFE11D2A),
+                      decoration: TextDecoration.lineThrough,
+                    ),
                   ),
                 ),
               ],
