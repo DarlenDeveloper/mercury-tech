@@ -279,37 +279,42 @@ class _PromoCarouselState extends State<_PromoCarousel> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        SizedBox(
-          height: 185,
-          child: PageView.builder(
+    return SizedBox(
+      height: 200,
+      child: Stack(
+        children: [
+          PageView.builder(
             controller: _controller,
             itemCount: _slides.length,
             onPageChanged: (i) => setState(() => _page = i),
             itemBuilder: (context, i) => _PromoCard(slide: _slides[i]),
           ),
-        ),
-        const SizedBox(height: 12),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            for (var i = 0; i < _slides.length; i++)
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 250),
-                margin: const EdgeInsets.symmetric(horizontal: 3),
-                width: i == _page ? 18 : 7,
-                height: 7,
-                decoration: BoxDecoration(
-                  color: i == _page
-                      ? AppColors.primary
-                      : AppColors.inactive.withValues(alpha: 0.3),
-                  borderRadius: BorderRadius.circular(4),
-                ),
-              ),
-          ],
-        ),
-      ],
+          // Page dots nested inside the bottom-center notch of the card.
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 18,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                for (var i = 0; i < _slides.length; i++)
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 250),
+                    margin: const EdgeInsets.symmetric(horizontal: 3),
+                    width: i == _page ? 18 : 7,
+                    height: 7,
+                    decoration: BoxDecoration(
+                      color: i == _page
+                          ? AppColors.primary
+                          : AppColors.inactive.withValues(alpha: 0.3),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -321,73 +326,162 @@ class _PromoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 20),
-      clipBehavior: Clip.antiAlias,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(22),
-      ),
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          Image.asset(slide.image, fit: BoxFit.cover),
-          // Dark scrim on the left for text legibility.
-          const DecoratedBox(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.centerLeft,
-                end: Alignment.centerRight,
-                colors: [Color(0xCC000000), Color(0x33000000), Colors.transparent],
-                stops: [0.0, 0.55, 1.0],
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 15),
+      child: ClipPath(
+        clipper: _NotchedCardClipper(
+          radius: 22,
+          notchWidth: 150,
+          notchDepth: 17,
+        ),
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            Image.asset(slide.image, fit: BoxFit.cover),
+            // Dark scrim on the left for text legibility.
+            const DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.centerLeft,
+                  end: Alignment.centerRight,
+                  colors: [
+                    Color(0xCC000000),
+                    Color(0x33000000),
+                    Colors.transparent
+                  ],
+                  stops: [0.0, 0.55, 1.0],
+                ),
               ),
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  slide.title,
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w800,
-                    height: 1.1,
-                    color: Colors.white,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  slide.subtitle,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    color: Color(0xFFE5E7EB),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                ElevatedButton(
-                  onPressed: () {},
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: Colors.white,
-                    elevation: 0,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 18,
-                      vertical: 9,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 18, 20, 24),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    slide.title,
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w800,
+                      height: 1.1,
+                      color: Colors.white,
                     ),
                   ),
-                  child: const Text('Shop Now'),
-                ),
-              ],
+                  const SizedBox(height: 6),
+                  Text(
+                    slide.subtitle,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      color: Color(0xFFE5E7EB),
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  const _ShopNowPill(),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
+  }
+}
+
+/// "Shop Now" pill with a circular arrow badge at its trailing edge.
+class _ShopNowPill extends StatelessWidget {
+  const _ShopNowPill();
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: AppColors.primary,
+      borderRadius: BorderRadius.circular(30),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(30),
+        onTap: () {},
+        child: const Padding(
+          padding: EdgeInsets.fromLTRB(18, 6, 6, 6),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Shop Now',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              SizedBox(width: 10),
+              CircleAvatar(
+                radius: 15,
+                backgroundColor: AppColors.accent,
+                child: Icon(
+                  Icons.arrow_downward_rounded,
+                  size: 18,
+                  color: Colors.white,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Clips a card into a rounded rectangle with a smooth concave notch carved
+/// out of the bottom-center — the page indicator dots nest inside the dip.
+class _NotchedCardClipper extends CustomClipper<Path> {
+  const _NotchedCardClipper({
+    required this.radius,
+    required this.notchWidth,
+    required this.notchDepth,
+  });
+
+  final double radius;
+  final double notchWidth;
+  final double notchDepth;
+
+  @override
+  Path getClip(Size size) {
+    final w = size.width;
+    final h = size.height;
+    final r = radius;
+    final cx = w / 2;
+    final half = notchWidth / 2;
+    final left = cx - half;
+    final right = cx + half;
+    // Smoothing factor: large k => horizontal tangents at both the bottom
+    // edge and the bottom of the dip, giving a soft cosine-like scoop with
+    // no pinching at the shoulders.
+    final k = half * 0.62;
+
+    final path = Path()
+      ..moveTo(0, r)
+      ..quadraticBezierTo(0, 0, r, 0) // top-left
+      ..lineTo(w - r, 0)
+      ..quadraticBezierTo(w, 0, w, r) // top-right
+      ..lineTo(w, h - r)
+      ..quadraticBezierTo(w, h, w - r, h) // bottom-right
+      ..lineTo(right, h)
+      // right half of the dip (horizontal tangents at both ends)
+      ..cubicTo(right - k, h, cx + k, h - notchDepth, cx, h - notchDepth)
+      // left half of the dip
+      ..cubicTo(cx - k, h - notchDepth, left + k, h, left, h)
+      ..lineTo(r, h)
+      ..quadraticBezierTo(0, h, 0, h - r) // bottom-left
+      ..close();
+
+    return path;
+  }
+
+  @override
+  bool shouldReclip(_NotchedCardClipper oldClipper) {
+    return oldClipper.radius != radius ||
+        oldClipper.notchWidth != notchWidth ||
+        oldClipper.notchDepth != notchDepth;
   }
 }
 
