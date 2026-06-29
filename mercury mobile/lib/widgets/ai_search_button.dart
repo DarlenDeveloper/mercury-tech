@@ -25,7 +25,7 @@ class AiSearchButton extends StatelessWidget {
         width: size,
         height: size,
         child: Icon(
-          IconsaxPlusBold.sms_star,
+          IconsaxPlusBold.magic_star,
           size: size * 0.6,
           color: AppColors.primary,
         ),
