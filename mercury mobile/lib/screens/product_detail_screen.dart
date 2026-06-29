@@ -5,6 +5,63 @@ import '../models/product.dart';
 import '../theme/app_colors.dart';
 import '../utils/format.dart';
 
+/// Apple Human Interface Guidelines — iOS Dynamic Type scale at the default
+/// "Large" content size (SF Pro point sizes, leading and tracking). Applied to
+/// the brand font to follow Apple's typographic hierarchy on this page.
+/// Source: developer.apple.com/design/human-interface-guidelines/typography
+class _AppleType {
+  const _AppleType._();
+
+  static const title2 = TextStyle(
+    fontSize: 19,
+    fontWeight: FontWeight.w700, // emphasized: Bold
+    height: 28 / 22,
+    letterSpacing: -0.26,
+  );
+  static const title3 = TextStyle(
+    fontSize: 17,
+    fontWeight: FontWeight.w600, // emphasized: Semibold
+    height: 25 / 20,
+    letterSpacing: -0.45,
+  );
+  static const headline = TextStyle(
+    fontSize: 15,
+    fontWeight: FontWeight.w600, // Semibold
+    height: 22 / 17,
+    letterSpacing: -0.43,
+  );
+  static const body = TextStyle(
+    fontSize: 15,
+    fontWeight: FontWeight.w400,
+    height: 22 / 17,
+    letterSpacing: -0.43,
+  );
+  static const subhead = TextStyle(
+    fontSize: 13,
+    fontWeight: FontWeight.w400,
+    height: 20 / 15,
+    letterSpacing: -0.23,
+  );
+  static const footnote = TextStyle(
+    fontSize: 12,
+    fontWeight: FontWeight.w400,
+    height: 18 / 13,
+    letterSpacing: -0.08,
+  );
+  static const caption1 = TextStyle(
+    fontSize: 11,
+    fontWeight: FontWeight.w400,
+    height: 16 / 12,
+    letterSpacing: 0.0,
+  );
+  static const caption2 = TextStyle(
+    fontSize: 10,
+    fontWeight: FontWeight.w400,
+    height: 13 / 11,
+    letterSpacing: 0.06,
+  );
+}
+
 class ProductDetailScreen extends StatefulWidget {
   const ProductDetailScreen({super.key, required this.product});
 
@@ -33,7 +90,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         bottom: false,
         child: Column(
           children: [
-            SizedBox(height: MediaQuery.of(context).padding.top),
+            SizedBox(height: MediaQuery.of(context).padding.top + 6),
             _TopBar(
               onBack: () => Navigator.of(context).maybePop(),
             ),
@@ -45,8 +102,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                   const SizedBox(height: 18),
                   Text(
                     product.category,
-                    style: const TextStyle(
-                      fontSize: 13,
+                    style: _AppleType.footnote.copyWith(
                       color: AppColors.inactive,
                     ),
                   ),
@@ -67,10 +123,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                   const SizedBox(height: 8),
                   Text(
                     product.description,
-                    style: const TextStyle(
-                      fontSize: 13.5,
-                      height: 1.5,
-                      color: Color(0xFF6B7280),
+                    style: _AppleType.body.copyWith(
+                      color: const Color(0xFF6B7280),
                     ),
                   ),
                   if (product.specifications.isNotEmpty) ...[
@@ -113,21 +167,19 @@ class _TopBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
       child: Row(
         children: [
           _RoundButton(
             onTap: onBack,
             child: const Icon(Icons.arrow_back_ios_new,
-                size: 18, color: _ProductDetailScreenState._ink),
+                size: 16, color: _ProductDetailScreenState._ink),
           ),
-          const Expanded(
+          Expanded(
             child: Center(
               child: Text(
                 'Details',
-                style: TextStyle(
-                  fontSize: 17,
-                  fontWeight: FontWeight.w700,
+                style: _AppleType.headline.copyWith(
                   color: _ProductDetailScreenState._ink,
                 ),
               ),
@@ -136,7 +188,7 @@ class _TopBar extends StatelessWidget {
           _RoundButton(
             onTap: () {},
             child: const Icon(Icons.share_outlined,
-                size: 20, color: _ProductDetailScreenState._ink),
+                size: 18, color: _ProductDetailScreenState._ink),
           ),
         ],
       ),
@@ -153,12 +205,12 @@ class _RoundButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: AppColors.surface,
+      color: Colors.white.withValues(alpha: 0.55),
       shape: const CircleBorder(),
       child: InkWell(
         onTap: onTap,
         customBorder: const CircleBorder(),
-        child: SizedBox(width: 44, height: 44, child: Center(child: child)),
+        child: SizedBox(width: 38, height: 38, child: Center(child: child)),
       ),
     );
   }
@@ -172,7 +224,7 @@ class _ImageArea extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AspectRatio(
-      aspectRatio: 0.92,
+      aspectRatio: 1.12,
       child: Container(
         decoration: BoxDecoration(
           color: product.accent,
@@ -206,11 +258,10 @@ class _ImageArea extends StatelessWidget {
                     color: AppColors.primary,
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: const Text(
+                  child: Text(
                     'SALE',
-                    style: TextStyle(
+                    style: _AppleType.caption2.copyWith(
                       color: Colors.white,
-                      fontSize: 11,
                       fontWeight: FontWeight.w700,
                       letterSpacing: 0.5,
                     ),
@@ -248,9 +299,7 @@ class _TitleRow extends StatelessWidget {
             children: [
               Text(
                 product.name,
-                style: const TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w700,
+                style: _AppleType.title2.copyWith(
                   color: _ProductDetailScreenState._ink,
                 ),
               ),
@@ -262,12 +311,11 @@ class _TitleRow extends StatelessWidget {
                     color: const Color(0xFFEDF1F7),
                     borderRadius: BorderRadius.circular(20),
                   ),
-                  child: const Text(
+                  child: Text(
                     'New',
-                    style: TextStyle(
-                      fontSize: 12,
+                    style: _AppleType.caption1.copyWith(
                       fontWeight: FontWeight.w600,
-                      color: Color(0xFF6B7280),
+                      color: const Color(0xFF6B7280),
                     ),
                   ),
                 ),
@@ -282,11 +330,11 @@ class _TitleRow extends StatelessWidget {
             onTap: onWishlist,
             customBorder: const CircleBorder(),
             child: SizedBox(
-              width: 46,
-              height: 46,
+              width: 40,
+              height: 40,
               child: Icon(
                 wishlisted ? Icons.favorite : Icons.favorite_border,
-                size: 22,
+                size: 20,
                 color: wishlisted ? AppColors.primary : _ProductDetailScreenState._ink,
               ),
             ),
@@ -313,12 +361,10 @@ class _QuantityCard extends StatelessWidget {
       ),
       child: Row(
         children: [
-          const Expanded(
+          Expanded(
             child: Text(
               'Quantity',
-              style: TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w700,
+              style: _AppleType.headline.copyWith(
                 color: _ProductDetailScreenState._ink,
               ),
             ),
@@ -331,9 +377,7 @@ class _QuantityCard extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Text(
               '$qty',
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
+              style: _AppleType.headline.copyWith(
                 color: _ProductDetailScreenState._ink,
               ),
             ),
@@ -364,11 +408,11 @@ class _StepperButton extends StatelessWidget {
         onTap: onTap,
         customBorder: const CircleBorder(),
         child: SizedBox(
-          width: 34,
-          height: 34,
+          width: 30,
+          height: 30,
           child: Icon(
             icon,
-            size: 18,
+            size: 16,
             color: enabled
                 ? _ProductDetailScreenState._ink
                 : AppColors.inactive.withValues(alpha: 0.5),
@@ -388,9 +432,7 @@ class _SectionTitle extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       text,
-      style: const TextStyle(
-        fontSize: 18,
-        fontWeight: FontWeight.w700,
+      style: _AppleType.title3.copyWith(
         color: _ProductDetailScreenState._ink,
       ),
     );
@@ -430,9 +472,8 @@ class _SpecificationsCard extends StatelessWidget {
                     flex: 4,
                     child: Text(
                       entries[i].key,
-                      style: const TextStyle(
-                        fontSize: 13.5,
-                        color: Color(0xFF6B7280),
+                      style: _AppleType.subhead.copyWith(
+                        color: const Color(0xFF6B7280),
                       ),
                     ),
                   ),
@@ -442,9 +483,8 @@ class _SpecificationsCard extends StatelessWidget {
                     child: Text(
                       entries[i].value,
                       textAlign: TextAlign.right,
-                      style: const TextStyle(
-                        fontSize: 13.5,
-                        fontWeight: FontWeight.w700,
+                      style: _AppleType.subhead.copyWith(
+                        fontWeight: FontWeight.w600,
                         color: _ProductDetailScreenState._ink,
                       ),
                     ),
@@ -474,14 +514,13 @@ class _ReviewsPlaceholder extends StatelessWidget {
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(18),
       ),
-      child: const Column(
+      child: Column(
         children: [
-          Icon(IconsaxPlusLinear.message_text, size: 30, color: AppColors.inactive),
-          SizedBox(height: 8),
+          const Icon(IconsaxPlusLinear.message_text, size: 30, color: AppColors.inactive),
+          const SizedBox(height: 8),
           Text(
             'No reviews yet',
-            style: TextStyle(
-              fontSize: 13,
+            style: _AppleType.subhead.copyWith(
               color: AppColors.inactive,
             ),
           ),
@@ -522,9 +561,11 @@ class _BottomBar extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Text(
+                  Text(
                     'Total price',
-                    style: TextStyle(fontSize: 13, color: AppColors.inactive),
+                    style: _AppleType.footnote.copyWith(
+                      color: AppColors.inactive,
+                    ),
                   ),
                   const SizedBox(height: 2),
                   Text.rich(
@@ -532,17 +573,14 @@ class _BottomBar extends StatelessWidget {
                       children: [
                         TextSpan(
                           text: 'USh ',
-                          style: const TextStyle(
-                            fontSize: 14,
+                          style: _AppleType.subhead.copyWith(
                             fontWeight: FontWeight.w500,
                             color: _ProductDetailScreenState._ink,
                           ),
                         ),
                         TextSpan(
                           text: formatAmount(total),
-                          style: const TextStyle(
-                            fontSize: 22,
-                            fontWeight: FontWeight.w700,
+                          style: _AppleType.title2.copyWith(
                             color: _ProductDetailScreenState._ink,
                           ),
                         ),
@@ -565,10 +603,9 @@ class _BottomBar extends StatelessWidget {
                     ),
                   ),
                   icon: const Icon(IconsaxPlusBold.bag_2, size: 20),
-                  label: const Text(
+                  label: Text(
                     'Add to Cart',
-                    style:
-                        TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+                    style: _AppleType.headline.copyWith(color: Colors.white),
                   ),
                 ),
               ),
