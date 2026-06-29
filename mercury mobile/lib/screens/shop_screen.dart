@@ -6,13 +6,12 @@ import '../data/sample_products.dart';
 import '../models/category.dart';
 import '../theme/app_colors.dart';
 import '../widgets/product_card.dart';
+import '../widgets/ai_search_button.dart';
 import 'category_screen.dart';
 import 'product_detail_screen.dart';
 
 class ShopScreen extends StatelessWidget {
   const ShopScreen({super.key});
-
-  static const _ink = Color(0xFF1F2937);
 
   @override
   Widget build(BuildContext context) {
@@ -28,16 +27,6 @@ class ShopScreen extends StatelessWidget {
         ),
         children: [
           const _SearchField(),
-          const SizedBox(height: 22),
-          const Text(
-            'Browse categories',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w700,
-              color: _ink,
-            ),
-          ),
-          const SizedBox(height: 16),
           GridView.count(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
@@ -57,7 +46,7 @@ class ShopScreen extends StatelessWidget {
                 ),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 0),
           const _RecommendedSection(),
         ],
       ),
@@ -70,24 +59,32 @@ class _SearchField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 50,
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      decoration: BoxDecoration(
-        color: const Color(0xFFEDF1F7),
-        borderRadius: BorderRadius.circular(30),
-      ),
-      child: Row(
-        children: const [
-          Icon(IconsaxPlusLinear.search_normal,
-              size: 20, color: AppColors.inactive),
-          SizedBox(width: 12),
-          Text(
-            'Search',
-            style: TextStyle(fontSize: 14, color: AppColors.inactive),
+    return Row(
+      children: [
+        Expanded(
+          child: Container(
+            height: 50,
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            decoration: BoxDecoration(
+              color: const Color(0xFFEDF1F7),
+              borderRadius: BorderRadius.circular(30),
+            ),
+            child: Row(
+              children: const [
+                Icon(IconsaxPlusLinear.search_normal,
+                    size: 20, color: AppColors.inactive),
+                SizedBox(width: 12),
+                Text(
+                  'Search',
+                  style: TextStyle(fontSize: 14, color: AppColors.inactive),
+                ),
+              ],
+            ),
           ),
-        ],
-      ),
+        ),
+        const SizedBox(width: 4),
+        const AiSearchButton(size: 50),
+      ],
     );
   }
 }
@@ -207,7 +204,7 @@ class _RecommendedSection extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 8),
         SizedBox(
           height: 252,
           child: ListView.separated(

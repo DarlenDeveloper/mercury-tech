@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:iconsax_plus/iconsax_plus.dart';
 
 import '../widgets/mercury_bottom_nav_bar.dart';
-import 'ai_agent_screen.dart';
 import 'cart_screen.dart';
 import 'home_screen.dart';
 import 'profile_screen.dart';
@@ -31,14 +30,9 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       activeIcon: IconsaxPlusBold.search_status_1,
     ),
     MercuryNavItem(
-      label: 'AI',
-      icon: IconsaxPlusLinear.sms_star,
-      activeIcon: IconsaxPlusBold.sms_star,
-    ),
-    MercuryNavItem(
       label: 'Cart',
-      icon: IconsaxPlusLinear.bag_2,
-      activeIcon: IconsaxPlusBold.bag_2,
+      icon: Icons.shopping_cart_outlined,
+      activeIcon: Icons.shopping_cart,
     ),
     MercuryNavItem(
       label: 'Profile',
@@ -50,7 +44,6 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   static const _pages = <Widget>[
     HomeScreen(),
     ShopScreen(),
-    AiAgentScreen(),
     CartScreen(),
     ProfileScreen(),
   ];

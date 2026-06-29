@@ -8,6 +8,7 @@ import '../models/product.dart';
 import '../theme/app_colors.dart';
 import '../widgets/mercury_filter_chip.dart';
 import '../widgets/product_card.dart';
+import '../widgets/ai_search_button.dart';
 import 'product_detail_screen.dart';
 
 /// Image + circle color for each Home filter chip.
@@ -80,9 +81,9 @@ class _HomeScreenState extends State<HomeScreen> {
               const SliverToBoxAdapter(child: _HomeHeader()),
               const SliverToBoxAdapter(child: _SearchField()),
               const SliverToBoxAdapter(child: SizedBox(height: 20)),
-              const SliverToBoxAdapter(child: _QuickActions()),
-              const SliverToBoxAdapter(child: SizedBox(height: 22)),
               const SliverToBoxAdapter(child: _PromoCarousel()),
+              const SliverToBoxAdapter(child: SizedBox(height: 22)),
+              const SliverToBoxAdapter(child: _QuickActions()),
           const SliverToBoxAdapter(child: SizedBox(height: 18)),
           SliverToBoxAdapter(
             child: _CategoryChips(
@@ -182,24 +183,32 @@ class _SearchField extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 18, 20, 0),
-      child: Container(
-        height: 50,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        decoration: BoxDecoration(
-          color: const Color(0xFFEDF1F7),
-          borderRadius: BorderRadius.circular(30),
-        ),
-        child: Row(
-          children: const [
-            Icon(IconsaxPlusLinear.search_normal,
-                size: 20, color: AppColors.inactive),
-            SizedBox(width: 12),
-            Text(
-              'Search products & brands',
-              style: TextStyle(fontSize: 14, color: AppColors.inactive),
+      child: Row(
+        children: [
+          Expanded(
+            child: Container(
+              height: 50,
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              decoration: BoxDecoration(
+                color: const Color(0xFFEDF1F7),
+                borderRadius: BorderRadius.circular(30),
+              ),
+              child: Row(
+                children: const [
+                  Icon(IconsaxPlusLinear.search_normal,
+                      size: 20, color: AppColors.inactive),
+                  SizedBox(width: 12),
+                  Text(
+                    'Search products & brands',
+                    style: TextStyle(fontSize: 14, color: AppColors.inactive),
+                  ),
+                ],
+              ),
             ),
-          ],
-        ),
+          ),
+          const SizedBox(width: 4),
+          const AiSearchButton(size: 50),
+        ],
       ),
     );
   }

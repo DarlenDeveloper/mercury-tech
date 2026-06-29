@@ -69,32 +69,46 @@ class _AiAgentScreenState extends State<AiAgentScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      top: false,
-      bottom: false,
-      child: Column(
-        children: [
-          SizedBox(height: MediaQuery.of(context).padding.top),
-          Expanded(
-            child: _hasConversation
-                ? ListView(
-                    controller: _scrollController,
-                    padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
-                    children: [
-                      for (final m in _messages) _MessageBubble(message: m),
-                    ],
-                  )
-                : const _GreetingHero(),
-          ),
-          if (!_hasConversation)
-            _SuggestionRow(suggestions: _suggestions, onTap: _send),
-          _Composer(
-            controller: _controller,
-            aiMode: _aiMode,
-            onModeChanged: (v) => setState(() => _aiMode = v),
-            onSend: () => _send(_controller.text),
-          ),
-        ],
+    return Scaffold(
+      backgroundColor: const Color(0xFFF5F7FB),
+      body: SafeArea(
+        top: false,
+        bottom: false,
+        child: Column(
+          children: [
+            SizedBox(height: MediaQuery.of(context).padding.top),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(8, 8, 8, 0),
+                child: IconButton(
+                  icon: const Icon(IconsaxPlusLinear.arrow_left_2),
+                  color: _ink,
+                  onPressed: () => Navigator.of(context).maybePop(),
+                ),
+              ),
+            ),
+            Expanded(
+              child: _hasConversation
+                  ? ListView(
+                      controller: _scrollController,
+                      padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
+                      children: [
+                        for (final m in _messages) _MessageBubble(message: m),
+                      ],
+                    )
+                  : const _GreetingHero(),
+            ),
+            if (!_hasConversation)
+              _SuggestionRow(suggestions: _suggestions, onTap: _send),
+            _Composer(
+              controller: _controller,
+              aiMode: _aiMode,
+              onModeChanged: (v) => setState(() => _aiMode = v),
+              onSend: () => _send(_controller.text),
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -54,11 +54,11 @@ class MercuryBottomNavBar extends StatelessWidget {
             filter: ImageFilter.blur(sigmaX: 22, sigmaY: 22),
             child: Container(
               decoration: BoxDecoration(
-                // Translucent white so content behind shows through (frosted).
-                color: const Color(0xCCFFFFFF),
+                // Translucent brand blue so content behind shows through.
+                color: const Color(0xBF1F3E97),
                 borderRadius: BorderRadius.circular(38),
                 border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.6),
+                  color: Colors.white.withValues(alpha: 0.25),
                   width: 1,
                 ),
                 boxShadow: const [
@@ -107,14 +107,14 @@ class _NavBarItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = selected ? AppColors.primary : AppColors.inactive;
+    final color = selected ? Colors.white : Colors.white.withValues(alpha: 0.6);
 
     return Expanded(
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(16),
-        splashColor: AppColors.primary.withValues(alpha: 0.08),
-        highlightColor: AppColors.primary.withValues(alpha: 0.05),
+        splashColor: Colors.white.withValues(alpha: 0.12),
+        highlightColor: Colors.white.withValues(alpha: 0.08),
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 4),
           child: Column(
@@ -136,10 +136,10 @@ class _NavBarItem extends StatelessWidget {
                         width: 9,
                         height: 9,
                         decoration: BoxDecoration(
-                          color: AppColors.primary,
+                          color: AppColors.accent,
                           shape: BoxShape.circle,
                           border: Border.all(
-                            color: AppColors.surface,
+                            color: Colors.white,
                             width: 1.5,
                           ),
                         ),
