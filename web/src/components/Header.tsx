@@ -3,7 +3,6 @@ import {
   Search,
   Headphones,
   Truck,
-  Menu,
   ChevronDown,
   User,
   Repeat,
@@ -11,19 +10,10 @@ import {
   ShoppingCart,
 } from "lucide-react";
 
-const NAV_LINKS = [
-  "Deals",
-  "Repairs & Services",
-  "Microsoft Licensing",
-  "About Us",
-  "Contact",
-] as const;
-
 export default function Header() {
   return (
-    <header className="w-full bg-white">
-      {/* Main row: logo, search, support + delivery */}
-      <div className="mx-auto flex max-w-7xl items-center gap-6 px-4 py-4 lg:px-6">
+    <header className="sticky top-0 z-40 w-full bg-white shadow-[0_2px_12px_rgba(31,62,151,0.06)]">
+      <div className="flex w-full items-center gap-6 px-4 py-4 lg:px-6">
         <a href="/" className="flex shrink-0 items-center gap-2.5">
           <Image
             src="/mercury-logo.png"
@@ -70,63 +60,39 @@ export default function Header() {
             highlight="Free Delivery"
           />
         </div>
-      </div>
 
-      {/* Nav row */}
-      <div className="border-y border-line bg-white">
-        <div className="mx-auto flex max-w-7xl items-center gap-2 px-4 py-2 lg:px-6">
-          {/* All categories */}
-          <button className="flex items-center gap-2 rounded-lg bg-mercury px-5 py-3 text-sm font-semibold text-white transition hover:bg-mercury-dark">
-            <Menu size={18} />
-            All Categories
-            <ChevronDown size={16} className="opacity-80" />
+        {/* Right cluster: currency, account, compare, wishlist, cart */}
+        <div className="flex shrink-0 items-center gap-1">
+          <button className="flex items-center gap-1 px-2 py-2 text-sm font-medium text-ink transition hover:text-mercury">
+            USh
+            <ChevronDown size={14} className="text-muted" />
           </button>
 
-          <nav className="hidden items-center md:flex">
-            {NAV_LINKS.map((link) => (
-              <a
-                key={link}
-                href="#"
-                className="px-3.5 py-2 text-sm font-medium text-ink transition hover:text-mercury"
-              >
-                {link}
-              </a>
-            ))}
-          </nav>
+          <span className="mx-1 hidden h-5 w-px bg-line sm:block" />
 
-          {/* Right cluster */}
-          <div className="ml-auto flex items-center gap-1">
-            <button className="flex items-center gap-1 px-2 py-2 text-sm font-medium text-ink transition hover:text-mercury">
-              USh
-              <ChevronDown size={14} className="text-muted" />
-            </button>
+          <IconButton label="Account">
+            <User size={20} />
+          </IconButton>
+          <IconButton label="Compare" badge={0}>
+            <Repeat size={20} />
+          </IconButton>
+          <IconButton label="Wishlist" badge={0}>
+            <Heart size={20} />
+          </IconButton>
 
-            <span className="mx-1 h-5 w-px bg-line" />
-
-            <IconButton label="Account">
-              <User size={20} />
-            </IconButton>
-            <IconButton label="Compare" badge={0}>
-              <Repeat size={20} />
-            </IconButton>
-            <IconButton label="Wishlist" badge={0}>
-              <Heart size={20} />
-            </IconButton>
-
-            {/* Cart */}
-            <a
-              href="#"
-              className="ml-1 flex items-center gap-2 rounded-full bg-mercury py-1.5 pl-1.5 pr-4 text-white transition hover:bg-mercury-dark"
-            >
-              <span className="relative flex h-9 w-9 items-center justify-center rounded-full bg-white/15">
-                <ShoppingCart size={18} />
-                <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-mercury-accent px-1 text-[10px] font-bold leading-none text-white">
-                  0
-                </span>
+          {/* Cart */}
+          <a
+            href="#"
+            className="ml-1 flex items-center gap-2 rounded-full bg-mercury py-1.5 pl-1.5 pr-4 text-white transition hover:bg-mercury-dark"
+          >
+            <span className="relative flex h-9 w-9 items-center justify-center rounded-full bg-white/15">
+              <ShoppingCart size={18} />
+              <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-mercury-accent px-1 text-[10px] font-bold leading-none text-white">
+                0
               </span>
-              <span className="text-sm font-semibold">USh 0</span>
-            </a>
-          </div>
+            </span>
+            <span className="hidden text-sm font-semibold sm:block">USh 0</span>
+          </a>
         </div>
       </div>
     </header>
