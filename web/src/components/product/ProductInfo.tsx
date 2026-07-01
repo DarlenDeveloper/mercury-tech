@@ -1,0 +1,184 @@
+"use client";
+
+import { useState } from "react";
+import { Star, Minus, Plus, Truck, ShieldCheck, Headphones, Check } from "lucide-react";
+import { formatUgx, type Product } from "@/lib/products";
+
+function Stars({ rating }: { rating: number }) {
+  return (
+    <div className="flex items-center gap-0.5">
+      {Array.from({ length: 5 }, (_, i) => {
+        const filled = i < Math.round(rating);
+        return (
+          <Star
+            key={i}
+            size={14}
+            className={filled ? "fill-amber-400 text-amber-400" : "text-line"}
+          />
+        );
+      })}
+    </div>
+  );
+}
+
+function TrustRow({
+  icon,
+  title,
+  subtitle,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  subtitle: string;
+}) {
+  return (
+    <div className="flex items-start gap-3">
+      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-sky text-mercury">
+        {icon}
+      </span>
+      <div>
+        <p className="text-[13px] font-semibold text-ink">{title}</p>
+        <p className="text-xs text-muted">{subtitle}</p>
+      </div>
+    </div>
+  );
+}
+
+export default function ProductInfo({ product }: { product: Product }) {
+  const [qty, setQty] = useState(1);
+  const [color, setColor] = useState(0);
+  const onSale = product.oldPrice != null && product.oldPrice > product.price;
+  const colors = product.colors ?? [];
+
+  return (
+    <div className="flex flex-col">
+      <p className="text-xs font-medium text-muted">{product.category}</p>
+      <h1 className="mt-1 text-2xl font-extrabold tracking-tight text-ink">
+        {product.name}
+      </h1>
+
+      <p className="mt-2 text-sm leading-relaxed text-muted">
+        {product.description}
+      </p>
+
+      {/* Rating */}
+      <div className="mt-2.5 flex items-center gap-2">
+        <Stars rating={product.rating} />
+        <span className="text-xs text-muted">({product.reviews})</span>
+      </div>
+
+      {/* Price */}
+      <div className="mt-3 flex flex-wrap items-center gap-2.5">
+        <span className="text-2xl font-extrabold text-ink">
+          {formatUgx(product.price)}
+        </span>
+        {onSale && (
+          <span className="text-base font-medium text-muted line-through">
+            {formatUgx(product.oldPrice!)}
+          </span>
+        )}
+        {onSale && (
+          <span className="text-xs font-semibold text-mercury-accent">
+            Discount only this weekend
+          </span>
+        )}
+      </div>
+
+      {/* Color picker (shown only when the product has colour variants). */}
+      {colors.length > 0 && (
+        <div className="mt-4">
+          <p className="text-[13px] font-semibold text-ink">
+            Pick a Color
+            <span className="ml-2 font-normal text-muted">
+              {colors[color].name}
+            </span>
+          </p>
+          <div className="mt-2 flex items-center gap-2.5">
+            {colors.map((c, i) => (
+              <button
+                key={c.name}
+                type="button"
+                aria-label={c.name}
+                onClick={() => setColor(i)}
+                style={{ backgroundColor: c.hex }}
+                className={`flex h-7 w-7 items-center justify-center rounded-lg ring-2 ring-offset-2 transition ${
+                  i === color ? "ring-mercury" : "ring-transparent"
+                }`}
+              >
+                {i === color && (
+                  <Check size={14} className="text-white drop-shadow" />
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Quantity + stock */}
+      <div className="mt-4 flex flex-wrap items-center gap-3">
+        <div className="flex items-center gap-1 rounded-full border border-line p-1">
+          <button
+            type="button"
+            aria-label="Decrease quantity"
+            onClick={() => setQty((q) => Math.max(1, q - 1))}
+            className="flex h-8 w-8 items-center justify-center rounded-full text-ink transition hover:bg-surface-soft disabled:opacity-40"
+            disabled={qty <= 1}
+          >
+            <Minus size={15} />
+          </button>
+          <span className="w-7 text-center text-sm font-bold text-ink tabular-nums">
+            {qty}
+          </span>
+          <button
+            type="button"
+            aria-label="Increase quantity"
+            onClick={() => setQty((q) => Math.min(product.stock ?? 99, q + 1))}
+            className="flex h-8 w-8 items-center justify-center rounded-full text-ink transition hover:bg-surface-soft"
+          >
+            <Plus size={15} />
+          </button>
+        </div>
+
+        {product.stock != null && product.stock <= 10 && (
+          <span className="text-[13px] font-medium text-mercury-accent">
+            Only {product.stock} items left, hurry up!
+          </span>
+        )}
+      </div>
+
+      {/* CTAs */}
+      <div className="mt-5 flex flex-wrap gap-3">
+        <button
+          type="button"
+          className="rounded-full bg-mercury px-7 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-mercury-dark"
+        >
+          Buy Now
+        </button>
+        <button
+          type="button"
+          className="rounded-full border border-line bg-white px-7 py-2.5 text-sm font-semibold text-ink transition hover:border-mercury hover:text-mercury"
+        >
+          Add to Cart
+        </button>
+      </div>
+
+      {/* Trust rows */}
+      <div className="mt-6 flex flex-col gap-3.5 border-t border-line pt-5">
+        <TrustRow
+          icon={<Truck size={16} />}
+          title="Free Delivery"
+          subtitle="Free delivery within Kampala on this order"
+        />
+        <TrustRow
+          icon={<ShieldCheck size={16} />}
+          title="Secure Payments"
+          subtitle="Trusted, secure checkout options available"
+        />
+        <TrustRow
+          icon={<Headphones size={16} />}
+          title="24/7 Support"
+          subtitle="Our support team is here to help anytime"
+        />
+      </div>
+    </div>
+  );
+}

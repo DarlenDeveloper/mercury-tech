@@ -1,37 +1,46 @@
 import Image from "next/image";
+import Link from "next/link";
 import { formatUgx, type Product } from "@/lib/products";
 import WishlistButton from "@/components/WishlistButton";
 
 export default function ProductCard({ product }: { product: Product }) {
   const onSale = product.oldPrice != null && product.oldPrice > product.price;
+  const href = `/product/${product.id}`;
 
   return (
-    <div className="flex flex-col">
+    <div className="group flex flex-col">
       {/* Image tile */}
-      <div className="relative aspect-square overflow-hidden rounded-[18px] border border-[#E3E5EA] bg-[#F0F1F4]">
-        <Image
-          src={product.image}
-          alt={product.name}
-          fill
-          sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 240px"
-          className="object-cover"
-        />
+      <div className="relative">
+        <Link
+          href={href}
+          className="relative block aspect-square overflow-hidden rounded-[18px] border border-[#E3E5EA] bg-[#F0F1F4]"
+        >
+          <Image
+            src={product.image}
+            alt={product.name}
+            fill
+            sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 240px"
+            className="object-cover"
+          />
 
-        {onSale && (
-          <span className="absolute left-2.5 top-2.5 rounded-md bg-mercury px-1.5 py-0.5 text-[9px] font-semibold tracking-wide text-white">
-            SALE
-          </span>
-        )}
+          {onSale && (
+            <span className="absolute left-2.5 top-2.5 rounded-md bg-mercury px-1.5 py-0.5 text-[9px] font-semibold tracking-wide text-white">
+              SALE
+            </span>
+          )}
+        </Link>
 
-        <div className="absolute bottom-2 right-2">
+        <div className="absolute bottom-2 right-2 z-10">
           <WishlistButton />
         </div>
       </div>
 
       {/* Name */}
-      <h3 className="mt-2 truncate text-[13px] font-semibold text-ink">
-        {product.name}
-      </h3>
+      <Link href={href}>
+        <h3 className="mt-2 truncate text-[13px] font-semibold text-ink transition group-hover:text-mercury">
+          {product.name}
+        </h3>
+      </Link>
 
       {/* Description */}
       <p className="mt-0.5 truncate text-[11px] leading-snug text-muted">
