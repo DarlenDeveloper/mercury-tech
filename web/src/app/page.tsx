@@ -1,7 +1,7 @@
 import Header from "@/components/Header";
 import AnnouncementBar from "@/components/AnnouncementBar";
+import Hero from "@/components/Hero";
 import Sidebar from "@/components/Sidebar";
-import PromoHero from "@/components/PromoHero";
 import PopularCategories from "@/components/PopularCategories";
 import Recommendations from "@/components/Recommendations";
 import Newsletter from "@/components/Newsletter";
@@ -19,7 +19,7 @@ export default function Home() {
           <div className="flex gap-8">
             <Sidebar />
             <div className="min-w-0 flex-1">
-              <PromoHero />
+              <Hero />
               <PopularCategories />
               <Recommendations />
             </div>

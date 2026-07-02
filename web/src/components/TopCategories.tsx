@@ -30,7 +30,8 @@ export default function TopCategories() {
                   {category.name}
                 </p>
                 <p className="mt-0.5 text-xs text-muted">
-                  {category.count} {category.count === 1 ? "item" : "items"}
+                  {category.children.length}{" "}
+                  {category.children.length === 1 ? "category" : "categories"}
                 </p>
               </div>
             </a>
