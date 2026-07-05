@@ -190,3 +190,84 @@ export const ANALYTICS = {
     { name: "Email", value: 5, color: "#9f1239" },
   ] as Segment[],
 };
+
+// ---------------------------------------------------------------------------
+// Products (priced in USD) + USD exchange rate
+// ---------------------------------------------------------------------------
+
+export const USD_RATE = {
+  pair: "USD → UGX",
+  value: 3780, // 1 USD in UGX
+  prev: 3765,
+  updated: "Today, 09:24",
+};
+
+export type ProductStatus = "Published" | "Draft" | "Out of stock";
+
+export type AdminProduct = {
+  id: string;
+  name: string;
+  sku: string;
+  category: string;
+  priceUsd: number;
+  stock: number;
+  status: ProductStatus;
+  image: string;
+};
+
+export const ADMIN_PRODUCTS: AdminProduct[] = [
+  { id: "hp-250-g9", name: "HP 250 G9 Laptop", sku: "MC-LAP-0091", category: "Laptops", priceUsd: 350, stock: 42, status: "Published", image: "/p-hp-250-g9.jpg" },
+  { id: "lenovo-ideapad-1", name: "Lenovo IdeaPad 1", sku: "MC-LAP-0114", category: "Laptops", priceUsd: 357, stock: 18, status: "Published", image: "/p-lenovo-ideapad-1.jpg" },
+  { id: "hp-deskjet-2320", name: "HP DeskJet 2320", sku: "MC-PRN-0032", category: "Printers", priceUsd: 49, stock: 76, status: "Published", image: "/p-hp-deskjet-2320.jpg" },
+  { id: "dell-e2020h", name: "Dell E2020H Monitor", sku: "MC-MON-0025", category: "Monitors", priceUsd: 116, stock: 0, status: "Out of stock", image: "/p-dell-e2020h.jpg" },
+  { id: "dell-optiplex-7020", name: "Dell OptiPlex 7020 MT", sku: "MC-DSK-0007", category: "Desktops", priceUsd: 694, stock: 9, status: "Published", image: "/p-dell-optiplex-7020.jpg" },
+  { id: "hp-smart-tank-581", name: "HP Smart Tank 581", sku: "MC-PRN-0058", category: "Printers", priceUsd: 148, stock: 5, status: "Draft", image: "/p-hp-smart-tank-581.jpg" },
+];
+
+export const PRODUCT_CATEGORIES = [
+  "All",
+  "Laptops",
+  "Desktops",
+  "Monitors",
+  "Printers",
+  "Components",
+  "Accessories",
+];
+
+// ---------------------------------------------------------------------------
+// Orders
+// ---------------------------------------------------------------------------
+
+export type OrderStatus =
+  | "Pending"
+  | "Processing"
+  | "Completed"
+  | "Cancelled";
+
+export type AdminOrder = {
+  id: string;
+  customer: string;
+  email: string;
+  date: string;
+  items: number;
+  total: string;
+  status: OrderStatus;
+};
+
+export const ORDER_SUMMARY = [
+  { label: "Total Orders", value: "3,248" },
+  { label: "Pending", value: "86" },
+  { label: "Completed", value: "2,904" },
+  { label: "Cancelled", value: "112" },
+];
+
+export const ADMIN_ORDERS: AdminOrder[] = [
+  { id: "#MC-10428", customer: "Aisha Nakato", email: "aisha.n@example.com", date: "05 Jul 2026", items: 3, total: "USh 1.86M", status: "Completed" },
+  { id: "#MC-10427", customer: "Daniel Okello", email: "daniel.o@example.com", date: "05 Jul 2026", items: 1, total: "USh 1.32M", status: "Processing" },
+  { id: "#MC-10426", customer: "Grace Auma", email: "grace.a@example.com", date: "04 Jul 2026", items: 2, total: "USh 746K", status: "Pending" },
+  { id: "#MC-10425", customer: "Samuel Mugisha", email: "samuel.m@example.com", date: "04 Jul 2026", items: 5, total: "USh 3.12M", status: "Completed" },
+  { id: "#MC-10424", customer: "Brenda Achieng", email: "brenda.a@example.com", date: "03 Jul 2026", items: 1, total: "USh 437K", status: "Cancelled" },
+  { id: "#MC-10423", customer: "Ivan Ssemwanga", email: "ivan.s@example.com", date: "03 Jul 2026", items: 2, total: "USh 1.12M", status: "Completed" },
+  { id: "#MC-10422", customer: "Patricia Nabirye", email: "patricia.n@example.com", date: "02 Jul 2026", items: 4, total: "USh 2.24M", status: "Processing" },
+  { id: "#MC-10421", customer: "Joseph Kato", email: "joseph.k@example.com", date: "02 Jul 2026", items: 1, total: "USh 560K", status: "Pending" },
+];

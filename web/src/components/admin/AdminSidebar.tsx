@@ -11,7 +11,7 @@ import {
   LayoutGrid,
   Users,
   Wrench,
-  Megaphone,
+  Activity,
   Wallet,
   Globe,
   ShieldCheck,
@@ -46,7 +46,7 @@ const GROUPS: Group[] = [
   {
     title: "Growth",
     items: [
-      { label: "Marketing", icon: Megaphone, href: "/admin/marketing" },
+      { label: "User Tracking", icon: Activity, href: "/admin/user-tracking" },
       { label: "Financial Reports", icon: Wallet, href: "/admin/finance" },
       { label: "Website", icon: Globe, href: "/admin/website" },
     ],
