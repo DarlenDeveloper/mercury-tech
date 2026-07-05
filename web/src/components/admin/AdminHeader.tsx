@@ -1,18 +1,26 @@
 import { Search, Bell, ChevronDown } from "lucide-react";
 
-export default function DashboardTopbar() {
+export default function AdminHeader({
+  title,
+  subtitle,
+  action,
+}: {
+  title: string;
+  subtitle: string;
+  action?: React.ReactNode;
+}) {
   return (
     <header className="flex flex-wrap items-center justify-between gap-4">
       <div>
         <h1 className="text-2xl font-extrabold tracking-tight text-ink">
-          Welcome Back, Daniel!
+          {title}
         </h1>
-        <p className="mt-0.5 text-sm text-muted">
-          Here&apos;s what&apos;s happening with your store today
-        </p>
+        <p className="mt-0.5 text-sm text-muted">{subtitle}</p>
       </div>
 
       <div className="flex items-center gap-3">
+        {action}
+
         <button
           type="button"
           aria-label="Search"

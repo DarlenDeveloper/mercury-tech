@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import {
   House,
   ChartNoAxesColumn,
@@ -22,56 +23,56 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
-type Item = { label: string; icon: LucideIcon; badge?: string };
+type Item = { label: string; icon: LucideIcon; href: string; badge?: string };
 type Group = { title?: string; items: Item[] };
 
 const GROUPS: Group[] = [
   {
     items: [
-      { label: "Dashboard", icon: House },
-      { label: "Analytics", icon: ChartNoAxesColumn },
+      { label: "Dashboard", icon: House, href: "/admin" },
+      { label: "Analytics", icon: ChartNoAxesColumn, href: "/admin/analytics" },
     ],
   },
   {
     title: "Store",
     items: [
-      { label: "Orders", icon: ClipboardList, badge: "24" },
-      { label: "Products", icon: Package },
-      { label: "Categories", icon: LayoutGrid },
-      { label: "Customers", icon: Users },
-      { label: "Repairs & Services", icon: Wrench },
+      { label: "Orders", icon: ClipboardList, href: "/admin/orders", badge: "24" },
+      { label: "Products", icon: Package, href: "/admin/products" },
+      { label: "Categories", icon: LayoutGrid, href: "/admin/categories" },
+      { label: "Customers", icon: Users, href: "/admin/customers" },
+      { label: "Repairs & Services", icon: Wrench, href: "/admin/repairs" },
     ],
   },
   {
     title: "Growth",
     items: [
-      { label: "Marketing", icon: Megaphone },
-      { label: "Financial Reports", icon: Wallet },
-      { label: "Website", icon: Globe },
+      { label: "Marketing", icon: Megaphone, href: "/admin/marketing" },
+      { label: "Financial Reports", icon: Wallet, href: "/admin/finance" },
+      { label: "Website", icon: Globe, href: "/admin/website" },
     ],
   },
   {
     title: "System",
     items: [
-      { label: "Users & Roles", icon: ShieldCheck },
-      { label: "Notifications", icon: Bell, badge: "9" },
-      { label: "Audit Logs", icon: ScrollText },
-      { label: "Settings", icon: Settings },
-      { label: "Help", icon: CircleHelp },
+      { label: "Users & Roles", icon: ShieldCheck, href: "/admin/users" },
+      { label: "Notifications", icon: Bell, href: "/admin/notifications", badge: "9" },
+      { label: "Audit Logs", icon: ScrollText, href: "/admin/audit-logs" },
+      { label: "Settings", icon: Settings, href: "/admin/settings" },
+      { label: "Help", icon: CircleHelp, href: "/admin/help" },
     ],
   },
 ];
 
 export default function AdminSidebar() {
-  const [active, setActive] = useState("Dashboard");
+  const pathname = usePathname();
 
-  const renderItem = ({ label, icon: Icon, badge }: Item) => {
-    const isActive = active === label;
+  const renderItem = ({ label, icon: Icon, href, badge }: Item) => {
+    const isActive =
+      href === "/admin" ? pathname === "/admin" : pathname.startsWith(href);
     return (
-      <button
+      <Link
         key={label}
-        type="button"
-        onClick={() => setActive(label)}
+        href={href}
         className={`flex w-full items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-medium transition ${
           isActive
             ? "bg-ink text-white shadow-sm"
@@ -79,7 +80,7 @@ export default function AdminSidebar() {
         }`}
       >
         <Icon size={18} className="shrink-0" />
-        <span className="flex-1 text-left">{label}</span>
+        <span className="flex-1">{label}</span>
         {badge && (
           <span
             className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold leading-none ${
@@ -91,14 +92,14 @@ export default function AdminSidebar() {
             {badge}
           </span>
         )}
-      </button>
+      </Link>
     );
   };
 
   return (
     <aside className="flex h-full w-64 shrink-0 flex-col bg-white px-4 py-6">
       {/* Brand */}
-      <div className="flex items-center gap-2.5 px-2">
+      <Link href="/admin" className="flex items-center gap-2.5 px-2">
         <Image
           src="/mercury-logo.png"
           alt="Mercury"
@@ -109,7 +110,7 @@ export default function AdminSidebar() {
         <span className="text-lg font-extrabold tracking-tight text-ink">
           Mercury
         </span>
-      </div>
+      </Link>
 
       {/* Scrollable nav */}
       <div className="no-scrollbar mt-6 flex-1 overflow-y-auto">

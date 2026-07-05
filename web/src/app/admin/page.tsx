@@ -1,4 +1,4 @@
-import DashboardTopbar from "@/components/admin/DashboardTopbar";
+import AdminHeader from "@/components/admin/AdminHeader";
 import StatCard from "@/components/admin/StatCard";
 import EarningsChart from "@/components/admin/EarningsChart";
 import TopSellingProducts from "@/components/admin/TopSellingProducts";
@@ -10,7 +10,10 @@ import { STATS } from "@/lib/adminData";
 export default function AdminDashboardPage() {
   return (
     <div className="px-5 py-6 lg:px-8 lg:py-7">
-      <DashboardTopbar />
+      <AdminHeader
+        title="Welcome Back, Daniel!"
+        subtitle="Here's what's happening with your store today"
+      />
 
       <div className="mt-6 grid grid-cols-1 gap-6 xl:grid-cols-[1fr_320px]">
         {/* Center column */}

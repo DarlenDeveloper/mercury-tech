@@ -121,3 +121,72 @@ export const TOP_SELLING: SellingProduct[] = [
   { no: "04", name: "Dell E2020H Monitor", category: "Monitors", inStock: true, sales: "984", image: "/p-dell-e2020h.jpg" },
   { no: "05", name: "Lenovo IdeaPad 1", category: "Laptops", inStock: false, sales: "1.21K", image: "/p-lenovo-ideapad-1.jpg" },
 ];
+
+// ---------------------------------------------------------------------------
+// Analytics page
+// ---------------------------------------------------------------------------
+
+export type Segment = { name: string; value: number; color: string };
+
+export const ANALYTICS = {
+  kpis: [
+    {
+      label: "Revenue",
+      value: "USh 84.6M",
+      delta: "+12.4%",
+      trend: "up" as Trend,
+      spark: [6, 7, 6.5, 8, 7.4, 9, 8.6, 10.2, 9.6, 11.2],
+    },
+    {
+      label: "Orders",
+      value: "3,248",
+      delta: "+8.1%",
+      trend: "up" as Trend,
+      spark: [180, 220, 210, 280, 260, 320, 300, 360, 340, 420],
+    },
+    {
+      label: "Avg. Order Value",
+      value: "USh 260K",
+      delta: "-3.2%",
+      trend: "down" as Trend,
+      spark: [280, 275, 278, 270, 268, 262, 265, 258, 261, 260],
+    },
+    {
+      label: "Conversion Rate",
+      value: "3.9%",
+      delta: "+0.6%",
+      trend: "up" as Trend,
+      spark: [3.1, 3.2, 3.0, 3.4, 3.3, 3.6, 3.5, 3.7, 3.8, 3.9],
+    },
+  ],
+  revenueTrend: {
+    months: [
+      "JAN", "FEB", "MAR", "APR", "MAY", "JUN",
+      "JUL", "AUG", "SEP", "OCT", "NOV", "DEC",
+    ],
+    // Millions of USh.
+    values: [4.2, 5.1, 6.8, 6.0, 7.2, 8.4, 7.1, 6.5, 7.8, 8.9, 9.6, 11.2],
+  },
+  ordersByMonth: {
+    months: [
+      "JAN", "FEB", "MAR", "APR", "MAY", "JUN",
+      "JUL", "AUG", "SEP", "OCT", "NOV", "DEC",
+    ],
+    values: [180, 220, 310, 280, 340, 420, 360, 300, 380, 440, 480, 560],
+  },
+  salesByCategory: [
+    { name: "Computers", value: 38, color: "#1f3e97" },
+    { name: "Phones, TV & Audio", value: 22, color: "#0e7490" },
+    { name: "Printers & Office", value: 16, color: "#ff7a00" },
+    { name: "Components & Power", value: 12, color: "#9f1239" },
+    { name: "Networking", value: 7, color: "#7c3aed" },
+    { name: "Accessories", value: 5, color: "#16a34a" },
+  ] as Segment[],
+  trafficSources: [
+    { name: "Direct", value: 40, color: "#1f3e97" },
+    { name: "Organic Search", value: 28, color: "#16a34a" },
+    { name: "Social", value: 18, color: "#ff7a00" },
+    { name: "Referral", value: 9, color: "#0e7490" },
+    { name: "Email", value: 5, color: "#9f1239" },
+  ] as Segment[],
+};
