@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "322532190054",
+    "project_id": "mercurycomputers-tech",
+    "storage_bucket": "mercurycomputers-tech.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:322532190054:android:48246dc0ca730be8be8aa7",
+        "android_client_info": {
+          "package_name": "com.mercurytech.mercury_tech"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDi7A5mA35fX6PshGnVE4m9DUSVO5X4Y4Y"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
