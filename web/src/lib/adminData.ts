@@ -357,3 +357,76 @@ export const USER_TRACKING = {
     { user: "Mercy Atim", items: 2, value: "USh 874K", step: "Cart review" },
   ],
 };
+
+// ---------------------------------------------------------------------------
+// Customers (will be backed by Firebase users)
+// ---------------------------------------------------------------------------
+
+export type AdminCustomer = {
+  id: string;
+  name: string;
+  email: string;
+  location: string;
+  orders: number;
+  spent: string;
+  status: "Active" | "New" | "Inactive";
+  joined: string;
+  color: string;
+};
+
+export const CUSTOMER_SUMMARY = [
+  { label: "Total Customers", value: "12,480" },
+  { label: "New this month", value: "648" },
+  { label: "Active", value: "9,210" },
+  { label: "Repeat rate", value: "38%" },
+];
+
+export const ADMIN_CUSTOMERS: AdminCustomer[] = [
+  { id: "u1", name: "Aisha Nakato", email: "aisha.n@example.com", location: "Kampala, UG", orders: 26, spent: "USh 4.19M", status: "Active", joined: "Jan 2024", color: "#1f3e97" },
+  { id: "u2", name: "Daniel Okello", email: "daniel.o@example.com", location: "Gulu, UG", orders: 21, spent: "USh 3.56M", status: "Active", joined: "Mar 2024", color: "#0e7490" },
+  { id: "u3", name: "Grace Auma", email: "grace.a@example.com", location: "Jinja, UG", orders: 17, spent: "USh 3.12M", status: "Active", joined: "May 2024", color: "#9f1239" },
+  { id: "u4", name: "Samuel Mugisha", email: "samuel.m@example.com", location: "Mbarara, UG", orders: 15, spent: "USh 2.14M", status: "Inactive", joined: "Jun 2024", color: "#b45309" },
+  { id: "u5", name: "Brenda Achieng", email: "brenda.a@example.com", location: "Kampala, UG", orders: 9, spent: "USh 1.42M", status: "Active", joined: "Sep 2024", color: "#5b21b6" },
+  { id: "u6", name: "Ivan Ssemwanga", email: "ivan.s@example.com", location: "Entebbe, UG", orders: 4, spent: "USh 786K", status: "New", joined: "Jun 2026", color: "#0f766e" },
+  { id: "u7", name: "Patricia Nabirye", email: "patricia.n@example.com", location: "Kampala, UG", orders: 2, spent: "USh 312K", status: "New", joined: "Jul 2026", color: "#be185d" },
+];
+
+// ---------------------------------------------------------------------------
+// Financial reports
+// ---------------------------------------------------------------------------
+
+export const FINANCE = {
+  kpis: [
+    { label: "Gross Revenue", value: "USh 84.6M", delta: "+12.4%", trend: "up" as Trend },
+    { label: "Net Profit", value: "USh 21.3M", delta: "+8.7%", trend: "up" as Trend },
+    { label: "Refunds", value: "USh 2.1M", delta: "-1.2%", trend: "down" as Trend },
+    { label: "Outstanding", value: "USh 5.4M", delta: "+3.5%", trend: "up" as Trend },
+  ],
+  months: [
+    "JAN", "FEB", "MAR", "APR", "MAY", "JUN",
+    "JUL", "AUG", "SEP", "OCT", "NOV", "DEC",
+  ],
+  // Millions of USh
+  revenue: [4.2, 5.1, 6.8, 6.0, 7.2, 8.4, 7.1, 6.5, 7.8, 8.9, 9.6, 11.2],
+  expenses: [3.0, 3.6, 4.4, 4.1, 4.8, 5.2, 4.6, 4.3, 5.0, 5.4, 5.8, 6.4],
+  paymentMethods: [
+    { name: "Mobile Money", value: 54, color: "#1f3e97" },
+    { name: "Card", value: 28, color: "#0e7490" },
+    { name: "Bank Transfer", value: 12, color: "#ff7a00" },
+    { name: "Cash on Delivery", value: 6, color: "#9f1239" },
+  ] as Segment[],
+  transactions: [
+    { id: "TXN-88213", customer: "Aisha Nakato", method: "Mobile Money", date: "05 Jul 2026", amount: "USh 1.86M", status: "Paid" },
+    { id: "TXN-88212", customer: "Daniel Okello", method: "Card", date: "05 Jul 2026", amount: "USh 1.32M", status: "Paid" },
+    { id: "TXN-88211", customer: "Grace Auma", method: "Bank Transfer", date: "04 Jul 2026", amount: "USh 746K", status: "Pending" },
+    { id: "TXN-88210", customer: "Brenda Achieng", method: "Mobile Money", date: "04 Jul 2026", amount: "USh 437K", status: "Refunded" },
+    { id: "TXN-88209", customer: "Samuel Mugisha", method: "Card", date: "03 Jul 2026", amount: "USh 3.12M", status: "Paid" },
+  ] as {
+    id: string;
+    customer: string;
+    method: string;
+    date: string;
+    amount: string;
+    status: "Paid" | "Pending" | "Refunded";
+  }[],
+};
