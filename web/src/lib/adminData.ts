@@ -271,3 +271,89 @@ export const ADMIN_ORDERS: AdminOrder[] = [
   { id: "#MC-10422", customer: "Patricia Nabirye", email: "patricia.n@example.com", date: "02 Jul 2026", items: 4, total: "USh 2.24M", status: "Processing" },
   { id: "#MC-10421", customer: "Joseph Kato", email: "joseph.k@example.com", date: "02 Jul 2026", items: 1, total: "USh 560K", status: "Pending" },
 ];
+
+// ---------------------------------------------------------------------------
+// Website management (carousels, flash sales, site numbers)
+// ---------------------------------------------------------------------------
+
+export type CarouselSlide = {
+  id: string;
+  title: string;
+  subtitle: string;
+  image: string;
+  active: boolean;
+};
+
+export type FlashSale = {
+  id: string;
+  product: string;
+  image: string;
+  discount: string;
+  starts: string;
+  ends: string;
+  status: "Live" | "Scheduled" | "Ended";
+};
+
+export const WEBSITE = {
+  carousel: [
+    { id: "s1", title: "The new Mercury app is here", subtitle: "Shop tech on the go", image: "/hero-mercury-app.png", active: true },
+    { id: "s2", title: "The smarter way to own premium tech", subtitle: "Laptops, desktops & more", image: "/hero-tech.png", active: true },
+    { id: "s3", title: "Your next phone starts here", subtitle: "Premium phones, honest prices", image: "/hero-phones.png", active: false },
+  ] as CarouselSlide[],
+  flashSales: [
+    { id: "f1", product: "HP 250 G9 Laptop", image: "/p-hp-250-g9.jpg", discount: "-15%", starts: "05 Jul", ends: "07 Jul", status: "Live" },
+    { id: "f2", product: "HP Smart Tank 581", image: "/p-hp-smart-tank-581.jpg", discount: "-20%", starts: "08 Jul", ends: "10 Jul", status: "Scheduled" },
+    { id: "f3", product: "Dell E2020H Monitor", image: "/p-dell-e2020h.jpg", discount: "-10%", starts: "28 Jun", ends: "30 Jun", status: "Ended" },
+  ] as FlashSale[],
+  siteStats: [
+    { label: "Years Experience", value: "20+" },
+    { label: "Happy Clients", value: "1000+" },
+    { label: "Brand Partners", value: "50+" },
+    { label: "Support", value: "24/7" },
+  ],
+};
+
+// ---------------------------------------------------------------------------
+// User tracking (wishlist, browsing, abandoned checkouts)
+// ---------------------------------------------------------------------------
+
+export type ActivityAction =
+  | "Viewed product"
+  | "Added to wishlist"
+  | "Added to cart"
+  | "Checked out";
+
+export type UserActivity = {
+  user: string;
+  action: ActivityAction;
+  product: string;
+  time: string;
+};
+
+export const USER_TRACKING = {
+  kpis: [
+    { label: "Wishlist Saves", value: "1,284", delta: "+14%", trend: "up" as Trend },
+    { label: "Abandoned Carts", value: "312", delta: "+6%", trend: "down" as Trend },
+    { label: "Active Sessions", value: "486", delta: "+9%", trend: "up" as Trend },
+    { label: "Avg. Items Viewed", value: "7.2", delta: "+2%", trend: "up" as Trend },
+  ],
+  activity: [
+    { user: "Aisha Nakato", action: "Added to wishlist", product: "HP 250 G9 Laptop", time: "2 min ago" },
+    { user: "Daniel Okello", action: "Checked out", product: "Dell OptiPlex 7020 MT", time: "8 min ago" },
+    { user: "Grace Auma", action: "Added to cart", product: "HP Smart Tank 581", time: "15 min ago" },
+    { user: "Samuel Mugisha", action: "Viewed product", product: "Lenovo IdeaPad 1", time: "23 min ago" },
+    { user: "Brenda Achieng", action: "Added to wishlist", product: "Dell E2020H Monitor", time: "31 min ago" },
+    { user: "Ivan Ssemwanga", action: "Viewed product", product: "HP DeskJet 2320", time: "47 min ago" },
+  ] as UserActivity[],
+  mostWishlisted: [
+    { name: "HP 250 G9 Laptop", image: "/p-hp-250-g9.jpg", count: 342 },
+    { name: "Lenovo IdeaPad 1", image: "/p-lenovo-ideapad-1.jpg", count: 289 },
+    { name: "Dell OptiPlex 7020 MT", image: "/p-dell-optiplex-7020.jpg", count: 176 },
+    { name: "HP Smart Tank 581", image: "/p-hp-smart-tank-581.jpg", count: 148 },
+  ],
+  abandonedCheckouts: [
+    { user: "Patricia Nabirye", items: 3, value: "USh 1.86M", step: "Payment" },
+    { user: "Joseph Kato", items: 1, value: "USh 560K", step: "Shipping" },
+    { user: "Mercy Atim", items: 2, value: "USh 874K", step: "Cart review" },
+  ],
+};
