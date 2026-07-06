@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../models/product.dart';
+import '../screens/auth_flow.dart';
 import '../theme/app_colors.dart';
 import '../utils/format.dart';
 
@@ -164,7 +165,14 @@ class _WishlistButtonState extends State<_WishlistButton> {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () => setState(() => _on = !_on),
+      onTap: () async {
+        final ok = await requireAccount(
+          context,
+          reason: 'Sign in to save items to your wishlist.',
+        );
+        if (!ok) return;
+        setState(() => _on = !_on);
+      },
       child: Container(
         width: 29,
         height: 29,

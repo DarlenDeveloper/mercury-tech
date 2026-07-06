@@ -2,6 +2,8 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import 'data/auth_scope.dart';
+import 'data/catalog_scope.dart';
 import 'firebase_options.dart';
 import 'theme/app_colors.dart';
 import 'screens/main_navigation_screen.dart';
@@ -45,7 +47,9 @@ class MercuryApp extends StatelessWidget {
           ],
         );
       },
-      home: const MainNavigationScreen(),
+      home: const AuthGate(
+        child: CatalogLoader(child: MainNavigationScreen()),
+      ),
     );
   }
 }

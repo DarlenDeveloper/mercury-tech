@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:iconsax_plus/iconsax_plus.dart';
 
+import '../data/auth_scope.dart';
 import '../theme/app_colors.dart';
+import 'auth_flow.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -146,7 +148,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 label: 'Log Out',
                 danger: true,
                 showChevron: false,
-                onTap: () {},
+                onTap: () => AuthScope.of(context).service.signOut(),
               ),
             ],
           ),
@@ -161,10 +163,28 @@ class _ProfileHeaderCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final user = AuthScope.of(context).user;
+    final registered = user != null && !user.isAnonymous;
+    String name;
+    String subtitle;
+    if (registered) {
+      final displayName = user.displayName?.trim() ?? '';
+      name = displayName.isNotEmpty ? displayName : 'Mercury Customer';
+      subtitle = user.email ?? 'Signed in';
+    } else {
+      name = 'Guest User';
+      subtitle = 'Sign in or create an account';
+    }
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        onTap: () {},
+        onTap: registered
+            ? () {}
+            : () => showAuthFlow(
+                  context,
+                  reason: 'Sign in or create an account',
+                ),
         borderRadius: BorderRadius.circular(18),
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 4),
@@ -181,23 +201,23 @@ class _ProfileHeaderCard extends StatelessWidget {
                     color: Colors.white, size: 26),
               ),
               const SizedBox(width: 14),
-              const Expanded(
+              Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Guest User',
-                      style: TextStyle(
+                      name,
+                      style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
                         color: _ProfileScreenState._ink,
                       ),
                     ),
-                    SizedBox(height: 2),
+                    const SizedBox(height: 2),
                     Text(
-                      'Sign in or create an account',
-                      style:
-                          TextStyle(fontSize: 13, color: AppColors.inactive),
+                      subtitle,
+                      style: const TextStyle(
+                          fontSize: 13, color: AppColors.inactive),
                     ),
                   ],
                 ),

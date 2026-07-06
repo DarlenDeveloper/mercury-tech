@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../data/sample_products.dart';
+import '../data/catalog_scope.dart';
 import '../models/category.dart';
 import '../models/product.dart';
 import '../widgets/mercury_filter_chip.dart';
@@ -23,18 +23,17 @@ class _CategoryScreenState extends State<CategoryScreen> {
 
   Category get category => widget.category;
 
-  List<Product> get _products {
-    if (_selected == 0) return kSampleProducts;
+  List<Product> _productsFrom(List<Product> all) {
+    if (_selected == 0) return all;
     final label = category.subcategories[_selected].label;
-    final filtered =
-        kSampleProducts.where((p) => p.category == label).toList();
-    // Fall back to all products when sample data has no exact match.
-    return filtered.isEmpty ? kSampleProducts : filtered;
+    final filtered = all.where((p) => p.category == label).toList();
+    // Fall back to all products when nothing matches the subcategory.
+    return filtered.isEmpty ? all : filtered;
   }
 
   @override
   Widget build(BuildContext context) {
-    final products = _products;
+    final products = _productsFrom(CatalogScope.of(context).products);
 
     return Scaffold(
       backgroundColor: Colors.white,

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:iconsax_plus/iconsax_plus.dart';
 
+import '../data/catalog_scope.dart';
 import '../data/categories.dart';
-import '../data/sample_products.dart';
 import '../models/category.dart';
 import '../theme/app_colors.dart';
 import '../widgets/product_card.dart';
@@ -174,7 +174,7 @@ class _RecommendedSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final products = kSampleProducts;
+    final products = CatalogScope.of(context).products;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

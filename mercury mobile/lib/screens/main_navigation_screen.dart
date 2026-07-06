@@ -48,6 +48,8 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     ProfileScreen(),
   ];
 
+  void _onTap(int index) => setState(() => _currentIndex = index);
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -57,7 +59,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       bottomNavigationBar: MercuryBottomNavBar(
         currentIndex: _currentIndex,
         items: _items,
-        onTap: (index) => setState(() => _currentIndex = index),
+        onTap: _onTap,
       ),
     );
   }

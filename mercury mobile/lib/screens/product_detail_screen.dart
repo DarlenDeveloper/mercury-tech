@@ -4,6 +4,7 @@ import 'package:iconsax_plus/iconsax_plus.dart';
 import '../models/product.dart';
 import '../theme/app_colors.dart';
 import '../utils/format.dart';
+import 'auth_flow.dart';
 
 /// Apple Human Interface Guidelines — iOS Dynamic Type scale at the default
 /// "Large" content size (SF Pro point sizes, leading and tracking). Applied to
@@ -110,8 +111,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                   _TitleRow(
                     product: product,
                     wishlisted: _wishlisted,
-                    onWishlist: () =>
-                        setState(() => _wishlisted = !_wishlisted),
+                    onWishlist: _toggleWishlist,
                   ),
                   const SizedBox(height: 16),
                   _QuantityCard(
@@ -143,19 +143,35 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       ),
       bottomNavigationBar: _BottomBar(
         total: product.price * _qty,
-        onAddToCart: () {
-          ScaffoldMessenger.of(context)
-            ..hideCurrentSnackBar()
-            ..showSnackBar(
-              SnackBar(
-                content: Text('${product.name} (x$_qty) added to cart'),
-                behavior: SnackBarBehavior.floating,
-                duration: const Duration(seconds: 1),
-              ),
-            );
-        },
+        onAddToCart: _addToCart,
       ),
     );
+  }
+
+  Future<void> _toggleWishlist() async {
+    final ok = await requireAccount(
+      context,
+      reason: 'Sign in to save items to your wishlist.',
+    );
+    if (!ok) return;
+    setState(() => _wishlisted = !_wishlisted);
+  }
+
+  Future<void> _addToCart() async {
+    final ok = await requireAccount(
+      context,
+      reason: 'Sign in to add items to your cart and check out.',
+    );
+    if (!ok || !mounted) return;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text('${product.name} (x$_qty) added to cart'),
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 1),
+        ),
+      );
   }
 }
 

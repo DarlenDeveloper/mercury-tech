@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:iconsax_plus/iconsax_plus.dart';
 
+import '../data/catalog_scope.dart';
 import '../data/sample_products.dart';
 import '../models/product.dart';
 import '../theme/app_colors.dart';
@@ -54,16 +55,12 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   String _selectedCategory = kCategories.first;
 
-  List<Product> get _visibleProducts {
-    if (_selectedCategory == kCategories.first) return kSampleProducts;
-    return kSampleProducts
-        .where((p) => p.category == _selectedCategory)
-        .toList();
-  }
-
   @override
   Widget build(BuildContext context) {
-    final products = _visibleProducts;
+    final all = CatalogScope.of(context).products;
+    final products = _selectedCategory == kCategories.first
+        ? all
+        : all.where((p) => p.category == _selectedCategory).toList();
 
     return Stack(
       children: [
