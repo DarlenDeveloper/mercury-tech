@@ -430,3 +430,131 @@ export const FINANCE = {
     status: "Paid" | "Pending" | "Refunded";
   }[],
 };
+
+// ---------------------------------------------------------------------------
+// Categories
+// ---------------------------------------------------------------------------
+
+export type AdminCategory = {
+  name: string;
+  image: string;
+  products: number;
+  subcategories: number;
+  active: boolean;
+};
+
+export const ADMIN_CATEGORIES: AdminCategory[] = [
+  { name: "Computers", image: "/cat-computers.jpeg", products: 128, subcategories: 8, active: true },
+  { name: "Printers & Office", image: "/cat-office.jpeg", products: 64, subcategories: 8, active: true },
+  { name: "Components & Power", image: "/cat-components.jpeg", products: 96, subcategories: 8, active: true },
+  { name: "Networking & Security", image: "/cat-networking.jpeg", products: 52, subcategories: 7, active: true },
+  { name: "Phones, TV & Audio", image: "/cat-phones.jpeg", products: 74, subcategories: 5, active: true },
+  { name: "Accessories", image: "/cat-accessories.jpeg", products: 118, subcategories: 6, active: false },
+];
+
+// ---------------------------------------------------------------------------
+// Repairs & Services
+// ---------------------------------------------------------------------------
+
+export type RepairStatus =
+  | "Received"
+  | "In Progress"
+  | "Awaiting Parts"
+  | "Completed";
+
+export type RepairTicket = {
+  id: string;
+  customer: string;
+  device: string;
+  service: string;
+  technician: string;
+  status: RepairStatus;
+  date: string;
+};
+
+export const REPAIR_SUMMARY = [
+  { label: "Open Tickets", value: "37" },
+  { label: "In Progress", value: "18" },
+  { label: "Awaiting Parts", value: "6" },
+  { label: "Completed (30d)", value: "142" },
+];
+
+export const REPAIR_TICKETS: RepairTicket[] = [
+  { id: "#RS-2041", customer: "Aisha Nakato", device: "HP 250 G9 Laptop", service: "Screen replacement", technician: "Isaac M.", status: "In Progress", date: "05 Jul 2026" },
+  { id: "#RS-2040", customer: "Daniel Okello", device: "Dell OptiPlex 7020", service: "OS reinstall + tune-up", technician: "Brian K.", status: "Completed", date: "05 Jul 2026" },
+  { id: "#RS-2039", customer: "Grace Auma", device: "HP Smart Tank 581", service: "Printhead cleaning", technician: "Unassigned", status: "Received", date: "04 Jul 2026" },
+  { id: "#RS-2038", customer: "Samuel Mugisha", device: "Lenovo IdeaPad 1", service: "Battery replacement", technician: "Isaac M.", status: "Awaiting Parts", date: "03 Jul 2026" },
+  { id: "#RS-2037", customer: "Office Setup — NGO", device: "Network (12 nodes)", service: "CCTV + cabling install", technician: "Field Team", status: "In Progress", date: "02 Jul 2026" },
+];
+
+// ---------------------------------------------------------------------------
+// Users & Roles (admin staff)
+// ---------------------------------------------------------------------------
+
+export type StaffRole = "Owner" | "Admin" | "Manager" | "Support" | "Editor";
+
+export type StaffUser = {
+  name: string;
+  email: string;
+  role: StaffRole;
+  active: boolean;
+  lastActive: string;
+  color: string;
+};
+
+export const ROLE_CARDS = [
+  { role: "Owner", members: 1, desc: "Full access to everything" },
+  { role: "Admin", members: 3, desc: "Manage store, staff and settings" },
+  { role: "Manager", members: 5, desc: "Orders, products and customers" },
+  { role: "Support", members: 8, desc: "Tickets, chat and refunds" },
+];
+
+export const STAFF_USERS: StaffUser[] = [
+  { name: "Daniel Okello", email: "daniel@mercury.co.ug", role: "Owner", active: true, lastActive: "Just now", color: "#1f3e97" },
+  { name: "Sarah Nabbanja", email: "sarah@mercury.co.ug", role: "Admin", active: true, lastActive: "12 min ago", color: "#0e7490" },
+  { name: "Brian Kityo", email: "brian@mercury.co.ug", role: "Manager", active: true, lastActive: "1 hr ago", color: "#9f1239" },
+  { name: "Mercy Atim", email: "mercy@mercury.co.ug", role: "Support", active: false, lastActive: "2 days ago", color: "#b45309" },
+  { name: "Isaac Mwesigwa", email: "isaac@mercury.co.ug", role: "Editor", active: true, lastActive: "3 hr ago", color: "#5b21b6" },
+];
+
+// ---------------------------------------------------------------------------
+// Notifications
+// ---------------------------------------------------------------------------
+
+export type NotificationItem = {
+  id: string;
+  title: string;
+  message: string;
+  audience: string;
+  channel: "Push" | "Email" | "In-app";
+  time: string;
+  status: "Sent" | "Scheduled" | "Draft";
+};
+
+export const NOTIFICATIONS: NotificationItem[] = [
+  { id: "n1", title: "Weekend Flash Sale is live", message: "Up to 20% off laptops this weekend only.", audience: "All customers", channel: "Push", time: "2 hrs ago", status: "Sent" },
+  { id: "n2", title: "Your order has shipped", message: "Order #MC-10427 is on the way.", audience: "Daniel Okello", channel: "Email", time: "8 hrs ago", status: "Sent" },
+  { id: "n3", title: "New arrivals: Gaming laptops", message: "Fresh stock just landed.", audience: "Wishlist: Laptops", channel: "Push", time: "Tomorrow, 09:00", status: "Scheduled" },
+  { id: "n4", title: "Back in stock: Dell E2020H", message: "The monitor you wanted is available.", audience: "Waitlist", channel: "In-app", time: "—", status: "Draft" },
+];
+
+// ---------------------------------------------------------------------------
+// Audit logs
+// ---------------------------------------------------------------------------
+
+export type AuditEntry = {
+  actor: string;
+  action: string;
+  target: string;
+  ip: string;
+  time: string;
+};
+
+export const AUDIT_LOGS: AuditEntry[] = [
+  { actor: "Sarah Nabbanja", action: "Updated product", target: "HP 250 G9 Laptop", ip: "102.89.x.x", time: "Today, 10:24" },
+  { actor: "Brian Kityo", action: "Refunded order", target: "#MC-10424", ip: "102.89.x.x", time: "Today, 09:51" },
+  { actor: "Daniel Okello", action: "Changed role", target: "Mercy Atim → Support", ip: "41.210.x.x", time: "Today, 09:12" },
+  { actor: "Isaac Mwesigwa", action: "Published slide", target: "Homepage carousel #2", ip: "197.157.x.x", time: "Yesterday, 17:40" },
+  { actor: "Sarah Nabbanja", action: "Created flash sale", target: "HP Smart Tank 581 (-20%)", ip: "102.89.x.x", time: "Yesterday, 15:03" },
+  { actor: "System", action: "USD rate updated", target: "1 USD = 3,780 UGX", ip: "—", time: "Yesterday, 09:24" },
+];
