@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import Image from "next/image";
 import { Plus, Search, ListFilter, MoreHorizontal } from "lucide-react";
 import AdminHeader from "@/components/admin/AdminHeader";
@@ -19,12 +22,19 @@ function usd(v: number) {
   return `$${v.toLocaleString()}`;
 }
 
-function approxUgx(usdValue: number) {
-  const ugx = usdValue * USD_RATE.value;
-  return `≈ USh ${Math.round(ugx).toLocaleString()}`;
-}
-
 export default function ProductsPage() {
+  // Admin-managed USD → UGX rate; conversions below recompute from it.
+  const [rate, setRate] = useState(USD_RATE.value);
+  const [prevRate, setPrevRate] = useState(USD_RATE.prev);
+
+  const applyRate = (value: number) => {
+    setPrevRate(rate);
+    setRate(value);
+  };
+
+  const approxUgx = (usdValue: number) =>
+    `≈ USh ${Math.round(usdValue * rate).toLocaleString()}`;
+
   return (
     <div className="px-5 py-6 lg:px-8 lg:py-7">
       <AdminHeader
@@ -38,14 +48,14 @@ export default function ProductsPage() {
         }
       />
 
-      {/* USD exchange-rate monitor */}
+      {/* Admin-managed USD → UGX rate */}
       <div className="mt-6">
-        <UsdRateBar />
+        <UsdRateBar rate={rate} prevRate={prevRate} onApply={applyRate} />
       </div>
 
       {/* Filters */}
       <div className="mt-6 flex flex-wrap items-center gap-3">
-        <div className="flex h-10 flex-1 items-center gap-2 rounded-full bg-white px-4 shadow-sm">
+        <div className="flex h-10 flex-1 items-center gap-2 rounded-full bg-white px-4">
           <Search size={16} className="text-muted" />
           <input
             placeholder="Search products or SKU"
@@ -59,14 +69,14 @@ export default function ProductsPage() {
               className={`whitespace-nowrap rounded-full px-3.5 py-2 text-sm font-medium transition ${
                 i === 0
                   ? "bg-ink text-white"
-                  : "bg-white text-muted shadow-sm hover:text-ink"
+                  : "bg-white text-muted hover:text-ink"
               }`}
             >
               {c}
             </button>
           ))}
         </div>
-        <button className="flex h-10 items-center gap-2 rounded-full bg-white px-4 text-sm font-medium text-ink shadow-sm transition hover:text-mercury">
+        <button className="flex h-10 items-center gap-2 rounded-full bg-white px-4 text-sm font-medium text-ink transition hover:text-mercury">
           <ListFilter size={15} />
           Filters
         </button>

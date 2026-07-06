@@ -2,7 +2,8 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { ADMIN_AUTH_KEY } from "@/components/admin/AdminGuard";
 import {
   House,
   ChartNoAxesColumn,
@@ -65,6 +66,12 @@ const GROUPS: Group[] = [
 
 export default function AdminSidebar() {
   const pathname = usePathname();
+  const router = useRouter();
+
+  const logout = () => {
+    window.localStorage.removeItem(ADMIN_AUTH_KEY);
+    router.push("/login");
+  };
 
   const renderItem = ({ label, icon: Icon, href, badge }: Item) => {
     const isActive =
@@ -131,6 +138,7 @@ export default function AdminSidebar() {
       {/* Log out */}
       <button
         type="button"
+        onClick={logout}
         className="mt-4 flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-medium text-muted transition hover:bg-surface-soft hover:text-ink"
       >
         <LogOut size={18} />

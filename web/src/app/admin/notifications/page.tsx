@@ -38,7 +38,7 @@ export default function NotificationsPage() {
             className={`rounded-full px-3.5 py-2 text-sm font-medium transition ${
               i === 0
                 ? "bg-ink text-white"
-                : "bg-white text-muted shadow-sm hover:text-ink"
+                : "bg-white text-muted hover:text-ink"
             }`}
           >
             {t}

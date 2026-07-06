@@ -21,7 +21,7 @@ export default function AuditLogsPage() {
       />
 
       {/* Search */}
-      <div className="mt-6 flex h-10 items-center gap-2 rounded-full bg-white px-4 shadow-sm">
+      <div className="mt-6 flex h-10 items-center gap-2 rounded-full bg-white px-4">
         <Search size={16} className="text-muted" />
         <input
           placeholder="Search by member, action or target"
