@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Star, Minus, Plus, Truck, ShieldCheck, Headphones, Check } from "lucide-react";
 import { formatUgx, type Product } from "@/lib/products";
+import AddToCartButton from "@/components/AddToCartButton";
 
 function Stars({ rating }: { rating: number }) {
   return (
@@ -147,18 +148,13 @@ export default function ProductInfo({ product }: { product: Product }) {
 
       {/* CTAs */}
       <div className="mt-5 flex flex-wrap gap-3">
-        <button
-          type="button"
-          className="rounded-full bg-mercury px-7 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-mercury-dark"
-        >
-          Buy Now
-        </button>
-        <button
-          type="button"
-          className="rounded-full border border-line bg-white px-7 py-2.5 text-sm font-semibold text-ink transition hover:border-mercury hover:text-mercury"
-        >
-          Add to Cart
-        </button>
+        <AddToCartButton
+          productId={product.id}
+          name={product.name}
+          category={product.category}
+          priceUsd={product.price / 3780}
+          image={product.image}
+        />
       </div>
 
       {/* Trust rows */}

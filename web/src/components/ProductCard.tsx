@@ -31,7 +31,7 @@ export default function ProductCard({ product }: { product: Product }) {
         </Link>
 
         <div className="absolute bottom-2 right-2 z-10">
-          <WishlistButton />
+          <WishlistButton productId={product.id} />
         </div>
       </div>
 

@@ -5,6 +5,7 @@ import AnnouncementBar from "@/components/AnnouncementBar";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ProductCard from "@/components/ProductCard";
+import { ProductGridSkeleton } from "@/components/ProductCardSkeleton";
 import Sidebar from "@/components/Sidebar";
 import { CATEGORIES } from "@/lib/categories";
 import { getProductsFromFirestore } from "@/lib/getProducts";
