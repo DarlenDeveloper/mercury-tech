@@ -389,15 +389,27 @@ class _OrderConfirmationSheetState extends State<_OrderConfirmationSheet> {
   Widget build(BuildContext context) {
     return Padding(
       padding: EdgeInsets.fromLTRB(
-          20, 24, 20, MediaQuery.of(context).padding.bottom + 20),
+          20, 12, 20, MediaQuery.of(context).padding.bottom + 20),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Drag handle
+          Center(
+            child: Container(
+              width: 36,
+              height: 4,
+              decoration: BoxDecoration(
+                color: const Color(0xFFD1D5DB),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
+          const SizedBox(height: 20),
           const Text(
             'Order confirmation',
             style: TextStyle(
-              fontSize: 22,
+              fontSize: 24,
               fontWeight: FontWeight.w800,
               color: _ink,
             ),
@@ -407,22 +419,23 @@ class _OrderConfirmationSheetState extends State<_OrderConfirmationSheet> {
           _PaymentOption(
             selected: _selectedPayment == 0,
             onTap: () => setState(() => _selectedPayment = 0),
-            color: const Color(0xFFFFCC00),
             label: 'MTN Mobile Money',
             subtitle: 'Pay with MTN MoMo',
-            icon: Icons.phone_android,
+            logo: 'assets/images/mtn-logo.jpeg',
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
           // Airtel Money
           _PaymentOption(
             selected: _selectedPayment == 1,
             onTap: () => setState(() => _selectedPayment = 1),
-            color: const Color(0xFFED1C24),
             label: 'Airtel Money',
             subtitle: 'Pay with Airtel Money',
-            icon: Icons.phone_android,
+            logo: 'assets/images/airtel-logo.jpeg',
           ),
           const SizedBox(height: 24),
+          // Divider
+          const Divider(height: 1, color: Color(0xFFE5E7EB)),
+          const SizedBox(height: 20),
           // Delivery address
           const Text(
             'Delivery address',
@@ -432,66 +445,63 @@ class _OrderConfirmationSheetState extends State<_OrderConfirmationSheet> {
               color: _ink,
             ),
           ),
-          const SizedBox(height: 12),
-          Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              border: Border.all(color: const Color(0xFFE5E7EB)),
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: Row(
-              children: [
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF0F1F4),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: const Icon(IconsaxPlusLinear.location,
-                      size: 20, color: _ink),
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF0F1F4),
+                  borderRadius: BorderRadius.circular(10),
                 ),
-                const SizedBox(width: 12),
-                const Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Kampala, Uganda',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: _ink,
-                        ),
+                child: const Icon(IconsaxPlusLinear.location,
+                    size: 20, color: _ink),
+              ),
+              const SizedBox(width: 12),
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Kampala, Uganda',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: _ink,
                       ),
-                      Text(
-                        'Enter delivery address',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: AppColors.inactive,
-                        ),
+                    ),
+                    Text(
+                      'Enter delivery address',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: AppColors.inactive,
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-                const Icon(IconsaxPlusLinear.edit_2,
-                    size: 18, color: AppColors.inactive),
-              ],
-            ),
+              ),
+              const Icon(IconsaxPlusLinear.edit_2,
+                  size: 18, color: AppColors.inactive),
+            ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
           // Estimated delivery
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: const [
               Text(
                 'Estimated delivery time:',
-                style: TextStyle(fontSize: 13, color: AppColors.inactive),
+                style: TextStyle(
+                  fontSize: 13,
+                  fontStyle: FontStyle.italic,
+                  color: AppColors.inactive,
+                ),
               ),
               Text(
                 '1-3 days',
                 style: TextStyle(
-                  fontSize: 13,
+                  fontSize: 14,
                   fontWeight: FontWeight.w700,
                   color: _ink,
                 ),
@@ -513,39 +523,40 @@ class _OrderConfirmationSheetState extends State<_OrderConfirmationSheet> {
                   Text(
                     formatUgx(widget.total),
                     style: const TextStyle(
-                      fontSize: 20,
+                      fontSize: 22,
                       fontWeight: FontWeight.w800,
                       color: _ink,
                     ),
                   ),
                 ],
               ),
-              const SizedBox(width: 20),
-              Expanded(
-                child: Material(
-                  color: _dark,
+              const Spacer(),
+              Material(
+                color: _dark,
+                borderRadius: BorderRadius.circular(30),
+                elevation: 4,
+                shadowColor: _dark.withValues(alpha: 0.3),
+                child: InkWell(
+                  onTap: () => Navigator.of(context).pop(),
                   borderRadius: BorderRadius.circular(30),
-                  child: InkWell(
-                    onTap: () => Navigator.of(context).pop(),
-                    borderRadius: BorderRadius.circular(30),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: const [
-                          Icon(Icons.check_circle_outline,
-                              size: 18, color: Colors.white),
-                          SizedBox(width: 8),
-                          Text(
-                            'Place Order',
-                            style: TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w700,
-                              color: Colors.white,
-                            ),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 14, horizontal: 24),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: const [
+                        Icon(IconsaxPlusBold.shield_tick,
+                            size: 16, color: Colors.white),
+                        SizedBox(width: 8),
+                        Text(
+                          'Place Order',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
@@ -562,42 +573,37 @@ class _PaymentOption extends StatelessWidget {
   const _PaymentOption({
     required this.selected,
     required this.onTap,
-    required this.color,
     required this.label,
     required this.subtitle,
-    required this.icon,
+    required this.logo,
   });
 
   final bool selected;
   final VoidCallback onTap;
-  final Color color;
   final String label;
   final String subtitle;
-  final IconData icon;
+  final String logo;
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.all(14),
+        padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: selected ? const Color(0xFF1A2E3B) : Colors.white,
+          color: selected ? const Color(0xFF1A2E3B) : const Color(0xFFF7F7F8),
           borderRadius: BorderRadius.circular(14),
-          border: selected
-              ? null
-              : Border.all(color: const Color(0xFFE5E7EB)),
         ),
         child: Row(
           children: [
             Container(
-              width: 38,
-              height: 38,
+              width: 40,
+              height: 40,
               decoration: BoxDecoration(
-                color: color,
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(10),
               ),
-              child: Icon(icon, size: 20, color: Colors.white),
+              clipBehavior: Clip.antiAlias,
+              child: Image.asset(logo, fit: BoxFit.cover),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -612,6 +618,7 @@ class _PaymentOption extends StatelessWidget {
                       color: selected ? Colors.white : const Color(0xFF1F2937),
                     ),
                   ),
+                  const SizedBox(height: 1),
                   Text(
                     subtitle,
                     style: TextStyle(
@@ -626,7 +633,7 @@ class _PaymentOption extends StatelessWidget {
             ),
             Icon(
               selected ? Icons.radio_button_checked : Icons.radio_button_off,
-              size: 22,
+              size: 20,
               color: selected ? Colors.white : AppColors.inactive,
             ),
           ],
