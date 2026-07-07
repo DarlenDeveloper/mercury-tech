@@ -44,67 +44,41 @@ class MercuryBottomNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        SafeArea(
-          top: false,
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(38),
-              child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 22, sigmaY: 22),
-                child: Container(
-                  decoration: BoxDecoration(
-                    // Translucent off-white/light grey — blends with white apps.
-                    color: const Color(0xFFF7F7F8).withValues(alpha: 0.92),
-                    borderRadius: BorderRadius.circular(38),
-                    boxShadow: const [
-                      BoxShadow(
-                        color: AppColors.shadow,
-                        blurRadius: 30,
-                        offset: Offset(0, 10),
+    return SafeArea(
+      top: false,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(38),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 22, sigmaY: 22),
+            child: Container(
+              decoration: BoxDecoration(
+                // Light warm grey with translucency.
+                color: const Color(0xFFF5F4F3).withValues(alpha: 0.85),
+                borderRadius: BorderRadius.circular(38),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  vertical: 12,
+                  horizontal: 8,
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    for (var i = 0; i < items.length; i++)
+                      _NavBarItem(
+                        item: items[i],
+                        selected: i == currentIndex,
+                        onTap: () => onTap(i),
                       ),
-                    ],
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      vertical: 8,
-                      horizontal: 6,
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: [
-                        for (var i = 0; i < items.length; i++)
-                          _NavBarItem(
-                            item: items[i],
-                            selected: i == currentIndex,
-                            onTap: () => onTap(i),
-                          ),
-                      ],
-                    ),
-                  ),
+                  ],
                 ),
               ),
             ),
           ),
         ),
-        // White fade below the navbar toward the screen edge.
-        Container(
-          height: 28,
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                Color(0x00FFFFFF),
-                Color(0xFFFFFFFF),
-              ],
-            ),
-          ),
-        ),
-      ],
+      ),
     );
   }
 }

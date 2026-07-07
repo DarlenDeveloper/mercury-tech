@@ -79,6 +79,8 @@ class _HomeScreenState extends State<HomeScreen> {
               const SliverToBoxAdapter(child: _SearchField()),
               const SliverToBoxAdapter(child: SizedBox(height: 20)),
               const SliverToBoxAdapter(child: _PromoCarousel()),
+              const SliverToBoxAdapter(child: SizedBox(height: 24)),
+              const SliverToBoxAdapter(child: _TopTechSection()),
               const SliverToBoxAdapter(child: SizedBox(height: 18)),
           SliverToBoxAdapter(
             child: _CategoryChips(
@@ -590,9 +592,9 @@ class _HomeGradientBackdrop extends StatelessWidget {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              Color(0xFFCFE4FB), // soft sky blue
-              Color(0xFFE3EEFB),
-              Color(0xFFF5F7FB), // page background
+              Color(0xFFFDE8C8), // soft warm orange
+              Color(0xFFFEF3E2),
+              Color(0xFFFAFAFA), // page background
             ],
             stops: [0.0, 0.55, 1.0],
           ),
@@ -682,6 +684,177 @@ class _QuickActionTile extends StatelessWidget {
               fontSize: 12,
               fontWeight: FontWeight.w600,
               color: Color(0xFF1F2937),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+
+// ─────────────────────────────────────────────────────────────────────────────
+// "Explore our Top Tech" — horizontally scrollable category cards
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _TopTechItem {
+  const _TopTechItem({
+    required this.tag,
+    required this.headline,
+    required this.image,
+  });
+
+  final String tag;
+  final String headline;
+  final String image;
+}
+
+class _TopTechSection extends StatelessWidget {
+  const _TopTechSection();
+
+  static const _items = <_TopTechItem>[
+    _TopTechItem(
+      tag: 'SHOP LAPTOPS',
+      headline: 'Serious Power.\nCertified Savings.',
+      image: 'assets/images/macbooks-removebg.png',
+    ),
+    _TopTechItem(
+      tag: 'SHOP PRINTERS',
+      headline: 'Work Ready.\nAlways.',
+      image: 'assets/images/printers-removebg.png',
+    ),
+    _TopTechItem(
+      tag: 'SHOP PHONES',
+      headline: 'Your Next Phone\nStarts Here.',
+      image: 'assets/images/phones-removebg.png',
+    ),
+    _TopTechItem(
+      tag: 'SHOP NETWORKING',
+      headline: 'Stay Connected.\nStay Secure.',
+      image: 'assets/images/networking-removebg.png',
+    ),
+    _TopTechItem(
+      tag: 'SHOP ACCESSORIES',
+      headline: 'Complete Your\nSetup.',
+      image: 'assets/images/accessories-removebg-preview.png',
+    ),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        const Text(
+          'TRUSTED BY MANY, LOVED BY ALL.',
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w600,
+            letterSpacing: 1.2,
+            color: AppColors.inactive,
+          ),
+        ),
+        const SizedBox(height: 6),
+        const Text(
+          'Explore our Top Tech.',
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w800,
+            color: Color(0xFF1F2937),
+          ),
+        ),
+        const SizedBox(height: 16),
+        SizedBox(
+          height: 340,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            itemCount: _items.length,
+            separatorBuilder: (_, __) => const SizedBox(width: 14),
+            itemBuilder: (context, i) => _TopTechCard(item: _items[i]),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _TopTechCard extends StatelessWidget {
+  const _TopTechCard({required this.item});
+
+  final _TopTechItem item;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 260,
+      decoration: BoxDecoration(
+        color: const Color(0xFFF5F5F5),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Column(
+        children: [
+          const SizedBox(height: 20),
+          // Gradient tag pill
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(20),
+              color: const Color(0xFF1A4D4D),
+            ),
+            child: Text(
+              item.tag,
+              style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                color: Colors.white,
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          // Headline
+          Text(
+            item.headline,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w800,
+              height: 1.2,
+              color: Color(0xFF1F2937),
+            ),
+          ),
+          const SizedBox(height: 12),
+          // Product image with green gradient at bottom
+          Expanded(
+            child: ClipRRect(
+              borderRadius:
+                  const BorderRadius.vertical(bottom: Radius.circular(20)),
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  // Soft orange gradient behind the image
+                  const DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Color(0x00FFFFFF),
+                          Color(0xFFFDE8C8),
+                        ],
+                        stops: [0.3, 1.0],
+                      ),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(0),
+                    child: Image.asset(
+                      item.image,
+                      fit: BoxFit.contain,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ],
