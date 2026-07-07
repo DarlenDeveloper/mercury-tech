@@ -53,7 +53,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFAFAFA),
+      backgroundColor: Colors.white,
       extendBody: true,
       body: IndexedStack(index: _currentIndex, children: _pages),
       bottomNavigationBar: MercuryBottomNavBar(

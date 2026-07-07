@@ -61,68 +61,143 @@ class _HomeScreenState extends State<HomeScreen> {
     final products = _selectedCategory == kCategories.first
         ? all
         : all.where((p) => p.category == _selectedCategory).toList();
+    final topPadding = MediaQuery.of(context).padding.top;
 
     return Stack(
       children: [
-        // Soft blue gradient that fades into the page background behind the
-        // header, search field and quick actions.
-        const _HomeGradientBackdrop(),
-        SafeArea(
-          top: false,
-          bottom: false,
-          child: CustomScrollView(
-            slivers: [
-              SliverToBoxAdapter(
-                child: SizedBox(height: MediaQuery.of(context).padding.top),
-              ),
-              const SliverToBoxAdapter(child: _HomeHeader()),
-              const SliverToBoxAdapter(child: _SearchField()),
-              const SliverToBoxAdapter(child: SizedBox(height: 20)),
-              const SliverToBoxAdapter(child: _PromoCarousel()),
-              const SliverToBoxAdapter(child: SizedBox(height: 24)),
-              const SliverToBoxAdapter(child: _TopTechSection()),
-              const SliverToBoxAdapter(child: SizedBox(height: 18)),
-          SliverToBoxAdapter(
-            child: _CategoryChips(
-              onSelected: (c) => setState(() => _selectedCategory = c),
+        // Fixed orange gradient banner behind everything
+        Container(
+          width: double.infinity,
+          height: topPadding + 56,
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Color(0xFF1A4D4D),
+                Color(0xFF163F3F),
+              ],
             ),
           ),
-          const SliverToBoxAdapter(
-            child: _SectionHeader(title: 'Top rated'),
+          alignment: Alignment.center,
+          padding: EdgeInsets.only(top: topPadding - 4),
+          child: GestureDetector(
+            onTap: () {
+              // TODO: navigate to deals
+            },
+            child: const _AnimatedDealsBanner(),
           ),
-          SliverToBoxAdapter(
-            child: _ProductRail(products: products),
-          ),
-          const SliverToBoxAdapter(child: SizedBox(height: 10)),
-          const SliverToBoxAdapter(
-            child: _SectionHeader(title: "What's new"),
-          ),
-          SliverToBoxAdapter(
-            child: _ProductRail(products: products.reversed.toList()),
-          ),
-          const SliverToBoxAdapter(child: SizedBox(height: 120)),
-            ],
-          ),
+        ),
+        // Scrollable content that covers the orange banner
+        CustomScrollView(
+          slivers: [
+            SliverToBoxAdapter(
+              child: SizedBox(height: topPadding + 42),
+            ),
+            SliverToBoxAdapter(child: _UserRow()),
+            const SliverToBoxAdapter(child: _SearchField()),
+            SliverToBoxAdapter(
+              child: Container(
+                color: Colors.white,
+                child: const SizedBox(height: 20),
+              ),
+            ),
+            SliverToBoxAdapter(
+              child: Container(
+                color: Colors.white,
+                child: const _PromoCarousel(),
+              ),
+            ),
+            SliverToBoxAdapter(
+              child: Container(
+                color: Colors.white,
+                child: const SizedBox(height: 24),
+              ),
+            ),
+            SliverToBoxAdapter(
+              child: Container(
+                color: Colors.white,
+                child: const _TopTechSection(),
+              ),
+            ),
+            SliverToBoxAdapter(
+              child: Container(
+                color: Colors.white,
+                child: const SizedBox(height: 18),
+              ),
+            ),
+            SliverToBoxAdapter(
+              child: Container(
+                color: Colors.white,
+                child: _CategoryChips(
+                  onSelected: (c) => setState(() => _selectedCategory = c),
+                ),
+              ),
+            ),
+            SliverToBoxAdapter(
+              child: Container(
+                color: Colors.white,
+                child: const _SectionHeader(title: 'Top rated'),
+              ),
+            ),
+            SliverToBoxAdapter(
+              child: Container(
+                color: Colors.white,
+                child: _ProductRail(products: products),
+              ),
+            ),
+            SliverToBoxAdapter(
+              child: Container(
+                color: Colors.white,
+                child: const SizedBox(height: 10),
+              ),
+            ),
+            SliverToBoxAdapter(
+              child: Container(
+                color: Colors.white,
+                child: const _SectionHeader(title: "What's new"),
+              ),
+            ),
+            SliverToBoxAdapter(
+              child: Container(
+                color: Colors.white,
+                child: _ProductRail(products: products.reversed.toList()),
+              ),
+            ),
+            SliverToBoxAdapter(
+              child: Container(
+                color: Colors.white,
+                child: const SizedBox(height: 120),
+              ),
+            ),
+          ],
         ),
       ],
     );
   }
 }
 
-class _HomeHeader extends StatelessWidget {
-  const _HomeHeader();
+class _UserRow extends StatelessWidget {
+  const _UserRow();
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+    return Container(
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      padding: const EdgeInsets.fromLTRB(20, 18, 20, 0),
       child: Row(
         children: [
-          Image.asset(
-            'assets/images/logo.png',
-            width: 48,
-            height: 48,
-            fit: BoxFit.contain,
+          CircleAvatar(
+            radius: 22,
+            backgroundColor: const Color(0xFFE5E7EB),
+            child: Icon(
+              IconsaxPlusLinear.user,
+              size: 22,
+              color: const Color(0xFF1F2937),
+            ),
           ),
           const SizedBox(width: 12),
           const Expanded(
@@ -144,6 +219,29 @@ class _HomeHeader extends StatelessWidget {
               ],
             ),
           ),
+          // USD currency indicator
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            child: const Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  '🇺🇸',
+                  style: TextStyle(fontSize: 16),
+                ),
+                SizedBox(width: 4),
+                Text(
+                  'USD',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF1F2937),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 4),
           _CircleIconButton(
             icon: IconsaxPlusLinear.notification,
             onTap: () {},
@@ -178,7 +276,8 @@ class _SearchField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
+    return Container(
+      color: Colors.white,
       padding: const EdgeInsets.fromLTRB(20, 18, 20, 0),
       child: Row(
         children: [
@@ -855,6 +954,94 @@ class _TopTechCard extends StatelessWidget {
                   ),
                 ],
               ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Animated deals banner — cycles through promo messages
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _AnimatedDealsBanner extends StatefulWidget {
+  const _AnimatedDealsBanner();
+
+  @override
+  State<_AnimatedDealsBanner> createState() => _AnimatedDealsBannerState();
+}
+
+class _AnimatedDealsBannerState extends State<_AnimatedDealsBanner>
+    with SingleTickerProviderStateMixin {
+  static const _messages = [
+    ('Hot Mercury Deals', 'Premium offers every day'),
+    ('New Weekly Arrivals', 'Fresh stock just dropped'),
+    ('Free Delivery', 'Within Kampala Central'),
+  ];
+
+  int _index = 0;
+  late final AnimationController _controller;
+  late Animation<double> _fadeIn;
+  late Animation<double> _fadeOut;
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 600),
+    );
+    _fadeIn = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeIn),
+    );
+    _fadeOut = Tween<double>(begin: 1.0, end: 0.0).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeOut),
+    );
+    _controller.forward();
+    _timer = Timer.periodic(const Duration(seconds: 3), (_) => _next());
+  }
+
+  void _next() {
+    _controller.reverse().then((_) {
+      if (!mounted) return;
+      setState(() => _index = (_index + 1) % _messages.length);
+      _controller.forward();
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final msg = _messages[_index];
+    return FadeTransition(
+      opacity: _fadeIn,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            msg.$1,
+            style: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              color: Colors.white,
+            ),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            msg.$2,
+            style: const TextStyle(
+              fontSize: 13,
+              color: Colors.white,
             ),
           ),
         ],
