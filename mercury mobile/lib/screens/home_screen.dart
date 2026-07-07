@@ -65,10 +65,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return Stack(
       children: [
-        // Fixed orange gradient banner behind everything
+        // Fixed green banner behind everything
         Container(
           width: double.infinity,
-          height: topPadding + 56,
+          height: topPadding + 80,
           decoration: const BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topCenter,
@@ -80,7 +80,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
           alignment: Alignment.center,
-          padding: EdgeInsets.only(top: topPadding - 4),
+          padding: EdgeInsets.only(top: topPadding - 4, bottom: 24),
           child: GestureDetector(
             onTap: () {
               // TODO: navigate to deals
@@ -88,30 +88,36 @@ class _HomeScreenState extends State<HomeScreen> {
             child: const _AnimatedDealsBanner(),
           ),
         ),
-        // Scrollable content that covers the orange banner
+        // Scrollable content
         CustomScrollView(
           slivers: [
+            // Spacer so carousel starts below the green banner
             SliverToBoxAdapter(
-              child: SizedBox(height: topPadding + 42),
+              child: SizedBox(height: topPadding + 48),
             ),
-            SliverToBoxAdapter(child: _UserRow()),
-            const SliverToBoxAdapter(child: _SearchField()),
+            // Full-bleed carousel
             SliverToBoxAdapter(
               child: Container(
-                color: Colors.white,
-                child: const SizedBox(height: 20),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(24),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.15),
+                      blurRadius: 20,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(24),
+                  child: const _PromoCarousel(),
+                ),
               ),
             ),
             SliverToBoxAdapter(
               child: Container(
                 color: Colors.white,
-                child: const _PromoCarousel(),
-              ),
-            ),
-            SliverToBoxAdapter(
-              child: Container(
-                color: Colors.white,
-                child: const SizedBox(height: 24),
+                child: const SizedBox(height: 16),
               ),
             ),
             SliverToBoxAdapter(
@@ -375,8 +381,9 @@ class _PromoCarouselState extends State<_PromoCarousel> {
 
   @override
   Widget build(BuildContext context) {
+    final topPadding = MediaQuery.of(context).padding.top;
     return SizedBox(
-      height: 260,
+      height: 340,
       child: Stack(
         children: [
           PageView.builder(
@@ -385,7 +392,7 @@ class _PromoCarouselState extends State<_PromoCarousel> {
             onPageChanged: (i) => setState(() => _page = i),
             itemBuilder: (context, i) => _PromoCard(slide: _slides[i]),
           ),
-          // Page dots nested inside the bottom-center notch of the card.
+          // Page dots
           Positioned(
             left: 0,
             right: 0,
@@ -401,8 +408,8 @@ class _PromoCarouselState extends State<_PromoCarousel> {
                     height: 7,
                     decoration: BoxDecoration(
                       color: i == _page
-                          ? AppColors.primary
-                          : AppColors.inactive.withValues(alpha: 0.3),
+                          ? Colors.white
+                          : Colors.white.withValues(alpha: 0.4),
                       borderRadius: BorderRadius.circular(4),
                     ),
                   ),
@@ -422,64 +429,71 @@ class _PromoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 0, 20, 15),
-      child: ClipPath(
-        clipper: _NotchedCardClipper(
-          radius: 22,
-          notchWidth: 150,
-          notchDepth: 17,
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        Image.asset(slide.image, fit: BoxFit.cover),
+        // Dark scrim for text legibility
+        const DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Color(0x33000000),
+                Color(0x00000000),
+                Color(0xAA000000),
+              ],
+              stops: [0.0, 0.4, 1.0],
+            ),
+          ),
         ),
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            Image.asset(slide.image, fit: BoxFit.cover),
-            // Dark scrim on the left for text legibility.
-            const DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.centerLeft,
-                  end: Alignment.centerRight,
-                  colors: [
-                    Color(0xCC000000),
-                    Color(0x33000000),
-                    Colors.transparent
-                  ],
-                  stops: [0.0, 0.55, 1.0],
+        Padding(
+          padding: const EdgeInsets.fromLTRB(24, 0, 24, 44),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.end,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Text(
+                slide.title,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 26,
+                  fontWeight: FontWeight.w800,
+                  height: 1.1,
+                  color: Colors.white,
                 ),
               ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 18, 20, 24),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.end,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    slide.title,
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w800,
-                      height: 1.1,
-                      color: Colors.white,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    slide.subtitle,
-                    style: const TextStyle(
-                      fontSize: 13,
-                      color: Color(0xFFE5E7EB),
-                    ),
-                  ),
-                  const SizedBox(height: 14),
-                  const _ShopNowPill(),
-                ],
+              const SizedBox(height: 6),
+              Text(
+                slide.subtitle,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 14,
+                  color: Color(0xFFE5E7EB),
+                ),
               ),
-            ),
-          ],
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(24),
+                  border: Border.all(color: Colors.white.withValues(alpha: 0.4)),
+                ),
+                child: const Text(
+                  'Shop now',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
-      ),
+      ],
     );
   }
 }
@@ -1023,29 +1037,79 @@ class _AnimatedDealsBannerState extends State<_AnimatedDealsBanner>
   @override
   Widget build(BuildContext context) {
     final msg = _messages[_index];
-    return FadeTransition(
-      opacity: _fadeIn,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(
-            msg.$1,
-            style: const TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w700,
-              color: Colors.white,
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      child: FadeTransition(
+        opacity: _fadeIn,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              msg.$1,
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                color: Colors.white,
+              ),
             ),
-          ),
-          const SizedBox(width: 6),
-          Text(
-            msg.$2,
-            style: const TextStyle(
-              fontSize: 13,
-              color: Colors.white,
+            const SizedBox(width: 6),
+            Text(
+              msg.$2,
+              style: const TextStyle(
+                fontSize: 13,
+                color: Colors.white,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
+    );
+  }
+}
+
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Floating search bar that sits on top of the carousel
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _FloatingSearchBar extends StatelessWidget {
+  const _FloatingSearchBar();
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: Container(
+            height: 46,
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.92),
+              borderRadius: BorderRadius.circular(28),
+            ),
+            child: Row(
+              children: [
+                const Expanded(
+                  child: Text(
+                    'Search for brands or products',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: AppColors.inactive,
+                    ),
+                  ),
+                ),
+                Icon(
+                  IconsaxPlusLinear.search_normal,
+                  size: 20,
+                  color: AppColors.inactive,
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(width: 10),
+        const AiSearchButton(size: 46),
+      ],
     );
   }
 }
