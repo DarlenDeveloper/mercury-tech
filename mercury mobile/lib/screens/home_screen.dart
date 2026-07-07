@@ -79,9 +79,7 @@ class _HomeScreenState extends State<HomeScreen> {
               const SliverToBoxAdapter(child: _SearchField()),
               const SliverToBoxAdapter(child: SizedBox(height: 20)),
               const SliverToBoxAdapter(child: _PromoCarousel()),
-              const SliverToBoxAdapter(child: SizedBox(height: 22)),
-              const SliverToBoxAdapter(child: _QuickActions()),
-          const SliverToBoxAdapter(child: SizedBox(height: 18)),
+              const SliverToBoxAdapter(child: SizedBox(height: 18)),
           SliverToBoxAdapter(
             child: _CategoryChips(
               onSelected: (c) => setState(() => _selectedCategory = c),
@@ -277,7 +275,7 @@ class _PromoCarouselState extends State<_PromoCarousel> {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 200,
+      height: 260,
       child: Stack(
         children: [
           PageView.builder(
@@ -353,7 +351,7 @@ class _PromoCard extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 18, 20, 24),
               child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.end,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
@@ -525,8 +523,8 @@ class _SectionHeader extends StatelessWidget {
           Text(
             title,
             style: const TextStyle(
-              fontSize: 19,
-              fontWeight: FontWeight.w800,
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
               color: Color(0xFF1F2937),
             ),
           ),

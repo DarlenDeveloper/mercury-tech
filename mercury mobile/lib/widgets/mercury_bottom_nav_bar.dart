@@ -44,52 +44,67 @@ class MercuryBottomNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      top: false,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(38),
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 22, sigmaY: 22),
-            child: Container(
-              decoration: BoxDecoration(
-                // Translucent brand blue so content behind shows through.
-                color: const Color(0xBF1F3E97),
-                borderRadius: BorderRadius.circular(38),
-                border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.25),
-                  width: 1,
-                ),
-                boxShadow: const [
-                  BoxShadow(
-                    color: AppColors.shadow,
-                    blurRadius: 30,
-                    offset: Offset(0, 10),
-                  ),
-                ],
-              ),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  vertical: 8,
-                  horizontal: 6,
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    for (var i = 0; i < items.length; i++)
-                      _NavBarItem(
-                        item: items[i],
-                        selected: i == currentIndex,
-                        onTap: () => onTap(i),
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        SafeArea(
+          top: false,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(38),
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 22, sigmaY: 22),
+                child: Container(
+                  decoration: BoxDecoration(
+                    // Translucent off-white/light grey — blends with white apps.
+                    color: const Color(0xFFF7F7F8).withValues(alpha: 0.92),
+                    borderRadius: BorderRadius.circular(38),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: AppColors.shadow,
+                        blurRadius: 30,
+                        offset: Offset(0, 10),
                       ),
-                  ],
+                    ],
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 8,
+                      horizontal: 6,
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        for (var i = 0; i < items.length; i++)
+                          _NavBarItem(
+                            item: items[i],
+                            selected: i == currentIndex,
+                            onTap: () => onTap(i),
+                          ),
+                      ],
+                    ),
+                  ),
                 ),
               ),
             ),
           ),
         ),
-      ),
+        // White fade below the navbar toward the screen edge.
+        Container(
+          height: 28,
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Color(0x00FFFFFF),
+                Color(0xFFFFFFFF),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
@@ -107,14 +122,14 @@ class _NavBarItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = selected ? Colors.white : Colors.white.withValues(alpha: 0.6);
+    final color = selected ? AppColors.primary : AppColors.inactive.withValues(alpha: 0.5);
 
     return Expanded(
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(16),
-        splashColor: Colors.white.withValues(alpha: 0.12),
-        highlightColor: Colors.white.withValues(alpha: 0.08),
+        splashColor: AppColors.primary.withValues(alpha: 0.08),
+        highlightColor: AppColors.primary.withValues(alpha: 0.05),
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 4),
           child: Column(
@@ -139,7 +154,7 @@ class _NavBarItem extends StatelessWidget {
                           color: AppColors.accent,
                           shape: BoxShape.circle,
                           border: Border.all(
-                            color: Colors.white,
+                            color: AppColors.primary,
                             width: 1.5,
                           ),
                         ),

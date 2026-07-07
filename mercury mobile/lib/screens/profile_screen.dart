@@ -17,43 +17,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      top: false,
-      bottom: false,
-      child: ListView(
-        padding: EdgeInsets.fromLTRB(
-          20,
-          MediaQuery.of(context).padding.top + 8,
-          20,
-          120,
-        ),
+    return Scaffold(
+      backgroundColor: const Color(0xFFF5F7FB),
+      body: ListView(
+        padding: EdgeInsets.zero,
         children: [
-          // Header.
-          Row(
-            children: const [
-              SizedBox(width: 40),
-              Expanded(
-                child: Center(
-                  child: Text(
-                    'Profile',
-                    style: TextStyle(
-                      fontSize: 17,
-                      fontWeight: FontWeight.w700,
-                      color: _ink,
-                    ),
-                  ),
-                ),
-              ),
-              Icon(IconsaxPlusLinear.notification, size: 24, color: _ink),
-            ],
-          ),
-          const SizedBox(height: 18),
+          // Hero banner.
+          const _ProfileHeroBanner(),
+          const SizedBox(height: 20),
 
-          // Profile card.
-          const _ProfileHeaderCard(),
-          const SizedBox(height: 18),
-
-          // Shopping.
+          // Manage section.
+          _buildSectionTitle('MANAGE'),
+          const SizedBox(height: 8),
           _SectionCard(
             rows: [
               _ProfileRow(
@@ -62,37 +37,44 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 onTap: () {},
               ),
               _ProfileRow(
-                icon: IconsaxPlusLinear.wallet_money,
-                label: 'Transactions',
+                icon: IconsaxPlusLinear.heart,
+                label: 'My Favorites',
                 onTap: () {},
               ),
               _ProfileRow(
-                icon: IconsaxPlusLinear.receipt_text,
-                label: 'Receipts',
+                icon: IconsaxPlusLinear.clock,
+                label: 'Recently Viewed',
                 onTap: () {},
               ),
               _ProfileRow(
-                icon: IconsaxPlusLinear.card,
-                label: 'Payment Methods',
+                icon: IconsaxPlusLinear.refresh,
+                label: 'Returns & Exchanges',
                 onTap: () {},
               ),
               _ProfileRow(
                 icon: IconsaxPlusLinear.location,
-                label: 'Delivery Addresses',
-                onTap: () {},
-              ),
-              _ProfileRow(
-                icon: IconsaxPlusLinear.heart,
-                label: 'Wishlist',
+                label: 'My Location',
                 onTap: () {},
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
 
-          // Account & security.
+          // Info section.
+          _buildSectionTitle('INFO'),
+          const SizedBox(height: 8),
           _SectionCard(
             rows: [
+              _ProfileRow(
+                icon: IconsaxPlusLinear.message_question,
+                label: 'Help & Support',
+                onTap: () {},
+              ),
+              _ProfileRow(
+                icon: IconsaxPlusLinear.shield_tick,
+                label: 'Policies',
+                onTap: () {},
+              ),
               _ProfileRow(
                 icon: IconsaxPlusLinear.notification,
                 label: 'Notifications',
@@ -103,42 +85,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 label: 'Preferences',
                 onTap: () {},
               ),
-              _ProfileRow(
-                icon: IconsaxPlusLinear.global,
-                label: 'Language',
-                trailingText: 'English',
-                onTap: () {},
-              ),
             ],
           ),
-          const SizedBox(height: 16),
-
-          // Support & legal.
-          _SectionCard(
-            rows: [
-              _ProfileRow(
-                icon: IconsaxPlusLinear.message_question,
-                label: 'Help & Support',
-                onTap: () {},
-              ),
-              _ProfileRow(
-                icon: IconsaxPlusLinear.shield_tick,
-                label: 'Privacy Policy',
-                onTap: () {},
-              ),
-              _ProfileRow(
-                icon: IconsaxPlusLinear.document_text,
-                label: 'Terms of Service',
-                onTap: () {},
-              ),
-              _ProfileRow(
-                icon: IconsaxPlusLinear.message_text,
-                label: 'Send Feedback',
-                onTap: () {},
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
 
           // Log out.
           _SectionCard(
@@ -152,78 +101,118 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
             ],
           ),
+          const SizedBox(height: 120),
         ],
+      ),
+    );
+  }
+
+  Widget _buildSectionTitle(String title) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Text(
+        title,
+        style: const TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.w800,
+          color: _ink,
+          letterSpacing: 0.5,
+        ),
       ),
     );
   }
 }
 
-class _ProfileHeaderCard extends StatelessWidget {
-  const _ProfileHeaderCard();
+/// Full-width hero banner at the top of the Profile tab.
+class _ProfileHeroBanner extends StatelessWidget {
+  const _ProfileHeroBanner();
 
   @override
   Widget build(BuildContext context) {
     final user = AuthScope.of(context).user;
     final registered = user != null && !user.isAnonymous;
-    String name;
-    String subtitle;
-    if (registered) {
-      final displayName = user.displayName?.trim() ?? '';
-      name = displayName.isNotEmpty ? displayName : 'Mercury Customer';
-      subtitle = user.email ?? 'Signed in';
-    } else {
-      name = 'Guest User';
-      subtitle = 'Sign in or create an account';
-    }
 
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: registered
-            ? () {}
-            : () => showAuthFlow(
-                  context,
-                  reason: 'Sign in or create an account',
-                ),
-        borderRadius: BorderRadius.circular(18),
+    return Container(
+      width: double.infinity,
+      decoration: const BoxDecoration(
+        color: Color(0xFF1A2E3B),
+        borderRadius: BorderRadius.vertical(bottom: Radius.circular(28)),
+      ),
+      child: SafeArea(
+        bottom: false,
         child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 4),
-          child: Row(
+          padding: const EdgeInsets.fromLTRB(24, 16, 24, 28),
+          child: Column(
             children: [
+              // Avatar.
               Container(
-                width: 50,
-                height: 50,
-                decoration: const BoxDecoration(
-                  color: AppColors.primary,
+                width: 64,
+                height: 64,
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.15),
                   shape: BoxShape.circle,
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.3),
+                    width: 2,
+                  ),
                 ),
-                child: const Icon(IconsaxPlusBold.user,
-                    color: Colors.white, size: 26),
+                child: const Icon(
+                  IconsaxPlusBold.user,
+                  color: Colors.white,
+                  size: 30,
+                ),
               ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      name,
-                      style: const TextStyle(
-                        fontSize: 16,
+              const SizedBox(height: 14),
+              Text(
+                registered
+                    ? 'Welcome back!'
+                    : 'Welcome to Mercury',
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.white,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                registered
+                    ? (user.email ?? 'Signed in')
+                    : 'Create an account or sign in to track orders,\nand save your shopping history.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 13,
+                  color: Colors.white.withValues(alpha: 0.75),
+                  height: 1.4,
+                ),
+              ),
+              if (!registered) ...[
+                const SizedBox(height: 18),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () => showAuthFlow(
+                      context,
+                      reason: 'Sign in or create an account',
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      foregroundColor: const Color(0xFF1A2E3B),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                      elevation: 0,
+                    ),
+                    child: const Text(
+                      'Get Started',
+                      style: TextStyle(
+                        fontSize: 15,
                         fontWeight: FontWeight.w700,
-                        color: _ProfileScreenState._ink,
                       ),
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      subtitle,
-                      style: const TextStyle(
-                          fontSize: 13, color: AppColors.inactive),
-                    ),
-                  ],
+                  ),
                 ),
-              ),
-              const Icon(Icons.chevron_right,
-                  color: AppColors.inactive, size: 22),
+              ],
             ],
           ),
         ),
@@ -239,24 +228,34 @@ class _SectionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(18),
-      ),
-      child: Column(
-        children: [
-          for (var i = 0; i < rows.length; i++) ...[
-            rows[i],
-            if (i != rows.length - 1)
-              const Divider(
-                height: 1,
-                thickness: 1,
-                indent: 56,
-                color: Color(0xFFF0F1F4),
-              ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(18),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.06),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
           ],
-        ],
+        ),
+        child: Column(
+          children: [
+            for (var i = 0; i < rows.length; i++) ...[
+              rows[i],
+              if (i != rows.length - 1)
+                const Divider(
+                  height: 1,
+                  thickness: 1,
+                  indent: 56,
+                  color: Color(0xFFF0F1F4),
+                ),
+            ],
+          ],
+        ),
       ),
     );
   }
@@ -267,7 +266,6 @@ class _ProfileRow extends StatelessWidget {
     required this.icon,
     required this.label,
     this.onTap,
-    this.trailingText,
     this.showChevron = true,
     this.danger = false,
   });
@@ -275,19 +273,19 @@ class _ProfileRow extends StatelessWidget {
   final IconData icon;
   final String label;
   final VoidCallback? onTap;
-  final String? trailingText;
   final bool showChevron;
   final bool danger;
 
   @override
   Widget build(BuildContext context) {
     final labelColor =
-        danger ? const Color(0xFFE11D2A) : _ProfileScreenState._ink;
-    final iconColor = danger ? const Color(0xFFE11D2A) : AppColors.primary;
+        danger ? const Color(0xFFE11D2A) : const Color(0xFF1F2937);
+    final iconColor =
+        danger ? const Color(0xFFE11D2A) : const Color(0xFF374151);
     return InkWell(
       onTap: onTap,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
         child: Row(
           children: [
             Icon(icon, size: 22, color: iconColor),
@@ -302,17 +300,6 @@ class _ProfileRow extends StatelessWidget {
                 ),
               ),
             ),
-            if (trailingText != null)
-              Padding(
-                padding: const EdgeInsets.only(right: 6),
-                child: Text(
-                  trailingText!,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    color: AppColors.inactive,
-                  ),
-                ),
-              ),
             if (showChevron)
               const Icon(Icons.chevron_right,
                   color: AppColors.inactive, size: 22),
