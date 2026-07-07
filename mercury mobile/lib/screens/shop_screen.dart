@@ -21,20 +21,32 @@ class ShopScreen extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
           child: Row(
             children: [
-              const Icon(IconsaxPlusLinear.search_normal,
-                  size: 20, color: AppColors.inactive),
-              const SizedBox(width: 12),
-              const Expanded(
-                child: Text(
-                  'What are you looking for?',
-                  style: TextStyle(fontSize: 15, color: AppColors.inactive),
+              Expanded(
+                child: Container(
+                  height: 50,
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFEDF1F7),
+                    borderRadius: BorderRadius.circular(30),
+                  ),
+                  child: Row(
+                    children: const [
+                      Icon(IconsaxPlusLinear.search_normal,
+                          size: 20, color: AppColors.inactive),
+                      SizedBox(width: 12),
+                      Text(
+                        'What are you looking for?',
+                        style: TextStyle(fontSize: 14, color: AppColors.inactive),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-              const AiSearchButton(size: 36),
+              const SizedBox(width: 4),
+              const AiSearchButton(size: 50),
             ],
           ),
         ),
-        const Divider(height: 1, color: Color(0xFFE5E7EB)),
         const SizedBox(height: 8),
         // Category cards
         for (final category in kShopCategories)
