@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:iconsax_plus/iconsax_plus.dart';
 
+import '../data/auth_scope.dart';
+import '../data/cart_repository.dart';
 import '../models/product.dart';
 import '../theme/app_colors.dart';
 import '../utils/format.dart';
@@ -163,6 +165,21 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       reason: 'Sign in to add items to your cart and check out.',
     );
     if (!ok || !mounted) return;
+
+    final uid = AuthScope.of(context).user?.uid;
+    if (uid == null) return;
+
+    final cartRepo = CartRepository(uid: uid);
+    await cartRepo.addToCart(CartItem(
+      productId: product.id,
+      name: product.name,
+      category: product.category,
+      priceUsd: product.price / 3780, // convert back to USD
+      qty: _qty,
+      image: product.image,
+    ));
+
+    if (!mounted) return;
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(

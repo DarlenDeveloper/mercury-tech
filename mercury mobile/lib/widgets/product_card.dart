@@ -61,11 +61,23 @@ class ProductCard extends StatelessWidget {
                             ),
                           )
                         : Center(
-                            child: Icon(
-                              product.icon,
-                              size: 40,
-                              color:
-                                  AppColors.primary.withValues(alpha: 0.85),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.image_outlined,
+                                  size: 28,
+                                  color: AppColors.inactive.withValues(alpha: 0.4),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  'No image',
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    color: AppColors.inactive.withValues(alpha: 0.5),
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                   ),

@@ -23,12 +23,27 @@ class _CategoryScreenState extends State<CategoryScreen> {
 
   Category get category => widget.category;
 
+  /// Maps category name to Firestore categoryId.
+  static const _categoryIdMap = {
+    'Computers': 'computers',
+    'Printers & Office': 'printers-office',
+    'Components & Power': 'components-power',
+    'Networking & Security': 'networking-security',
+    'Phones, TV & Audio': 'phones-tv-audio',
+    'Accessories': 'accessories',
+  };
+
   List<Product> _productsFrom(List<Product> all) {
-    if (_selected == 0) return all;
+    final parentId = _categoryIdMap[category.name];
+    // First filter by parent category
+    final categoryProducts = parentId != null
+        ? all.where((p) => p.categoryId == parentId).toList()
+        : all;
+
+    if (_selected == 0) return categoryProducts;
     final label = category.subcategories[_selected].label;
-    final filtered = all.where((p) => p.category == label).toList();
-    // Fall back to all products when nothing matches the subcategory.
-    return filtered.isEmpty ? all : filtered;
+    final filtered = categoryProducts.where((p) => p.category == label).toList();
+    return filtered.isEmpty ? categoryProducts : filtered;
   }
 
   @override

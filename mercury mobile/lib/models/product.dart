@@ -14,6 +14,7 @@ class Product {
     required this.category,
     required this.icon,
     required this.accent,
+    this.categoryId,
     this.image,
     this.oldPrice,
     this.isNew = false,
@@ -32,13 +33,16 @@ class Product {
 
   final String category;
 
+  /// Parent category ID (matches Firestore categoryId, e.g. "computers").
+  final String? categoryId;
+
   /// Placeholder glyph used when no [image] is available.
   final IconData icon;
 
   /// Pastel background behind the placeholder glyph.
   final Color accent;
 
-  /// Optional product photo asset path.
+  /// Optional product photo asset path or URL.
   final String? image;
 
   /// Marks the product with a "New" badge.

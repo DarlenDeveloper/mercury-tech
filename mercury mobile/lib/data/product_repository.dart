@@ -73,6 +73,7 @@ class ProductRepository {
       price: (priceUsd * rate).round(),
       oldPrice: oldPriceUsd != null ? (oldPriceUsd * rate).round() : null,
       category: category,
+      categoryId: (data['categoryId'] as String?),
       icon: _iconFor(category),
       accent: _pastelAccents[index % _pastelAccents.length],
       image: images.isNotEmpty ? images.first : null,

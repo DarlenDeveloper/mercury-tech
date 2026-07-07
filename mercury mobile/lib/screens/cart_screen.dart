@@ -1,16 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:iconsax_plus/iconsax_plus.dart';
 
-import '../data/sample_products.dart';
-import '../models/product.dart';
+import '../data/auth_scope.dart';
+import '../data/cart_repository.dart';
+import '../data/order_repository.dart';
 import '../theme/app_colors.dart';
 import '../utils/format.dart';
-
-class _CartItem {
-  _CartItem(this.product, this.qty);
-  final Product product;
-  int qty;
-}
 
 class CartScreen extends StatefulWidget {
   const CartScreen({super.key});
@@ -23,34 +18,26 @@ class _CartScreenState extends State<CartScreen> {
   static const _ink = Color(0xFF1F2937);
   static const _dark = Color(0xFF1A2E3B);
 
-  late final List<_CartItem> _items = [
-    _CartItem(kSampleProducts[0], 1),
-    _CartItem(kSampleProducts[2], 2),
-    _CartItem(kSampleProducts[3], 1),
-  ];
+  CartRepository? _cartRepo;
+  double _rate = 3780;
 
-  int get _total => _items.fold(0, (sum, e) => sum + e.product.price * e.qty);
-
-  void _changeQty(_CartItem item, int delta) {
-    setState(() {
-      final next = item.qty + delta;
-      if (next <= 0) {
-        _items.remove(item);
-      } else {
-        item.qty = next;
-      }
-    });
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final uid = AuthScope.of(context).user?.uid;
+    if (uid != null && (_cartRepo == null || _cartRepo!.uid != uid)) {
+      _cartRepo = CartRepository(uid: uid);
+    }
   }
 
-  void _removeItem(_CartItem item) {
-    setState(() => _items.remove(item));
-  }
+  int _toUgx(double usd) => (usd * _rate).round();
 
   void _clearAll() {
-    setState(() => _items.clear());
+    _cartRepo?.clearCart();
   }
 
-  void _checkout() {
+  void _checkout(List<CartItem> items) {
+    final total = items.fold<double>(0, (s, e) => s + e.priceUsd * e.qty);
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -58,148 +45,183 @@ class _CartScreenState extends State<CartScreen> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      builder: (_) => _OrderConfirmationSheet(total: _total),
+      builder: (_) => _OrderConfirmationSheet(
+        totalUgx: _toUgx(total),
+        onPlaceOrder: (paymentMethod) async {
+          final uid = AuthScope.of(context).user?.uid;
+          if (uid == null) return;
+          final orderRepo = OrderRepository(uid: uid);
+          await orderRepo.placeOrder(
+            items: items,
+            totalUsd: total,
+            paymentMethod: paymentMethod,
+          );
+          await _cartRepo?.clearCart();
+          if (mounted) Navigator.of(context).pop();
+          if (mounted) {
+            ScaffoldMessenger.of(context)
+              ..hideCurrentSnackBar()
+              ..showSnackBar(
+                const SnackBar(
+                  content: Text('Order placed successfully!'),
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
+          }
+        },
+      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      top: false,
-      bottom: false,
-      child: ListView(
-        padding: EdgeInsets.fromLTRB(
-          16,
-          MediaQuery.of(context).padding.top + 12,
-          16,
-          130,
-        ),
-        children: [
-          // Header
-          Row(
+    if (_cartRepo == null) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    return StreamBuilder<List<CartItem>>(
+      stream: _cartRepo!.watchCart(),
+      builder: (context, snapshot) {
+        final items = snapshot.data ?? [];
+        final totalUgx = items.fold<int>(
+            0, (s, e) => s + _toUgx(e.priceUsd * e.qty));
+
+        return SafeArea(
+          top: false,
+          bottom: false,
+          child: ListView(
+            padding: EdgeInsets.fromLTRB(
+              16,
+              MediaQuery.of(context).padding.top + 12,
+              16,
+              130,
+            ),
             children: [
-              const Expanded(
-                child: Text(
-                  'My Order',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.w800,
-                    color: _ink,
-                  ),
-                ),
-              ),
-              if (_items.isNotEmpty)
-                GestureDetector(
-                  onTap: _clearAll,
-                  child: const Icon(IconsaxPlusLinear.trash,
-                      size: 22, color: _ink),
-                ),
-            ],
-          ),
-          const SizedBox(height: 18),
-          // Cart items
-          if (_items.isEmpty)
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 40),
-              child: Center(
-                child: Text(
-                  'Your cart is empty',
-                  style: TextStyle(color: AppColors.inactive),
-                ),
-              ),
-            ),
-          for (final item in _items) ...[
-            _CartItemCard(
-              item: item,
-              onAdd: () => _changeQty(item, 1),
-              onRemove: () => _changeQty(item, -1),
-              onDelete: () => _removeItem(item),
-            ),
-            const SizedBox(height: 12),
-          ],
-          if (_items.isNotEmpty) ...[
-            const SizedBox(height: 8),
-            // Dashed divider
-            CustomPaint(
-              painter: _DashedLinePainter(),
-              size: const Size(double.infinity, 1),
-            ),
-            const SizedBox(height: 16),
-            // Delivery
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: const [
-                Text(
-                  'Delivery services:',
-                  style: TextStyle(fontSize: 14, color: AppColors.inactive),
-                ),
-                Text(
-                  'Free',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: _ink,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 24),
-            // Total + checkout
-            Row(
-              children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Total price',
-                      style: TextStyle(fontSize: 12, color: AppColors.inactive),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      formatUgx(_total),
-                      style: const TextStyle(
-                        fontSize: 20,
+              // Header
+              Row(
+                children: [
+                  const Expanded(
+                    child: Text(
+                      'My Order',
+                      style: TextStyle(
+                        fontSize: 24,
                         fontWeight: FontWeight.w800,
+                        color: _ink,
+                      ),
+                    ),
+                  ),
+                  if (items.isNotEmpty)
+                    GestureDetector(
+                      onTap: _clearAll,
+                      child: const Icon(IconsaxPlusLinear.trash,
+                          size: 22, color: _ink),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 18),
+              // Cart items
+              if (items.isEmpty)
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 40),
+                  child: Center(
+                    child: Text(
+                      'Your cart is empty',
+                      style: TextStyle(color: AppColors.inactive),
+                    ),
+                  ),
+                ),
+              for (final item in items) ...[
+                _CartItemCard(
+                  item: item,
+                  rate: _rate,
+                  onAdd: () => _cartRepo!.setQty(item.productId, item.qty + 1),
+                  onRemove: () => _cartRepo!.setQty(item.productId, item.qty - 1),
+                  onDelete: () => _cartRepo!.removeItem(item.productId),
+                ),
+                const SizedBox(height: 12),
+              ],
+              if (items.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                CustomPaint(
+                  painter: _DashedLinePainter(),
+                  size: const Size(double.infinity, 1),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: const [
+                    Text(
+                      'Delivery services:',
+                      style: TextStyle(fontSize: 14, color: AppColors.inactive),
+                    ),
+                    Text(
+                      'Free',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
                         color: _ink,
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(width: 20),
-                Expanded(
-                  child: Material(
-                    color: _dark,
-                    borderRadius: BorderRadius.circular(30),
-                    child: InkWell(
-                      onTap: _checkout,
-                      borderRadius: BorderRadius.circular(30),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: const [
-                            Icon(IconsaxPlusBold.bag_2,
-                                size: 18, color: Colors.white),
-                            SizedBox(width: 8),
-                            Text(
-                              'Checkout',
-                              style: TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w700,
-                                color: Colors.white,
-                              ),
+                const SizedBox(height: 24),
+                Row(
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Total price',
+                          style: TextStyle(fontSize: 12, color: AppColors.inactive),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          formatUgx(totalUgx),
+                          style: const TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w800,
+                            color: _ink,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(width: 20),
+                    Expanded(
+                      child: Material(
+                        color: _dark,
+                        borderRadius: BorderRadius.circular(30),
+                        child: InkWell(
+                          onTap: () => _checkout(items),
+                          borderRadius: BorderRadius.circular(30),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: const [
+                                Icon(IconsaxPlusBold.bag_2,
+                                    size: 18, color: Colors.white),
+                                SizedBox(width: 8),
+                                Text(
+                                  'Checkout',
+                                  style: TextStyle(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w700,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ],
                             ),
-                          ],
+                          ),
                         ),
                       ),
                     ),
-                  ),
+                  ],
                 ),
               ],
-            ),
-          ],
-        ],
-      ),
+            ],
+          ),
+        );
+      },
     );
   }
 }
@@ -212,12 +234,14 @@ class _CartScreenState extends State<CartScreen> {
 class _CartItemCard extends StatelessWidget {
   const _CartItemCard({
     required this.item,
+    required this.rate,
     required this.onAdd,
     required this.onRemove,
     required this.onDelete,
   });
 
-  final _CartItem item;
+  final CartItem item;
+  final double rate;
   final VoidCallback onAdd;
   final VoidCallback onRemove;
   final VoidCallback onDelete;
@@ -226,7 +250,6 @@ class _CartItemCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final product = item.product;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
@@ -248,10 +271,12 @@ class _CartItemCard extends StatelessWidget {
               ],
             ),
             clipBehavior: Clip.antiAlias,
-            child: product.image != null
-                ? Image.asset(product.image!, fit: BoxFit.cover)
-                : Icon(product.icon,
-                    size: 34, color: AppColors.primary.withValues(alpha: 0.85)),
+            child: item.image != null
+                ? Image.network(item.image!, fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => const Icon(
+                        IconsaxPlusBold.box, size: 34, color: AppColors.inactive))
+                : const Icon(IconsaxPlusBold.box,
+                    size: 34, color: AppColors.inactive),
           ),
           const SizedBox(width: 14),
           // Name + category + price + stepper
@@ -259,13 +284,12 @@ class _CartItemCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Top row: name + delete
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Expanded(
                       child: Text(
-                        product.name,
+                        item.name,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
@@ -283,18 +307,17 @@ class _CartItemCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  product.category,
+                  item.category,
                   style: const TextStyle(
                     fontSize: 12,
                     color: AppColors.inactive,
                   ),
                 ),
                 const SizedBox(height: 8),
-                // Bottom row: price + stepper
                 Row(
                   children: [
                     Text(
-                      formatUgx(product.price),
+                      formatUgx((item.priceUsd * rate).round()),
                       style: const TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w800,
@@ -302,7 +325,6 @@ class _CartItemCard extends StatelessWidget {
                       ),
                     ),
                     const Spacer(),
-                    // Stepper
                     _CircleStepper(qty: item.qty, onAdd: onAdd, onRemove: onRemove),
                   ],
                 ),
@@ -404,9 +426,10 @@ class _DashedLinePainter extends CustomPainter {
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _OrderConfirmationSheet extends StatefulWidget {
-  const _OrderConfirmationSheet({required this.total});
+  const _OrderConfirmationSheet({required this.totalUgx, required this.onPlaceOrder});
 
-  final int total;
+  final int totalUgx;
+  final Future<void> Function(String paymentMethod) onPlaceOrder;
 
   @override
   State<_OrderConfirmationSheet> createState() =>
@@ -555,7 +578,7 @@ class _OrderConfirmationSheetState extends State<_OrderConfirmationSheet> {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    formatUgx(widget.total),
+                    formatUgx(widget.totalUgx),
                     style: const TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.w800,
@@ -571,7 +594,12 @@ class _OrderConfirmationSheetState extends State<_OrderConfirmationSheet> {
                 elevation: 4,
                 shadowColor: _dark.withValues(alpha: 0.3),
                 child: InkWell(
-                  onTap: () => Navigator.of(context).pop(),
+                  onTap: () {
+                    final method = _selectedPayment == 0
+                        ? 'MTN Mobile Money'
+                        : 'Airtel Money';
+                    widget.onPlaceOrder(method);
+                  },
                   borderRadius: BorderRadius.circular(30),
                   child: Padding(
                     padding: const EdgeInsets.symmetric(
