@@ -325,10 +325,28 @@ class _CartItemCard extends StatelessWidget {
             clipBehavior: Clip.antiAlias,
             child: item.image != null
                 ? Image.network(item.image!, fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => const Icon(
-                        IconsaxPlusBold.box, size: 34, color: AppColors.inactive))
-                : const Icon(IconsaxPlusBold.box,
-                    size: 34, color: AppColors.inactive),
+                    errorBuilder: (_, __, ___) => Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.image_outlined, size: 24,
+                            color: AppColors.inactive.withValues(alpha: 0.4)),
+                        const SizedBox(height: 2),
+                        Text('No image',
+                            style: TextStyle(fontSize: 9,
+                                color: AppColors.inactive.withValues(alpha: 0.5))),
+                      ],
+                    ))
+                : Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.image_outlined, size: 24,
+                          color: AppColors.inactive.withValues(alpha: 0.4)),
+                      const SizedBox(height: 2),
+                      Text('No image',
+                          style: TextStyle(fontSize: 9,
+                              color: AppColors.inactive.withValues(alpha: 0.5))),
+                    ],
+                  ),
           ),
           const SizedBox(width: 14),
           // Name + category + price + stepper
