@@ -9,6 +9,7 @@ import '../models/product.dart';
 import '../theme/app_colors.dart';
 import '../widgets/mercury_filter_chip.dart';
 import '../widgets/product_card.dart';
+import '../widgets/product_card_skeleton.dart';
 import '../widgets/ai_search_button.dart';
 import 'product_detail_screen.dart';
 
@@ -57,7 +58,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final all = CatalogScope.of(context).products;
+    final catalogScope = CatalogScope.of(context);
+    final loading = catalogScope.loading;
+    final all = catalogScope.products;
     final products = _selectedCategory == kCategories.first
         ? all
         : all.where((p) => p.category == _selectedCategory).toList();
@@ -89,7 +92,11 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
         // Scrollable content
-        CustomScrollView(
+        RefreshIndicator(
+          onRefresh: catalogScope.reload,
+          color: AppColors.primary,
+          displacement: topPadding + 60,
+          child: CustomScrollView(
           slivers: [
             // Spacer so carousel starts below the green banner
             SliverToBoxAdapter(
@@ -123,7 +130,9 @@ class _HomeScreenState extends State<HomeScreen> {
                     const SizedBox(height: 16),
                     const _TopTechSection(),
                     const _SectionHeader(title: 'New Arrivals'),
-                    _ProductRail(products: products),
+                    loading
+                        ? const ProductRailSkeleton()
+                        : _ProductRail(products: products),
                   ],
                 ),
               ),
@@ -143,7 +152,9 @@ class _HomeScreenState extends State<HomeScreen> {
             SliverToBoxAdapter(
               child: Container(
                 color: Colors.white,
-                child: _ProductRail(products: products.reversed.toList()),
+                child: loading
+                    ? const ProductRailSkeleton()
+                    : _ProductRail(products: products.reversed.toList()),
               ),
             ),
             SliverToBoxAdapter(
@@ -153,6 +164,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
           ],
+        ),
         ),
       ],
     );
