@@ -48,8 +48,13 @@ class ShopScreen extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 8),
-        // Category cards
-        for (final category in kShopCategories)
+        // Category cards — Phones & Accessories first
+        for (final category in [
+          ...kShopCategories.where((c) =>
+              c.name == 'Phones, TV & Audio' || c.name == 'Accessories'),
+          ...kShopCategories.where((c) =>
+              c.name != 'Phones, TV & Audio' && c.name != 'Accessories'),
+        ])
           _ShopCategoryCard(
             category: category,
             onTap: () => Navigator.of(context).push(
@@ -78,7 +83,7 @@ class _ShopCategoryCard extends StatelessWidget {
         child: GestureDetector(
           onTap: onTap,
           child: SizedBox(
-            height: 140,
+            height: 170,
             child: Stack(
               fit: StackFit.expand,
               children: [

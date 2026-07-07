@@ -40,15 +40,17 @@ class MercuryApp extends StatelessWidget {
       ),
       builder: (context, child) {
         // Float the draggable customer-service button above every route.
-        return Stack(
-          children: [
-            if (child != null) Positioned.fill(child: child),
-            DraggableSupportButton(navigatorKey: navigatorKey),
-          ],
+        return CatalogLoader(
+          child: Stack(
+            children: [
+              if (child != null) Positioned.fill(child: child),
+              DraggableSupportButton(navigatorKey: navigatorKey),
+            ],
+          ),
         );
       },
       home: const AuthGate(
-        child: CatalogLoader(child: MainNavigationScreen()),
+        child: MainNavigationScreen(),
       ),
     );
   }
