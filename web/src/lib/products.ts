@@ -15,6 +15,7 @@ export type Product = {
   name: string;
   description: string;
   category: string;
+  categoryId?: string;
   price: number; // Ugandan Shillings
   oldPrice?: number;
   rating: number;

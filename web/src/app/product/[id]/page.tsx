@@ -8,15 +8,8 @@ import ProductGallery from "@/components/product/ProductGallery";
 import ProductInfo from "@/components/product/ProductInfo";
 import ProductTabs from "@/components/product/ProductTabs";
 import RelatedProducts from "@/components/product/RelatedProducts";
-import {
-  PRODUCTS,
-  getProductById,
-  getRelatedProducts,
-} from "@/lib/products";
-
-export function generateStaticParams() {
-  return PRODUCTS.map((p) => ({ id: p.id }));
-}
+import { getProductById, getRelatedProducts } from "@/lib/products";
+import { getProductsFromFirestore } from "@/lib/getProducts";
 
 export default async function ProductPage({
   params,
@@ -24,10 +17,16 @@ export default async function ProductPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const product = getProductById(id);
+
+  // Try Firestore first, fall back to hardcoded data.
+  const allProducts = await getProductsFromFirestore();
+  let product = allProducts.find((p) => p.id === id) ?? getProductById(id);
   if (!product) notFound();
 
-  const related = getRelatedProducts(id);
+  const related = allProducts
+    .filter((p) => p.id !== id && p.category === product!.category)
+    .slice(0, 6);
+
   const gallery =
     product.gallery && product.gallery.length > 0
       ? product.gallery

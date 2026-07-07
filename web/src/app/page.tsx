@@ -6,8 +6,11 @@ import PopularCategories from "@/components/PopularCategories";
 import Recommendations from "@/components/Recommendations";
 import Newsletter from "@/components/Newsletter";
 import Footer from "@/components/Footer";
+import { getProductsFromFirestore } from "@/lib/getProducts";
 
-export default function Home() {
+export default async function Home() {
+  const products = await getProductsFromFirestore();
+
   return (
     <>
       <AnnouncementBar />
@@ -21,7 +24,7 @@ export default function Home() {
             <div className="min-w-0 flex-1">
               <Hero />
               <PopularCategories />
-              <Recommendations />
+              <Recommendations products={products} />
             </div>
           </div>
         </section>

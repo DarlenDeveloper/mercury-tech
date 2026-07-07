@@ -20,7 +20,7 @@ export default function Sidebar() {
   };
 
   return (
-    <aside className="sticky top-[84px] hidden w-56 shrink-0 self-start lg:block">
+    <aside className="sticky top-[84px] hidden max-h-[calc(100vh-100px)] w-56 shrink-0 self-start overflow-y-auto lg:block">
       <h2 className="mb-4 text-xl font-semibold tracking-tight text-ink">
         Categories
       </h2>

@@ -39,7 +39,7 @@ export default function PopularCategories() {
           return (
             <a
               key={category.name}
-              href="#"
+              href={`/category/${category.slug}`}
               className="group relative flex flex-col"
             >
               <div

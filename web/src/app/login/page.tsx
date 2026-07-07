@@ -5,19 +5,37 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Mail, Lock, Eye, EyeOff, LogIn } from "lucide-react";
-import { ADMIN_AUTH_KEY } from "@/components/admin/AdminGuard";
+import { signIn } from "@/lib/auth";
 
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [show, setShow] = useState(false);
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
 
-  const submit = (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Demo session; replaced by Firebase Auth with the backend.
-    window.localStorage.setItem(ADMIN_AUTH_KEY, "1");
-    router.push("/admin");
+    setError("");
+    setBusy(true);
+    try {
+      await signIn(email, password);
+      router.push("/admin");
+    } catch (err: any) {
+      const code = err?.code ?? "";
+      if (code === "auth/invalid-credential" || code === "auth/wrong-password") {
+        setError("Incorrect email or password.");
+      } else if (code === "auth/user-not-found") {
+        setError("No account found with this email.");
+      } else if (code === "auth/too-many-requests") {
+        setError("Too many attempts. Try again later.");
+      } else {
+        setError(err?.message ?? "Something went wrong.");
+      }
+    } finally {
+      setBusy(false);
+    }
   };
 
   return (
@@ -93,11 +111,16 @@ export default function LoginPage() {
               </Link>
             </div>
 
+            {error && (
+              <p className="text-xs text-red-500">{error}</p>
+            )}
+
             <button
               type="submit"
-              className="mt-1 h-11 rounded-xl bg-ink text-sm font-semibold text-white transition hover:bg-black"
+              disabled={busy}
+              className="mt-1 h-11 rounded-xl bg-ink text-sm font-semibold text-white transition hover:bg-black disabled:opacity-50"
             >
-              Get Started
+              {busy ? "Signing in..." : "Get Started"}
             </button>
           </form>
         </div>

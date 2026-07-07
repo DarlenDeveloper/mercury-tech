@@ -1,12 +1,9 @@
-import { PRODUCTS } from "@/lib/products";
+import { type Product } from "@/lib/products";
 import ProductCard from "@/components/ProductCard";
 
-export default function Recommendations() {
-  // Repeat the catalog so the grid has enough items to scroll through.
-  const items = Array.from(
-    { length: 36 },
-    (_, i) => PRODUCTS[i % PRODUCTS.length]
-  );
+export default function Recommendations({ products }: { products?: Product[] }) {
+  const catalog = products ?? [];
+  if (catalog.length === 0) return null;
 
   return (
     <section className="mt-8">
@@ -23,9 +20,9 @@ export default function Recommendations() {
         </a>
       </div>
 
-      {/* Grid (flows downward); cards match the mobile app's ~160px width. */}
+      {/* Grid */}
       <div className="grid grid-cols-[repeat(auto-fill,minmax(172px,1fr))] gap-3">
-        {items.map((product, i) => (
+        {catalog.map((product, i) => (
           <ProductCard key={`${product.id}-${i}`} product={product} />
         ))}
       </div>
