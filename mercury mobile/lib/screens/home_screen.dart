@@ -117,39 +117,15 @@ class _HomeScreenState extends State<HomeScreen> {
             SliverToBoxAdapter(
               child: Container(
                 color: Colors.white,
-                child: const SizedBox(height: 16),
-              ),
-            ),
-            SliverToBoxAdapter(
-              child: Container(
-                color: Colors.white,
-                child: const _TopTechSection(),
-              ),
-            ),
-            SliverToBoxAdapter(
-              child: Container(
-                color: Colors.white,
-                child: const SizedBox(height: 18),
-              ),
-            ),
-            SliverToBoxAdapter(
-              child: Container(
-                color: Colors.white,
-                child: _CategoryChips(
-                  onSelected: (c) => setState(() => _selectedCategory = c),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 16),
+                    const _TopTechSection(),
+                    const _SectionHeader(title: 'New Arrivals'),
+                    _ProductRail(products: products),
+                  ],
                 ),
-              ),
-            ),
-            SliverToBoxAdapter(
-              child: Container(
-                color: Colors.white,
-                child: const _SectionHeader(title: 'Top rated'),
-              ),
-            ),
-            SliverToBoxAdapter(
-              child: Container(
-                color: Colors.white,
-                child: _ProductRail(products: products),
               ),
             ),
             SliverToBoxAdapter(
