@@ -21,7 +21,7 @@ export default function PopularCategories() {
   return (
     <section className="mt-8">
       <div className="mb-5 flex items-center justify-between">
-        <h2 className="text-2xl font-extrabold tracking-tight text-ink">
+        <h2 className="text-xl font-semibold tracking-tight text-mercury">
           Explore popular categories
         </h2>
         <a

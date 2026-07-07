@@ -106,17 +106,14 @@ export default function AdminSidebar() {
   return (
     <aside className="flex h-full w-64 shrink-0 flex-col bg-white px-4 py-6">
       {/* Brand */}
-      <Link href="/admin" className="flex items-center gap-2.5 px-2">
+      <Link href="/admin" className="flex items-center px-2">
         <Image
           src="/mercury-logo.png"
           alt="Mercury"
-          width={34}
-          height={34}
-          className="h-8 w-8 object-contain"
+          width={140}
+          height={26}
+          className="h-6 w-auto object-contain"
         />
-        <span className="text-lg font-extrabold tracking-tight text-ink">
-          Mercury
-        </span>
       </Link>
 
       {/* Scrollable nav */}

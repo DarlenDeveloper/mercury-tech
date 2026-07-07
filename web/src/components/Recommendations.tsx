@@ -12,7 +12,7 @@ export default function Recommendations() {
     <section className="mt-8">
       {/* Header */}
       <div className="mb-5 flex items-center justify-between">
-        <h2 className="text-2xl font-extrabold tracking-tight text-ink">
+        <h2 className="text-xl font-semibold tracking-tight text-mercury">
           Explore our recommendations
         </h2>
         <a

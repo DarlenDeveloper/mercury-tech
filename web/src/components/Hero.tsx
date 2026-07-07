@@ -22,32 +22,32 @@ const GREEN_GRADIENT = "from-[#eaf4ee] via-[#e8f3df] to-[#cfe8a3]";
 
 const SLIDES: Slide[] = [
   {
-    badge: "NEW · MERCURY APP",
-    title: "The new Mercury app is here",
+    badge: "NOW AVAILABLE",
+    title: "Shop smarter with the Mercury app",
     subtitle:
-      "Shop tech, track your orders and unlock app-only deals — all in one place.",
-    cta: "Get the App",
+      "Browse products, track orders, and access exclusive deals — all from your pocket.",
+    cta: "Download Now",
     image: "/hero-mercury-app.png",
     bg: GREEN_GRADIENT,
     showcase: true,
     href: "#",
   },
   {
-    badge: "MORE TECH. LESS SPEND.",
-    title: "The smarter way to own premium tech",
+    badge: "TRUSTED SINCE 2007",
+    title: "Premium tech. Honest prices.",
     subtitle:
-      "Laptops, desktops, printers and components — official, brand new and backed by warranty.",
-    cta: "Shop Tech",
+      "Official laptops, desktops, printers and components — brand new, warranty-backed, delivered across Uganda.",
+    cta: "Browse Catalog",
     image: "/hero-tech.png",
-    bg: "from-[#f2d34a] via-[#9fc95f] to-[#2f9f86]",
+    bg: "from-[#FF7A00] via-[#FFB366] to-white",
     href: "#",
   },
   {
-    badge: "TOP DEVICES. SMART PRICES.",
-    title: "Your next phone starts here",
+    badge: "CERTIFIED DEVICES",
+    title: "Phones you can trust",
     subtitle:
-      "Premium smartphones at honest prices — official, brand new and delivered free within Kampala.",
-    cta: "Shop Phones",
+      "Factory-sealed smartphones from top brands — delivered free within Kampala.",
+    cta: "View Phones",
     image: "/hero-phones.png",
     bg: GREEN_GRADIENT,
     href: "#",
@@ -77,24 +77,43 @@ function AppShowcase({ image, alt }: { image: string; alt: string }) {
 
 export default function Hero() {
   const [index, setIndex] = useState(0);
+  const [isTransitioning, setIsTransitioning] = useState(true);
+  const totalSlides = SLIDES.length;
+
+  // The track has an extra clone of the first slide at the end
+  const extendedSlides = [...SLIDES, SLIDES[0]];
 
   const go = useCallback((i: number) => {
-    setIndex(((i % SLIDES.length) + SLIDES.length) % SLIDES.length);
+    setIsTransitioning(true);
+    setIndex(i);
   }, []);
 
+  // Auto-advance
   useEffect(() => {
-    const id = setInterval(() => setIndex((i) => (i + 1) % SLIDES.length), 5500);
+    const id = setInterval(() => {
+      setIsTransitioning(true);
+      setIndex((i) => i + 1);
+    }, 5500);
     return () => clearInterval(id);
   }, []);
+
+  // When we land on the clone (index === totalSlides), snap back to 0
+  const handleTransitionEnd = () => {
+    if (index === totalSlides) {
+      setIsTransitioning(false);
+      setIndex(0);
+    }
+  };
 
   return (
     <div className="relative overflow-hidden rounded-3xl">
       {/* Sliding track */}
       <div
-        className="flex transition-transform duration-700 ease-out"
+        className={`flex ${isTransitioning ? "transition-transform duration-700 ease-out" : ""}`}
         style={{ transform: `translateX(-${index * 100}%)` }}
+        onTransitionEnd={handleTransitionEnd}
       >
-        {SLIDES.map((slide, i) => (
+        {extendedSlides.map((slide, i) => (
           <div
             key={i}
             className={`relative grid w-full shrink-0 grid-cols-1 items-center gap-4 overflow-hidden bg-gradient-to-r ${slide.bg} ${HERO_HEIGHT} px-6 py-6 sm:px-10 md:grid-cols-2`}
@@ -164,7 +183,7 @@ export default function Hero() {
             aria-label={`Go to slide ${i + 1}`}
             onClick={() => go(i)}
             className={`h-1.5 rounded-full transition-all ${
-              i === index
+              i === index % totalSlides
                 ? "w-8 bg-mercury-accent"
                 : slide.dark
                   ? "w-5 bg-white/40 hover:bg-white/60"
