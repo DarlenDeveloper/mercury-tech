@@ -122,6 +122,7 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
         },
         verificationFailed: (e) {
           if (mounted) {
+            debugPrint('[phone_auth] verificationFailed code=${e.code} message=${e.message}');
             setState(() {
               _error = _friendly(e);
               _busy = false;

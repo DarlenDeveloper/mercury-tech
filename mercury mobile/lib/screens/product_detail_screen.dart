@@ -152,51 +152,85 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   }
 
   Future<void> _toggleWishlist() async {
-    final ok = await requireAccount(
-      context,
-      reason: 'Sign in to save items to your wishlist.',
-    );
-    if (!ok) return;
+    try {
+      final ok = await requireAccount(
+        context,
+        reason: 'Sign in to save items to your wishlist.',
+      );
+      if (!ok || !mounted) return;
 
-    final uid = AuthScope.of(context).user?.uid;
-    if (uid == null) return;
+      // Allow widget tree to rebuild with new auth state.
+      await Future<void>.delayed(Duration.zero);
+      if (!mounted) return;
 
-    final favRepo = FavoritesRepository(uid: uid);
-    final nowFavorite = await favRepo.toggle(product.id);
-    if (!mounted) return;
-    setState(() => _wishlisted = nowFavorite);
+      final uid = AuthScope.of(context).user?.uid;
+      if (uid == null) return;
+
+      final favRepo = FavoritesRepository(uid: uid);
+      final nowFavorite = await favRepo.toggle(product.id);
+      if (!mounted) return;
+      setState(() => _wishlisted = nowFavorite);
+    } catch (e) {
+      debugPrint('[wishlist] error: $e');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(
+            content: Text('Something went wrong: $e'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+    }
   }
 
   Future<void> _addToCart() async {
-    final ok = await requireAccount(
-      context,
-      reason: 'Sign in to add items to your cart and check out.',
-    );
-    if (!ok || !mounted) return;
-
-    final uid = AuthScope.of(context).user?.uid;
-    if (uid == null) return;
-
-    final cartRepo = CartRepository(uid: uid);
-    await cartRepo.addToCart(CartItem(
-      productId: product.id,
-      name: product.name,
-      category: product.category,
-      priceUsd: product.price / 3780, // convert back to USD
-      qty: _qty,
-      image: product.image,
-    ));
-
-    if (!mounted) return;
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(
-          content: Text('${product.name} (x$_qty) added to cart'),
-          behavior: SnackBarBehavior.floating,
-          duration: const Duration(seconds: 1),
-        ),
+    try {
+      final ok = await requireAccount(
+        context,
+        reason: 'Sign in to add items to your cart and check out.',
       );
+      if (!ok || !mounted) return;
+
+      // Allow widget tree to rebuild with new auth state.
+      await Future<void>.delayed(Duration.zero);
+      if (!mounted) return;
+
+      final uid = AuthScope.of(context).user?.uid;
+      if (uid == null) return;
+
+      final cartRepo = CartRepository(uid: uid);
+      await cartRepo.addToCart(CartItem(
+        productId: product.id,
+        name: product.name,
+        category: product.category,
+        priceUsd: product.price / 3780, // convert back to USD
+        qty: _qty,
+        image: product.image,
+      ));
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(
+            content: Text('${product.name} (x$_qty) added to cart'),
+            behavior: SnackBarBehavior.floating,
+            duration: const Duration(seconds: 1),
+          ),
+        );
+    } catch (e) {
+      debugPrint('[addToCart] error: $e');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(
+            content: Text('Something went wrong: $e'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+    }
   }
 }
 

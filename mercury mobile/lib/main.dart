@@ -28,22 +28,22 @@ class MercuryApp extends StatelessWidget {
 
     final navigatorKey = GlobalKey<NavigatorState>();
 
-    return MaterialApp(
-      title: 'Mercury Mobile',
-      debugShowCheckedModeBanner: false,
-      navigatorKey: navigatorKey,
-      theme: baseTheme.copyWith(
-        textTheme: GoogleFonts.poppinsTextTheme(baseTheme.textTheme),
-        primaryTextTheme:
-            GoogleFonts.poppinsTextTheme(baseTheme.primaryTextTheme),
-      ),
-      builder: (context, child) {
-        return CatalogLoader(
-          child: child ?? const SizedBox.shrink(),
-        );
-      },
-      home: const AuthGate(
-        child: MainNavigationScreen(),
+    return AuthGate(
+      child: MaterialApp(
+        title: 'Mercury Mobile',
+        debugShowCheckedModeBanner: false,
+        navigatorKey: navigatorKey,
+        theme: baseTheme.copyWith(
+          textTheme: GoogleFonts.poppinsTextTheme(baseTheme.textTheme),
+          primaryTextTheme:
+              GoogleFonts.poppinsTextTheme(baseTheme.primaryTextTheme),
+        ),
+        builder: (context, child) {
+          return CatalogLoader(
+            child: child ?? const SizedBox.shrink(),
+          );
+        },
+        home: const MainNavigationScreen(),
       ),
     );
   }

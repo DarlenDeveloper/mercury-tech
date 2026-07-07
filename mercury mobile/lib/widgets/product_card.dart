@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../data/auth_scope.dart';
+import '../data/favorites_repository.dart';
 import '../models/product.dart';
 import '../screens/auth_flow.dart';
 import '../theme/app_colors.dart';
@@ -104,10 +106,10 @@ class ProductCard extends StatelessWidget {
                       ),
                     ),
                   ),
-                const Positioned(
+                Positioned(
                   right: 8,
                   bottom: 8,
-                  child: _WishlistButton(),
+                  child: _WishlistButton(productId: product.id),
                 ),
               ],
             ),
@@ -172,7 +174,9 @@ class ProductCard extends StatelessWidget {
 }
 
 class _WishlistButton extends StatefulWidget {
-  const _WishlistButton();
+  const _WishlistButton({required this.productId});
+
+  final String productId;
 
   @override
   State<_WishlistButton> createState() => _WishlistButtonState();
@@ -189,8 +193,18 @@ class _WishlistButtonState extends State<_WishlistButton> {
           context,
           reason: 'Sign in to save items to your wishlist.',
         );
-        if (!ok) return;
-        setState(() => _on = !_on);
+        if (!ok || !mounted) return;
+
+        await Future<void>.delayed(Duration.zero);
+        if (!mounted) return;
+
+        final uid = AuthScope.of(context).user?.uid;
+        if (uid == null) return;
+
+        final favRepo = FavoritesRepository(uid: uid);
+        final nowFavorite = await favRepo.toggle(widget.productId);
+        if (!mounted) return;
+        setState(() => _on = nowFavorite);
       },
       child: Container(
         width: 29,

@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:iconsax_plus/iconsax_plus.dart';
 
@@ -41,7 +42,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           const SizedBox(height: 20),
 
           // Profile card
-          const _ProfileCard(),
+          _ProfileCard(user: AuthScope.of(context).user),
           const SizedBox(height: 24),
 
           // First group
@@ -123,12 +124,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
 }
 
 class _ProfileCard extends StatelessWidget {
-  const _ProfileCard();
+  const _ProfileCard({required this.user});
+
+  final User? user;
 
   @override
   Widget build(BuildContext context) {
-    final user = AuthScope.of(context).user;
-    final registered = user != null && !user.isAnonymous;
+    final registered = user != null && !user!.isAnonymous;
 
     return Container(
       width: double.infinity,
@@ -164,8 +166,8 @@ class _ProfileCard extends StatelessWidget {
           const SizedBox(height: 14),
           Text(
             registered
-                ? (user.displayName?.trim().isNotEmpty == true
-                    ? user.displayName!
+                ? (user!.displayName?.trim().isNotEmpty == true
+                    ? user!.displayName!
                     : 'Mercury Customer')
                 : 'Guest User',
             style: const TextStyle(
@@ -177,7 +179,7 @@ class _ProfileCard extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             registered
-                ? (user.email ?? 'Signed in')
+                ? (user!.email ?? user!.phoneNumber ?? 'Signed in')
                 : 'Sign in or create an account',
             style: const TextStyle(
               fontSize: 13,
