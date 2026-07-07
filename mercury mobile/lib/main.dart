@@ -1,6 +1,7 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:lottie/lottie.dart';
 
 import 'data/auth_scope.dart';
 import 'data/catalog_scope.dart';
@@ -43,8 +44,54 @@ class MercuryApp extends StatelessWidget {
             child: child ?? const SizedBox.shrink(),
           );
         },
-        home: const MainNavigationScreen(),
+        home: const _SplashGate(),
       ),
+    );
+  }
+}
+
+class _SplashGate extends StatefulWidget {
+  const _SplashGate();
+
+  @override
+  State<_SplashGate> createState() => _SplashGateState();
+}
+
+class _SplashGateState extends State<_SplashGate> {
+  bool _showHome = false;
+
+  @override
+  void initState() {
+    super.initState();
+    Future.delayed(const Duration(milliseconds: 2800), () {
+      if (mounted) setState(() => _showHome = true);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 600),
+      switchInCurve: Curves.easeOut,
+      switchOutCurve: Curves.easeIn,
+      transitionBuilder: (child, animation) {
+        // Splash fades out, home fades in
+        return FadeTransition(opacity: animation, child: child);
+      },
+      child: _showHome
+          ? const MainNavigationScreen(key: ValueKey('home'))
+          : Scaffold(
+              key: const ValueKey('splash'),
+              backgroundColor: Colors.white,
+              body: Center(
+                child: Lottie.asset(
+                  'assets/animations/splash.json',
+                  width: 200,
+                  height: 200,
+                  fit: BoxFit.contain,
+                ),
+              ),
+            ),
     );
   }
 }
