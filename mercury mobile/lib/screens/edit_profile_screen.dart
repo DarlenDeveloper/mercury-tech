@@ -149,6 +149,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                           hint: '+256 700 000 000',
                           icon: IconsaxPlusLinear.call,
                           keyboardType: TextInputType.phone,
+                          readOnly: true,
                         ),
                         const SizedBox(height: 16),
                         _Field(
@@ -157,6 +158,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                           hint: 'your@email.com',
                           icon: IconsaxPlusLinear.sms,
                           keyboardType: TextInputType.emailAddress,
+                          readOnly: true,
                         ),
                         const SizedBox(height: 16),
                         _Field(
@@ -214,6 +216,7 @@ class _Field extends StatelessWidget {
     required this.hint,
     required this.icon,
     this.keyboardType,
+    this.readOnly = false,
   });
 
   final TextEditingController controller;
@@ -221,6 +224,7 @@ class _Field extends StatelessWidget {
   final String hint;
   final IconData icon;
   final TextInputType? keyboardType;
+  final bool readOnly;
 
   @override
   Widget build(BuildContext context) {
@@ -239,8 +243,7 @@ class _Field extends StatelessWidget {
         Container(
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: const Color(0xFFE5E7EB)),
+            borderRadius: BorderRadius.circular(28),
           ),
           padding: const EdgeInsets.symmetric(horizontal: 14),
           child: Row(
@@ -251,6 +254,11 @@ class _Field extends StatelessWidget {
                 child: TextField(
                   controller: controller,
                   keyboardType: keyboardType,
+                  readOnly: readOnly,
+                  style: TextStyle(
+                    fontSize: 15,
+                    color: readOnly ? AppColors.inactive : null,
+                  ),
                   decoration: InputDecoration(
                     hintText: hint,
                     border: InputBorder.none,
@@ -258,7 +266,6 @@ class _Field extends StatelessWidget {
                     contentPadding: const EdgeInsets.symmetric(vertical: 16),
                     hintStyle: const TextStyle(color: Color(0xFF9CA3AF)),
                   ),
-                  style: const TextStyle(fontSize: 15),
                 ),
               ),
             ],

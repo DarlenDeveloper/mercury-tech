@@ -7,6 +7,7 @@ import '../data/user_repository.dart';
 import '../theme/app_colors.dart';
 import 'auth_flow.dart';
 import 'edit_profile_screen.dart';
+import 'favorites_screen.dart';
 import 'order_history_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -60,7 +61,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
               _ProfileRow(
                 icon: IconsaxPlusLinear.heart,
                 label: 'My Favorites',
-                onTap: () {},
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const FavoritesScreen()),
+                ),
               ),
               _ProfileRow(
                 icon: IconsaxPlusLinear.clock,
@@ -75,7 +78,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
               _ProfileRow(
                 icon: IconsaxPlusLinear.location,
                 label: 'My Location',
-                onTap: () {},
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const EditProfileScreen()),
+                ),
               ),
             ],
           ),
