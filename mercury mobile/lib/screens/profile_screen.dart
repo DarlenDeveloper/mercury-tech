@@ -3,8 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:iconsax_plus/iconsax_plus.dart';
 
 import '../data/auth_scope.dart';
+import '../data/user_repository.dart';
 import '../theme/app_colors.dart';
 import 'auth_flow.dart';
+import 'edit_profile_screen.dart';
 import 'order_history_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -146,78 +148,175 @@ class _ProfileCard extends StatelessWidget {
           ),
         ],
       ),
-      child: Column(
-        children: [
-          // Avatar
-          Container(
-            width: 70,
-            height: 70,
-            decoration: BoxDecoration(
-              color: const Color(0xFFEDF1F7),
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: const Color(0xFFE5E7EB),
-                width: 2,
+      child: registered
+          ? _RegisteredContent(user: user!)
+          : _GuestContent(),
+    );
+  }
+}
+
+class _RegisteredContent extends StatelessWidget {
+  const _RegisteredContent({required this.user});
+  final User user;
+
+  @override
+  Widget build(BuildContext context) {
+    final repo = UserRepository();
+    return StreamBuilder<UserProfile?>(
+      stream: repo.watchProfile(user.uid),
+      builder: (context, snapshot) {
+        final profile = snapshot.data;
+        final displayName = profile?.name.isNotEmpty == true
+            ? profile!.name
+            : (user.displayName?.trim().isNotEmpty == true
+                ? user.displayName!
+                : 'Mercury Customer');
+        final subtitle = profile?.phone.isNotEmpty == true
+            ? profile!.phone
+            : (user.phoneNumber ?? user.email ?? 'Signed in');
+
+        return Column(
+          children: [
+            Container(
+              width: 70,
+              height: 70,
+              decoration: BoxDecoration(
+                color: const Color(0xFFEDF1F7),
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: const Color(0xFFE5E7EB),
+                  width: 2,
+                ),
+              ),
+              child: Center(
+                child: Text(
+                  displayName.isNotEmpty ? displayName[0].toUpperCase() : 'M',
+                  style: const TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.primary,
+                  ),
+                ),
               ),
             ),
-            child: const Icon(IconsaxPlusBold.user,
-                size: 32, color: AppColors.inactive),
-          ),
-          const SizedBox(height: 14),
-          Text(
-            registered
-                ? (user!.displayName?.trim().isNotEmpty == true
-                    ? user!.displayName!
-                    : 'Mercury Customer')
-                : 'Guest User',
-            style: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w700,
-              color: _ProfileScreenState._ink,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            registered
-                ? (user!.email ?? user!.phoneNumber ?? 'Signed in')
-                : 'Sign in or create an account',
-            style: const TextStyle(
-              fontSize: 13,
-              color: AppColors.inactive,
-            ),
-          ),
-          const SizedBox(height: 16),
-          // Edit Profile / Get Started button
-          ElevatedButton.icon(
-            onPressed: registered
-                ? () {}
-                : () => showAuthFlow(
-                      context,
-                      reason: 'Sign in or create an account',
-                    ),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.accent,
-              foregroundColor: Colors.white,
-              elevation: 0,
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(24),
-              ),
-            ),
-            icon: Icon(
-              registered ? IconsaxPlusLinear.edit_2 : IconsaxPlusLinear.login,
-              size: 16,
-            ),
-            label: Text(
-              registered ? 'Edit Profile' : 'Get Started',
+            const SizedBox(height: 14),
+            Text(
+              displayName,
               style: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: _ProfileScreenState._ink,
               ),
             ),
+            const SizedBox(height: 4),
+            Text(
+              subtitle,
+              style: const TextStyle(
+                fontSize: 13,
+                color: AppColors.inactive,
+              ),
+            ),
+            if (profile?.location.isNotEmpty == true) ...[
+              const SizedBox(height: 4),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(IconsaxPlusLinear.location,
+                      size: 13, color: AppColors.inactive),
+                  const SizedBox(width: 4),
+                  Text(
+                    profile!.location,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: AppColors.inactive,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+            const SizedBox(height: 16),
+            ElevatedButton.icon(
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const EditProfileScreen()),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.accent,
+                foregroundColor: Colors.white,
+                elevation: 0,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(24),
+                ),
+              ),
+              icon: const Icon(IconsaxPlusLinear.edit_2, size: 16),
+              label: const Text(
+                'Edit Profile',
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _GuestContent extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Container(
+          width: 70,
+          height: 70,
+          decoration: BoxDecoration(
+            color: const Color(0xFFEDF1F7),
+            shape: BoxShape.circle,
+            border: Border.all(
+              color: const Color(0xFFE5E7EB),
+              width: 2,
+            ),
           ),
-        ],
-      ),
+          child: const Icon(IconsaxPlusBold.user,
+              size: 32, color: AppColors.inactive),
+        ),
+        const SizedBox(height: 14),
+        const Text(
+          'Guest User',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w700,
+            color: _ProfileScreenState._ink,
+          ),
+        ),
+        const SizedBox(height: 4),
+        const Text(
+          'Sign in or create an account',
+          style: TextStyle(fontSize: 13, color: AppColors.inactive),
+        ),
+        const SizedBox(height: 16),
+        ElevatedButton.icon(
+          onPressed: () => showAuthFlow(
+            context,
+            reason: 'Sign in or create an account',
+          ),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.accent,
+            foregroundColor: Colors.white,
+            elevation: 0,
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(24),
+            ),
+          ),
+          icon: const Icon(IconsaxPlusLinear.login, size: 16),
+          label: const Text(
+            'Get Started',
+            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+          ),
+        ),
+      ],
     );
   }
 }

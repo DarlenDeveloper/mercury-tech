@@ -1,27 +1,29 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:iconsax_plus/iconsax_plus.dart';
 
 import '../data/auth_scope.dart';
+import '../data/user_repository.dart';
 import '../theme/app_colors.dart';
 import 'otp_screen.dart';
 
 class Country {
-  const Country(this.name, this.dial, this.flag);
+  const Country(this.name, this.dial, this.code);
   final String name;
   final String dial;
-  final String flag;
+  final String code; // ISO 2-letter code
 }
 
 const _countries = <Country>[
-  Country('Uganda', '+256', '🇺🇬'),
-  Country('Kenya', '+254', '🇰🇪'),
-  Country('Tanzania', '+255', '🇹🇿'),
-  Country('Rwanda', '+250', '🇷🇼'),
-  Country('South Sudan', '+211', '🇸🇸'),
-  Country('United States', '+1', '🇺🇸'),
-  Country('United Kingdom', '+44', '🇬🇧'),
+  Country('Uganda', '+256', 'UG'),
+  Country('Kenya', '+254', 'KE'),
+  Country('Tanzania', '+255', 'TZ'),
+  Country('Rwanda', '+250', 'RW'),
+  Country('South Sudan', '+211', 'SS'),
+  Country('United States', '+1', 'US'),
+  Country('United Kingdom', '+44', 'GB'),
 ];
 
 /// Full-screen phone/email authentication. Pops `true` when the user finishes
@@ -40,6 +42,8 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
   bool _isSignUp = false;
   bool _emailMode = false;
   bool _busy = false;
+  bool _showPassword = false;
+  bool _showConfirmPassword = false;
   String? _error;
 
   Country _country = _countries.first;
@@ -47,6 +51,8 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
   final _name = TextEditingController();
   final _email = TextEditingController();
   final _password = TextEditingController();
+  final _confirmPassword = TextEditingController();
+  final _location = TextEditingController();
 
   @override
   void initState() {
@@ -54,6 +60,7 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
     _phone.addListener(_onChanged);
     _email.addListener(_onChanged);
     _password.addListener(_onChanged);
+    _confirmPassword.addListener(_onChanged);
   }
 
   @override
@@ -62,6 +69,8 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
     _name.dispose();
     _email.dispose();
     _password.dispose();
+    _confirmPassword.dispose();
+    _location.dispose();
     super.dispose();
   }
 
@@ -72,7 +81,12 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
   bool get _canContinue {
     if (_busy) return false;
     if (_emailMode) {
-      return _email.text.contains('@') && _password.text.length >= 6;
+      final baseValid =
+          _email.text.contains('@') && _password.text.length >= 6;
+      if (_isSignUp) {
+        return baseValid && _password.text == _confirmPassword.text;
+      }
+      return baseValid;
     }
     return _digits.length >= 7;
   }
@@ -98,6 +112,19 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
             password: _password.text,
             name: _name.text,
           );
+          // Save location to user profile if provided.
+          if (_location.text.trim().isNotEmpty) {
+            final uid = AuthScope.of(context).user?.uid;
+            if (uid != null) {
+              final userRepo =
+                  UserRepository();
+              final existing = await userRepo.getProfile(uid);
+              if (existing != null) {
+                await userRepo
+                    .saveProfile(existing.copyWith(location: _location.text.trim()));
+              }
+            }
+          }
         } else {
           await auth.signIn(
             email: _email.text.trim(),
@@ -200,7 +227,7 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
             const SizedBox(height: 8),
             for (final c in _countries)
               ListTile(
-                leading: Text(c.flag, style: const TextStyle(fontSize: 22)),
+                leading: _CountryBadge(code: c.code),
                 title: Text(c.name),
                 trailing: Text(
                   c.dial,
@@ -347,11 +374,11 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 12),
               decoration: BoxDecoration(
                 color: const Color(0xFFF4F5F8),
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(28),
               ),
               child: Row(
                 children: [
-                  Text(_country.flag, style: const TextStyle(fontSize: 20)),
+                  _CountryBadge(code: _country.code),
                   const SizedBox(width: 4),
                   const Icon(Icons.keyboard_arrow_down, size: 18),
                 ],
@@ -365,7 +392,7 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 14),
               decoration: BoxDecoration(
                 color: const Color(0xFFF4F5F8),
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(28),
               ),
               alignment: Alignment.centerLeft,
               child: TextField(
@@ -399,8 +426,65 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
       _boxField(_email, 'Email address', IconsaxPlusLinear.sms,
           keyboardType: TextInputType.emailAddress),
       const SizedBox(height: 12),
-      _boxField(_password, 'Password', IconsaxPlusLinear.lock, obscure: true),
+      _passwordField(_password, 'Password', _showPassword, (v) {
+        setState(() => _showPassword = v);
+      }),
+      if (_isSignUp) ...[
+        const SizedBox(height: 12),
+        _passwordField(
+            _confirmPassword, 'Confirm password', _showConfirmPassword, (v) {
+          setState(() => _showConfirmPassword = v);
+        }),
+        const SizedBox(height: 12),
+        _boxField(_location, 'Location (e.g. Kampala)',
+            IconsaxPlusLinear.location),
+      ],
     ];
+  }
+
+  Widget _passwordField(
+    TextEditingController c,
+    String hint,
+    bool visible,
+    ValueChanged<bool> onToggle,
+  ) {
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFFF4F5F8),
+        borderRadius: BorderRadius.circular(28),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 14),
+      child: Row(
+        children: [
+          Icon(IconsaxPlusLinear.lock, size: 18, color: AppColors.inactive),
+          const SizedBox(width: 10),
+          Expanded(
+            child: TextField(
+              controller: c,
+              obscureText: !visible,
+              decoration: InputDecoration(
+                hintText: hint,
+                border: InputBorder.none,
+                isCollapsed: true,
+                contentPadding: const EdgeInsets.symmetric(vertical: 18),
+                hintStyle: const TextStyle(color: Color(0xFF9CA3AF)),
+              ),
+              style: const TextStyle(fontSize: 15),
+            ),
+          ),
+          GestureDetector(
+            onTap: () => onToggle(!visible),
+            child: Icon(
+              visible
+                  ? IconsaxPlusLinear.eye
+                  : IconsaxPlusLinear.eye_slash,
+              size: 18,
+              color: AppColors.inactive,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _boxField(
@@ -413,7 +497,7 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
     return Container(
       decoration: BoxDecoration(
         color: const Color(0xFFF4F5F8),
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(28),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 14),
       child: Row(
@@ -436,6 +520,24 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _CountryBadge extends StatelessWidget {
+  const _CountryBadge({required this.code});
+  final String code;
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(3),
+      child: SvgPicture.asset(
+        'assets/flags/${code.toLowerCase()}.svg',
+        width: 28,
+        height: 20,
+        fit: BoxFit.cover,
       ),
     );
   }

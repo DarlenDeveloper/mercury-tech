@@ -1,13 +1,18 @@
 import 'package:firebase_auth/firebase_auth.dart';
 
+import 'user_repository.dart';
+
 /// Wraps Firebase Auth for the app's "anonymous-first" model:
 /// every visitor gets an anonymous session; gated actions (wishlist, cart,
 /// profile) prompt them to upgrade to a real account, which links to the
 /// existing anonymous user so their data carries over.
 class AuthService {
-  AuthService({FirebaseAuth? auth}) : _auth = auth ?? FirebaseAuth.instance;
+  AuthService({FirebaseAuth? auth, UserRepository? userRepo})
+      : _auth = auth ?? FirebaseAuth.instance,
+        _userRepo = userRepo ?? UserRepository();
 
   final FirebaseAuth _auth;
+  final UserRepository _userRepo;
 
   User? get currentUser => _auth.currentUser;
 
@@ -39,6 +44,11 @@ class AuthService {
       if (name != null && name.trim().isNotEmpty) {
         await result.user?.updateDisplayName(name.trim());
       }
+      await _userRepo.ensureProfile(
+        uid: result.user!.uid,
+        name: name ?? '',
+        email: email,
+      );
     } else {
       final result = await _auth.createUserWithEmailAndPassword(
         email: email,
@@ -47,6 +57,11 @@ class AuthService {
       if (name != null && name.trim().isNotEmpty) {
         await result.user?.updateDisplayName(name.trim());
       }
+      await _userRepo.ensureProfile(
+        uid: result.user!.uid,
+        name: name ?? '',
+        email: email,
+      );
     }
   }
 
@@ -102,18 +117,33 @@ class AuthService {
     final current = _auth.currentUser;
     if (current != null && current.isAnonymous) {
       try {
-        await current.linkWithCredential(credential);
+        final result = await current.linkWithCredential(credential);
+        await _ensureProfileFromUser(result.user);
         return;
       } on FirebaseAuthException catch (e) {
         // Phone already belongs to another account — sign in to it instead.
         if (e.code == 'credential-already-in-use') {
-          await _auth.signInWithCredential(e.credential ?? credential);
+          final result =
+              await _auth.signInWithCredential(e.credential ?? credential);
+          await _ensureProfileFromUser(result.user);
           return;
         }
         rethrow;
       }
     }
-    await _auth.signInWithCredential(credential);
+    final result = await _auth.signInWithCredential(credential);
+    await _ensureProfileFromUser(result.user);
+  }
+
+  /// Creates a user profile doc if one doesn't exist yet.
+  Future<void> _ensureProfileFromUser(User? user) async {
+    if (user == null) return;
+    await _userRepo.ensureProfile(
+      uid: user.uid,
+      name: user.displayName ?? '',
+      phone: user.phoneNumber ?? '',
+      email: user.email ?? '',
+    );
   }
 
   /// Signs out and returns to a fresh anonymous session.
