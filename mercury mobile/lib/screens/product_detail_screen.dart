@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:iconsax_plus/iconsax_plus.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../data/auth_scope.dart';
 import '../data/cart_repository.dart';
@@ -97,6 +98,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
             SizedBox(height: MediaQuery.of(context).padding.top + 6),
             _TopBar(
               onBack: () => Navigator.of(context).maybePop(),
+              product: product,
             ),
             Expanded(
               child: ListView(
@@ -235,9 +237,10 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
 }
 
 class _TopBar extends StatelessWidget {
-  const _TopBar({required this.onBack});
+  const _TopBar({required this.onBack, required this.product});
 
   final VoidCallback onBack;
+  final Product product;
 
   @override
   Widget build(BuildContext context) {
@@ -261,7 +264,11 @@ class _TopBar extends StatelessWidget {
             ),
           ),
           _RoundButton(
-            onTap: () {},
+            onTap: () {
+              final url =
+                  'https://mercurycomputerslimited.com/product/${product.id}';
+              Share.share('${product.name} — ${product.description}\n\n$url');
+            },
             child: const Icon(Icons.share_outlined,
                 size: 18, color: _ProductDetailScreenState._ink),
           ),
@@ -316,10 +323,23 @@ class _ImageArea extends StatelessWidget {
               )
             else
               Center(
-                child: Icon(
-                  product.icon,
-                  size: 140,
-                  color: AppColors.primary.withValues(alpha: 0.85),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.image_outlined,
+                      size: 48,
+                      color: AppColors.inactive.withValues(alpha: 0.4),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'No image',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: AppColors.inactive.withValues(alpha: 0.5),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             if (product.isOnSale)
