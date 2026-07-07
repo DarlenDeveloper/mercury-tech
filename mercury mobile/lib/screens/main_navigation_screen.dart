@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:iconsax_plus/iconsax_plus.dart';
 
 import '../widgets/mercury_bottom_nav_bar.dart';
+import '../widgets/draggable_support_button.dart';
 import 'cart_screen.dart';
 import 'home_screen.dart';
 import 'profile_screen.dart';
@@ -55,7 +56,13 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       extendBody: true,
-      body: IndexedStack(index: _currentIndex, children: _pages),
+      body: Stack(
+        children: [
+          IndexedStack(index: _currentIndex, children: _pages),
+          if (_currentIndex == 3)
+            const DraggableSupportButton(),
+        ],
+      ),
       bottomNavigationBar: MercuryBottomNavBar(
         currentIndex: _currentIndex,
         items: _items,

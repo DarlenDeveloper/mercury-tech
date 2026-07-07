@@ -7,7 +7,6 @@ import 'data/catalog_scope.dart';
 import 'firebase_options.dart';
 import 'theme/app_colors.dart';
 import 'screens/main_navigation_screen.dart';
-import 'widgets/draggable_support_button.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -39,14 +38,8 @@ class MercuryApp extends StatelessWidget {
             GoogleFonts.poppinsTextTheme(baseTheme.primaryTextTheme),
       ),
       builder: (context, child) {
-        // Float the draggable customer-service button above every route.
         return CatalogLoader(
-          child: Stack(
-            children: [
-              if (child != null) Positioned.fill(child: child),
-              DraggableSupportButton(navigatorKey: navigatorKey),
-            ],
-          ),
+          child: child ?? const SizedBox.shrink(),
         );
       },
       home: const AuthGate(

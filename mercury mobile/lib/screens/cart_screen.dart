@@ -227,97 +227,86 @@ class _CartItemCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final product = item.product;
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-      ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Product image
           Container(
-            width: 64,
-            height: 64,
+            width: 80,
+            height: 80,
             decoration: BoxDecoration(
-              color: const Color(0xFFF0F1F4),
-              borderRadius: BorderRadius.circular(14),
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.08),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
             clipBehavior: Clip.antiAlias,
             child: product.image != null
                 ? Image.asset(product.image!, fit: BoxFit.cover)
                 : Icon(product.icon,
-                    size: 30, color: AppColors.primary.withValues(alpha: 0.85)),
+                    size: 34, color: AppColors.primary.withValues(alpha: 0.85)),
           ),
-          const SizedBox(width: 12),
-          // Name + description + price
+          const SizedBox(width: 14),
+          // Name + category + price + stepper
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  product.name,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: _ink,
-                  ),
+                // Top row: name + delete
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        product.name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          color: _ink,
+                        ),
+                      ),
+                    ),
+                    GestureDetector(
+                      onTap: onDelete,
+                      child: const Icon(Icons.close, size: 18, color: AppColors.inactive),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 2),
                 Text(
                   product.category,
-                  maxLines: 1,
                   style: const TextStyle(
-                    fontSize: 11.5,
+                    fontSize: 12,
                     color: AppColors.inactive,
                   ),
                 ),
-                const SizedBox(height: 6),
-                Text(
-                  formatUgx(product.price),
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
-                    color: _ink,
-                  ),
+                const SizedBox(height: 8),
+                // Bottom row: price + stepper
+                Row(
+                  children: [
+                    Text(
+                      formatUgx(product.price),
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w800,
+                        color: _ink,
+                      ),
+                    ),
+                    const Spacer(),
+                    // Stepper
+                    _CircleStepper(qty: item.qty, onAdd: onAdd, onRemove: onRemove),
+                  ],
                 ),
               ],
-            ),
-          ),
-          // Quantity stepper (horizontal)
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _StepBtn(icon: Icons.remove, onTap: onRemove),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 10),
-                child: Text(
-                  '${item.qty}',
-                  style: const TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                    color: _ink,
-                  ),
-                ),
-              ),
-              _StepBtn(icon: Icons.add, onTap: onAdd),
-            ],
-          ),
-          const SizedBox(width: 8),
-          // Delete button
-          GestureDetector(
-            onTap: onDelete,
-            child: Container(
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(
-                color: const Color(0xFFFFE5E5),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: const Icon(IconsaxPlusLinear.trash,
-                  size: 16, color: Color(0xFFE53935)),
             ),
           ),
         ],
@@ -326,17 +315,62 @@ class _CartItemCard extends StatelessWidget {
   }
 }
 
-class _StepBtn extends StatelessWidget {
-  const _StepBtn({required this.icon, required this.onTap});
+class _CircleStepper extends StatelessWidget {
+  const _CircleStepper({
+    required this.qty,
+    required this.onAdd,
+    required this.onRemove,
+  });
 
-  final IconData icon;
-  final VoidCallback onTap;
+  final int qty;
+  final VoidCallback onAdd;
+  final VoidCallback onRemove;
+
+  static const _ink = Color(0xFF1F2937);
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Icon(icon, size: 20, color: const Color(0xFF1F2937)),
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // Minus (outline circle)
+        GestureDetector(
+          onTap: onRemove,
+          child: Container(
+            width: 30,
+            height: 30,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(color: const Color(0xFFD1D5DB), width: 1.5),
+            ),
+            child: const Icon(Icons.remove, size: 16, color: AppColors.inactive),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 10),
+          child: Text(
+            qty.toString().padLeft(2, '0'),
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              color: _ink,
+            ),
+          ),
+        ),
+        // Plus (filled black circle)
+        GestureDetector(
+          onTap: onAdd,
+          child: Container(
+            width: 30,
+            height: 30,
+            decoration: const BoxDecoration(
+              shape: BoxShape.circle,
+              color: Color(0xFF1F2937),
+            ),
+            child: const Icon(Icons.add, size: 16, color: Colors.white),
+          ),
+        ),
+      ],
     );
   }
 }
