@@ -7,13 +7,12 @@ import 'package:iconsax_plus/iconsax_plus.dart';
 import '../data/auth_scope.dart';
 import '../data/user_repository.dart';
 import '../theme/app_colors.dart';
-import 'otp_screen.dart';
 
 class Country {
   const Country(this.name, this.dial, this.code);
   final String name;
   final String dial;
-  final String code; // ISO 2-letter code
+  final String code;
 }
 
 const _countries = <Country>[
@@ -26,8 +25,8 @@ const _countries = <Country>[
   Country('United Kingdom', '+44', 'GB'),
 ];
 
-/// Full-screen phone/email authentication. Pops `true` when the user finishes
-/// signed in (via OTP or email).
+/// Full-screen auth. Phone users get a password-based account using their
+/// phone number as the identifier (no SMS). Email users use email/password.
 class PhoneAuthScreen extends StatefulWidget {
   const PhoneAuthScreen({super.key, this.reason});
   final String? reason;
@@ -39,7 +38,7 @@ class PhoneAuthScreen extends StatefulWidget {
 class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
   static const _ink = Color(0xFF1F2937);
 
-  bool _isSignUp = false;
+  bool _isSignUp = true;
   bool _emailMode = false;
   bool _busy = false;
   bool _showPassword = false;
@@ -78,6 +77,19 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
 
   String get _digits => _phone.text.replaceAll(RegExp(r'\D'), '');
 
+  /// Converts phone to a fake email for Firebase Auth.
+  String get _phoneEmail {
+    var d = _digits;
+    if (d.startsWith('0')) d = d.substring(1);
+    return '${_country.dial.replaceAll('+', '')}$d@mercury.phone';
+  }
+
+  String get _e164 {
+    var d = _digits;
+    if (d.startsWith('0')) d = d.substring(1);
+    return '${_country.dial}$d';
+  }
+
   bool get _canContinue {
     if (_busy) return false;
     if (_emailMode) {
@@ -88,13 +100,12 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
       }
       return baseValid;
     }
-    return _digits.length >= 7;
-  }
-
-  String get _e164 {
-    var d = _digits;
-    if (d.startsWith('0')) d = d.substring(1);
-    return '${_country.dial}$d';
+    // Phone mode
+    final baseValid = _digits.length >= 7 && _password.text.length >= 6;
+    if (_isSignUp) {
+      return baseValid && _password.text == _confirmPassword.text;
+    }
+    return baseValid;
   }
 
   Future<void> _continue() async {
@@ -104,99 +115,91 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
     });
     final auth = AuthScope.of(context).service;
 
-    if (_emailMode) {
-      try {
+    try {
+      if (_emailMode) {
         if (_isSignUp) {
           await auth.signUp(
             email: _email.text.trim(),
             password: _password.text,
-            name: _name.text,
+            name: _name.text.trim(),
           );
-          // Save location to user profile if provided.
-          if (_location.text.trim().isNotEmpty) {
-            final uid = AuthScope.of(context).user?.uid;
-            if (uid != null) {
-              final userRepo =
-                  UserRepository();
-              final existing = await userRepo.getProfile(uid);
-              if (existing != null) {
-                await userRepo
-                    .saveProfile(existing.copyWith(location: _location.text.trim()));
-              }
-            }
-          }
+          await _saveLocation();
         } else {
           await auth.signIn(
             email: _email.text.trim(),
             password: _password.text,
           );
         }
-        if (mounted) Navigator.of(context).pop(true);
-      } on FirebaseAuthException catch (e) {
-        setState(() => _error = _friendly(e));
-      } finally {
-        if (mounted) setState(() => _busy = false);
-      }
-      return;
-    }
-
-    // Phone flow.
-    try {
-      await auth.verifyPhone(
-        phoneNumber: _e164,
-        autoVerified: () {
-          if (mounted) Navigator.of(context).pop(true);
-        },
-        verificationFailed: (e) {
-          if (mounted) {
-            debugPrint('[phone_auth] verificationFailed code=${e.code} message=${e.message}');
-            setState(() {
-              _error = _friendly(e);
-              _busy = false;
-            });
-          }
-        },
-        codeSent: (verificationId) async {
-          if (!mounted) return;
-          setState(() => _busy = false);
-          final ok = await Navigator.of(context).push<bool>(
-            MaterialPageRoute(
-              builder: (_) => OtpScreen(
-                verificationId: verificationId,
-                phoneNumber: _e164,
-              ),
-            ),
+      } else {
+        // Phone mode — use phone-derived email with password.
+        if (_isSignUp) {
+          await auth.signUp(
+            email: _phoneEmail,
+            password: _password.text,
+            name: _name.text.trim(),
           );
-          if (ok == true && mounted) Navigator.of(context).pop(true);
-        },
-      );
-    } on FirebaseAuthException catch (e) {
-      if (mounted) {
-        setState(() {
-          _error = _friendly(e);
-          _busy = false;
-        });
+          // Save phone number and location to profile.
+          final uid = AuthScope.of(context).user?.uid;
+          if (uid != null) {
+            final repo = UserRepository();
+            final existing = await repo.getProfile(uid);
+            if (existing != null) {
+              await repo.saveProfile(existing.copyWith(
+                phone: _e164,
+                location: _location.text.trim(),
+              ));
+            } else {
+              await repo.saveProfile(UserProfile(
+                uid: uid,
+                name: _name.text.trim(),
+                phone: _e164,
+                location: _location.text.trim(),
+              ));
+            }
+          }
+        } else {
+          await auth.signIn(
+            email: _phoneEmail,
+            password: _password.text,
+          );
+        }
       }
+      if (mounted) Navigator.of(context).pop(true);
+    } on FirebaseAuthException catch (e) {
+      setState(() => _error = _friendly(e));
+    } catch (e) {
+      setState(() => _error = e.toString());
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  Future<void> _saveLocation() async {
+    if (_location.text.trim().isEmpty) return;
+    final uid = AuthScope.of(context).user?.uid;
+    if (uid == null) return;
+    final repo = UserRepository();
+    final existing = await repo.getProfile(uid);
+    if (existing != null) {
+      await repo.saveProfile(existing.copyWith(location: _location.text.trim()));
     }
   }
 
   String _friendly(FirebaseAuthException e) {
     switch (e.code) {
-      case 'invalid-phone-number':
-        return 'Please enter a valid phone number.';
-      case 'too-many-requests':
-        return 'Too many attempts. Please try again later.';
       case 'email-already-in-use':
-        return 'That email already has an account. Try signing in.';
+        return 'This phone number or email already has an account. Try signing in.';
       case 'invalid-email':
         return 'Please enter a valid email address.';
       case 'weak-password':
         return 'Password should be at least 6 characters.';
       case 'wrong-password':
       case 'invalid-credential':
-        return 'Incorrect email or password.';
-      case 'operation-not-allowed':
-        return 'This sign-in method is not enabled yet.';
+        return 'Incorrect password. Please try again.';
+      case 'user-not-found':
+        return 'No account found. Please sign up first.';
+      case 'too-many-requests':
+        return 'Too many attempts. Please try again later.';
       case 'network-request-failed':
         return 'Network error. Check your connection.';
       default:
@@ -254,7 +257,7 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Top bar: back + logo.
+              // Top bar
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -275,66 +278,71 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
               ),
               const SizedBox(height: 6),
               Text(
-                widget.reason ??
-                    (_emailMode
-                        ? 'Access your account with your email'
-                        : 'Access your account through your phone number'),
+                widget.reason ?? (_isSignUp
+                    ? 'Create your account to get started.'
+                    : 'Sign in to continue.'),
                 style: const TextStyle(fontSize: 13.5, color: AppColors.inactive),
               ),
               const SizedBox(height: 28),
 
-              if (_emailMode)
-                ..._emailFields()
-              else
-                ..._phoneFields(),
+              Expanded(
+                child: ListView(
+                  children: [
+                    if (_emailMode)
+                      ..._emailFields()
+                    else
+                      ..._phoneFields(),
 
-              if (_error != null) ...[
-                const SizedBox(height: 12),
-                Text(
-                  _error!,
-                  style: const TextStyle(
-                    fontSize: 12.5,
-                    color: Color(0xFFE11D2A),
-                  ),
-                ),
-              ],
-
-              const SizedBox(height: 28),
-              _ContinueButton(
-                enabled: _canContinue,
-                busy: _busy,
-                onTap: _continue,
-              ),
-              const SizedBox(height: 16),
-              Center(
-                child: GestureDetector(
-                  onTap: () => setState(() {
-                    _isSignUp = !_isSignUp;
-                    _error = null;
-                  }),
-                  child: Text.rich(
-                    TextSpan(
-                      text: _isSignUp
-                          ? 'Already have an account? '
-                          : "Don't have an account? ",
-                      style: const TextStyle(
-                        fontSize: 13.5,
-                        color: AppColors.inactive,
+                    if (_error != null) ...[
+                      const SizedBox(height: 12),
+                      Text(
+                        _error!,
+                        style: const TextStyle(
+                          fontSize: 12.5,
+                          color: Color(0xFFE11D2A),
+                        ),
                       ),
-                      children: [
-                        TextSpan(
-                          text: _isSignUp ? 'Sign in' : 'Signup',
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w700,
-                            color: _ink,
+                    ],
+
+                    const SizedBox(height: 28),
+                    _ContinueButton(
+                      enabled: _canContinue,
+                      busy: _busy,
+                      onTap: _continue,
+                    ),
+                    const SizedBox(height: 16),
+                    Center(
+                      child: GestureDetector(
+                        onTap: () => setState(() {
+                          _isSignUp = !_isSignUp;
+                          _error = null;
+                        }),
+                        child: Text.rich(
+                          TextSpan(
+                            text: _isSignUp
+                                ? 'Already have an account? '
+                                : "Don't have an account? ",
+                            style: const TextStyle(
+                              fontSize: 13.5,
+                              color: AppColors.inactive,
+                            ),
+                            children: [
+                              TextSpan(
+                                text: _isSignUp ? 'Sign in' : 'Sign up',
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                  color: _ink,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                      ],
+                      ),
                     ),
-                  ),
+                  ],
                 ),
               ),
-              const Spacer(),
+
               Center(
                 child: TextButton(
                   onPressed: () => setState(() {
@@ -360,11 +368,15 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
 
   List<Widget> _phoneFields() {
     return [
+      if (_isSignUp) ...[
+        _boxField(_name, 'Full name', IconsaxPlusLinear.user),
+        const SizedBox(height: 12),
+      ],
       const Text(
-        'Enter Your Phone Number',
+        'Phone Number',
         style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: _ink),
       ),
-      const SizedBox(height: 10),
+      const SizedBox(height: 8),
       Row(
         children: [
           GestureDetector(
@@ -397,13 +409,12 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
               alignment: Alignment.centerLeft,
               child: TextField(
                 controller: _phone,
-                autofocus: true,
                 keyboardType: TextInputType.phone,
                 inputFormatters: [
                   FilteringTextInputFormatter.allow(RegExp(r'[0-9 ]')),
                 ],
                 decoration: const InputDecoration(
-                  hintText: 'EX: 3834 3939 393',
+                  hintText: 'e.g. 780 123 456',
                   border: InputBorder.none,
                   isCollapsed: true,
                   hintStyle: TextStyle(color: Color(0xFF9CA3AF)),
@@ -414,6 +425,19 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
           ),
         ],
       ),
+      const SizedBox(height: 12),
+      _passwordField(_password, 'Create password', _showPassword, (v) {
+        setState(() => _showPassword = v);
+      }),
+      if (_isSignUp) ...[
+        const SizedBox(height: 12),
+        _passwordField(
+            _confirmPassword, 'Confirm password', _showConfirmPassword, (v) {
+          setState(() => _showConfirmPassword = v);
+        }),
+        const SizedBox(height: 12),
+        _boxField(_location, 'Location (e.g. Kampala)', IconsaxPlusLinear.location),
+      ],
     ];
   }
 
@@ -436,8 +460,7 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
           setState(() => _showConfirmPassword = v);
         }),
         const SizedBox(height: 12),
-        _boxField(_location, 'Location (e.g. Kampala)',
-            IconsaxPlusLinear.location),
+        _boxField(_location, 'Location (e.g. Kampala)', IconsaxPlusLinear.location),
       ],
     ];
   }
@@ -475,9 +498,7 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
           GestureDetector(
             onTap: () => onToggle(!visible),
             child: Icon(
-              visible
-                  ? IconsaxPlusLinear.eye
-                  : IconsaxPlusLinear.eye_slash,
+              visible ? IconsaxPlusLinear.eye : IconsaxPlusLinear.eye_slash,
               size: 18,
               color: AppColors.inactive,
             ),
