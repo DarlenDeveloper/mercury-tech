@@ -1,8 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import { Plus, Search, ListFilter, MoreHorizontal } from "lucide-react";
+import { doc, getDoc, updateDoc, serverTimestamp, getFirestore } from "firebase/firestore";
+import { firebaseApp } from "@/lib/firebase";
 import AdminHeader from "@/components/admin/AdminHeader";
 import UsdRateBar from "@/components/admin/UsdRateBar";
 import {
@@ -23,13 +25,29 @@ function usd(v: number) {
 }
 
 export default function ProductsPage() {
-  // Admin-managed USD → UGX rate; conversions below recompute from it.
   const [rate, setRate] = useState(USD_RATE.value);
   const [prevRate, setPrevRate] = useState(USD_RATE.prev);
 
-  const applyRate = (value: number) => {
+  // Load current rate from Firestore on mount.
+  useEffect(() => {
+    const db = getFirestore(firebaseApp);
+    getDoc(doc(db, "config", "rate")).then((snap) => {
+      const data = snap.data();
+      if (data?.usdToUgx) {
+        setRate(data.usdToUgx);
+        setPrevRate(data.usdToUgx);
+      }
+    });
+  }, []);
+
+  const applyRate = async (value: number) => {
     setPrevRate(rate);
     setRate(value);
+    const db = getFirestore(firebaseApp);
+    await updateDoc(doc(db, "config", "rate"), {
+      usdToUgx: value,
+      updatedAt: serverTimestamp(),
+    });
   };
 
   const approxUgx = (usdValue: number) =>

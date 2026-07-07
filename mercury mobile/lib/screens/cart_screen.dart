@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:iconsax_plus/iconsax_plus.dart';
+import 'package:lottie/lottie.dart';
 
 import '../data/auth_scope.dart';
 import '../data/cart_repository.dart';
+import '../data/navigation_scope.dart';
 import '../data/order_repository.dart';
 import '../theme/app_colors.dart';
 import '../utils/format.dart';
@@ -89,7 +91,69 @@ class _CartScreenState extends State<CartScreen> {
         return SafeArea(
           top: false,
           bottom: false,
-          child: ListView(
+          child: items.isEmpty
+              ? Padding(
+                  padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top + 12),
+                  child: Column(
+                    children: [
+                      // Header
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: Row(
+                          children: const [
+                            Text(
+                              'My Order',
+                              style: TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.w800,
+                                color: _ink,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Expanded(
+                        child: Center(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Lottie.asset(
+                                'assets/animations/empty_cart.json',
+                                width: 200,
+                                height: 200,
+                                repeat: true,
+                              ),
+                              const SizedBox(height: 24),
+                              ElevatedButton(
+                                onPressed: () {
+                                  NavigationScope.of(context)?.switchTab(1);
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xFF1A2E3B),
+                                  foregroundColor: Colors.white,
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 24, vertical: 12),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(30),
+                                  ),
+                                  elevation: 0,
+                                ),
+                                child: const Text(
+                                  'Continue Shopping',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+              : ListView(
             padding: EdgeInsets.fromLTRB(
               16,
               MediaQuery.of(context).padding.top + 12,
@@ -110,26 +174,14 @@ class _CartScreenState extends State<CartScreen> {
                       ),
                     ),
                   ),
-                  if (items.isNotEmpty)
-                    GestureDetector(
-                      onTap: _clearAll,
-                      child: const Icon(IconsaxPlusLinear.trash,
-                          size: 22, color: _ink),
-                    ),
+                  GestureDetector(
+                    onTap: _clearAll,
+                    child: const Icon(IconsaxPlusLinear.trash,
+                        size: 22, color: _ink),
+                  ),
                 ],
               ),
               const SizedBox(height: 18),
-              // Cart items
-              if (items.isEmpty)
-                const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 40),
-                  child: Center(
-                    child: Text(
-                      'Your cart is empty',
-                      style: TextStyle(color: AppColors.inactive),
-                    ),
-                  ),
-                ),
               for (final item in items) ...[
                 _CartItemCard(
                   item: item,

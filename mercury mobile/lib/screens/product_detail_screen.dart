@@ -3,6 +3,7 @@ import 'package:iconsax_plus/iconsax_plus.dart';
 
 import '../data/auth_scope.dart';
 import '../data/cart_repository.dart';
+import '../data/favorites_repository.dart';
 import '../models/product.dart';
 import '../theme/app_colors.dart';
 import '../utils/format.dart';
@@ -156,7 +157,14 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       reason: 'Sign in to save items to your wishlist.',
     );
     if (!ok) return;
-    setState(() => _wishlisted = !_wishlisted);
+
+    final uid = AuthScope.of(context).user?.uid;
+    if (uid == null) return;
+
+    final favRepo = FavoritesRepository(uid: uid);
+    final nowFavorite = await favRepo.toggle(product.id);
+    if (!mounted) return;
+    setState(() => _wishlisted = nowFavorite);
   }
 
   Future<void> _addToCart() async {

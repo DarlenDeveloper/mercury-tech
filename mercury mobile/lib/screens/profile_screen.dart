@@ -4,6 +4,7 @@ import 'package:iconsax_plus/iconsax_plus.dart';
 import '../data/auth_scope.dart';
 import '../theme/app_colors.dart';
 import 'auth_flow.dart';
+import 'order_history_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -49,7 +50,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
               _ProfileRow(
                 icon: IconsaxPlusLinear.box,
                 label: 'My Orders',
-                onTap: () {},
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const OrderHistoryScreen()),
+                ),
               ),
               _ProfileRow(
                 icon: IconsaxPlusLinear.heart,
