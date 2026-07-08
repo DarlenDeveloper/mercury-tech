@@ -1,114 +1,308 @@
-import { UserPlus, ShieldCheck, MoreHorizontal } from "lucide-react";
-import AdminHeader from "@/components/admin/AdminHeader";
-import { ROLE_CARDS, STAFF_USERS, type StaffRole } from "@/lib/adminData";
+"use client";
 
-const ROLE_STYLES: Record<StaffRole, string> = {
-  Owner: "bg-[#efeafc] text-[#5b21b6]",
-  Admin: "bg-[#e8eefc] text-mercury",
-  Manager: "bg-[#e7f6ee] text-[#16a34a]",
-  Support: "bg-[#fff3dc] text-[#b45309]",
-  Editor: "bg-surface-soft text-muted",
+import { useEffect, useState } from "react";
+import {
+  collection,
+  getDocs,
+  doc,
+  getDoc,
+  updateDoc,
+  arrayUnion,
+  arrayRemove,
+} from "firebase/firestore";
+import { Search, Plus, ShieldCheck, X, Trash2 } from "lucide-react";
+import AdminHeader from "@/components/admin/AdminHeader";
+import { db } from "@/lib/firestore";
+
+type AdminUser = {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  location: string;
+  role: string;
 };
 
-function initials(name: string) {
-  return name.split(" ").map((n) => n[0]).slice(0, 2).join("");
-}
+const ROLE_COLORS: Record<string, string> = {
+  Admin: "bg-[#eaf1fc] text-mercury",
+  Manager: "bg-[#f3e8ff] text-[#7c3aed]",
+  Support: "bg-[#eef7ee] text-[#16a34a]",
+  Developer: "bg-[#fef3e2] text-[#b45309]",
+  Finance: "bg-[#fde8ea] text-[#e11d48]",
+};
 
-export default function UsersPage() {
+export default function UsersRolesPage() {
+  const [admins, setAdmins] = useState<AdminUser[]>([]);
+  const [adminEmails, setAdminEmails] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [search, setSearch] = useState("");
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      // Get admin email whitelist
+      const adminDoc = await getDoc(doc(db, "config", "admins"));
+      const emails: string[] = adminDoc.exists()
+        ? adminDoc.data()?.emails ?? []
+        : [];
+      setAdminEmails(emails);
+
+      // Get all users who are admins
+      const usersSnap = await getDocs(collection(db, "users"));
+      const adminUsers = usersSnap.docs
+        .filter((d) => {
+          const data = d.data();
+          return emails.includes(data.email ?? "");
+        })
+        .map((d) => {
+          const data = d.data();
+          return {
+            id: d.id,
+            name: data.name || "Unknown",
+            email: data.email || "",
+            phone: data.phone || "",
+            location: data.location || "",
+            role: data.role || "Admin",
+          };
+        });
+      setAdmins(adminUsers);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const removeAdmin = async (email: string) => {
+    if (!confirm(`Remove ${email} from admin access?`)) return;
+    await updateDoc(doc(db, "config", "admins"), {
+      emails: arrayRemove(email),
+    });
+    setAdminEmails((prev) => prev.filter((e) => e !== email));
+    setAdmins((prev) => prev.filter((a) => a.email !== email));
+  };
+
+  const filtered = admins.filter(
+    (a) =>
+      search === "" ||
+      a.name.toLowerCase().includes(search.toLowerCase()) ||
+      a.email.toLowerCase().includes(search.toLowerCase())
+  );
+
   return (
     <div className="px-5 py-6 lg:px-8 lg:py-7">
       <AdminHeader
         title="Users & Roles"
-        subtitle="Manage staff access and permissions"
+        subtitle="Manage admin access and permissions"
         action={
-          <button className="flex items-center gap-2 rounded-full bg-ink px-4 py-2 text-sm font-semibold text-white transition hover:bg-black">
-            <UserPlus size={16} />
-            Invite User
+          <button
+            onClick={() => setShowAddModal(true)}
+            className="flex items-center gap-2 rounded-full bg-ink px-4 py-2 text-sm font-semibold text-white transition hover:bg-black"
+          >
+            <Plus size={16} />
+            Add Admin
           </button>
         }
       />
 
-      {/* Role cards */}
-      <div className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
-        {ROLE_CARDS.map((r) => (
-          <div key={r.role} className="admin-card p-5">
-            <div className="flex items-center gap-2.5">
-              <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-surface-soft text-mercury">
-                <ShieldCheck size={18} />
-              </span>
-              <p className="text-[15px] font-bold text-ink">{r.role}</p>
-            </div>
-            <p className="mt-3 text-xs text-muted">{r.desc}</p>
-            <p className="mt-3 text-sm font-semibold text-ink">
-              {r.members} {r.members === 1 ? "member" : "members"}
-            </p>
-          </div>
-        ))}
+      {/* Summary */}
+      <div className="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-3">
+        <div className="rounded-2xl p-5" style={{ backgroundColor: "#eaf1fc" }}>
+          <p className="text-[12px] text-muted">Total Admins</p>
+          <p className="text-xl font-extrabold text-ink">
+            {adminEmails.length}
+          </p>
+        </div>
+        <div className="rounded-2xl p-5" style={{ backgroundColor: "#eef7ee" }}>
+          <p className="text-[12px] text-muted">With Profiles</p>
+          <p className="text-xl font-extrabold text-ink">{admins.length}</p>
+        </div>
+        <div className="rounded-2xl p-5" style={{ backgroundColor: "#f3e8ff" }}>
+          <p className="text-[12px] text-muted">Whitelisted Emails</p>
+          <p className="text-xl font-extrabold text-ink">
+            {adminEmails.length}
+          </p>
+        </div>
       </div>
 
-      {/* Staff table */}
-      <section className="admin-card mt-6 p-5">
-        <h3 className="mb-4 text-lg font-bold text-ink">Team Members</h3>
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[680px] border-collapse text-left">
-            <thead>
-              <tr className="border-b border-line text-[12px] font-medium text-muted">
-                <th className="pb-3 pl-1 font-medium">Member</th>
-                <th className="pb-3 font-medium">Role</th>
-                <th className="pb-3 font-medium">Status</th>
-                <th className="pb-3 font-medium">Last Active</th>
-                <th className="pb-3 font-medium"></th>
-              </tr>
-            </thead>
-            <tbody>
-              {STAFF_USERS.map((u) => (
-                <tr
-                  key={u.email}
-                  className="border-b border-line/70 text-sm last:border-0"
+      {/* Search */}
+      <div className="mt-5 flex h-10 flex-1 items-center gap-2 rounded-full bg-white px-4">
+        <Search size={16} className="text-muted" />
+        <input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search admins"
+          className="w-full bg-transparent text-sm text-ink outline-none placeholder:text-muted"
+        />
+      </div>
+
+      {/* Admin list */}
+      <section className="mt-5 rounded-2xl bg-white p-5">
+        {loading ? (
+          <div className="flex justify-center py-12">
+            <div className="h-8 w-8 animate-spin rounded-full border-2 border-line border-t-mercury" />
+          </div>
+        ) : filtered.length === 0 ? (
+          <p className="py-12 text-center text-sm text-muted">
+            No admin users found.
+          </p>
+        ) : (
+          <div className="flex flex-col gap-3">
+            {filtered.map((admin) => (
+              <div
+                key={admin.id}
+                className="flex items-center justify-between rounded-xl bg-[#f8fafb] px-5 py-4"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-mercury text-sm font-bold text-white">
+                    {admin.name
+                      .split(" ")
+                      .map((n) => n[0])
+                      .join("")
+                      .slice(0, 2)
+                      .toUpperCase()}
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-ink">
+                      {admin.name}
+                    </p>
+                    <p className="text-[11px] text-muted">{admin.email}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span
+                    className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${
+                      ROLE_COLORS[admin.role] ?? ROLE_COLORS.Admin
+                    }`}
+                  >
+                    {admin.role}
+                  </span>
+                  <span className="text-xs text-muted">{admin.location}</span>
+                  <button
+                    onClick={() => removeAdmin(admin.email)}
+                    className="text-muted transition hover:text-red-500"
+                  >
+                    <Trash2 size={15} />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Show whitelisted emails that don't have profiles yet */}
+        {adminEmails.filter(
+          (e) => !admins.some((a) => a.email === e)
+        ).length > 0 && (
+          <div className="mt-4 border-t border-line pt-4">
+            <p className="mb-2 text-xs font-semibold text-muted">
+              Pending (no profile yet)
+            </p>
+            {adminEmails
+              .filter((e) => !admins.some((a) => a.email === e))
+              .map((email) => (
+                <div
+                  key={email}
+                  className="flex items-center justify-between py-2"
                 >
-                  <td className="py-3 pl-1">
-                    <div className="flex items-center gap-3">
-                      <span
-                        className="flex h-9 w-9 items-center justify-center rounded-full text-[11px] font-bold text-white"
-                        style={{ backgroundColor: u.color }}
-                      >
-                        {initials(u.name)}
-                      </span>
-                      <div>
-                        <p className="font-medium text-ink">{u.name}</p>
-                        <p className="text-[11px] text-muted">{u.email}</p>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="py-3">
-                    <span
-                      className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${ROLE_STYLES[u.role]}`}
-                    >
-                      {u.role}
-                    </span>
-                  </td>
-                  <td className="py-3">
-                    <span className="flex items-center gap-1.5 text-sm text-ink">
-                      <span
-                        className={`h-2 w-2 rounded-full ${
-                          u.active ? "bg-[#16a34a]" : "bg-line"
-                        }`}
-                      />
-                      {u.active ? "Active" : "Inactive"}
-                    </span>
-                  </td>
-                  <td className="py-3 text-muted">{u.lastActive}</td>
-                  <td className="py-3 text-right">
-                    <button className="rounded-lg p-1.5 text-muted transition hover:bg-surface-soft hover:text-ink">
-                      <MoreHorizontal size={18} />
-                    </button>
-                  </td>
-                </tr>
+                  <span className="text-sm text-muted">{email}</span>
+                  <button
+                    onClick={() => removeAdmin(email)}
+                    className="text-xs text-red-500 hover:text-red-700"
+                  >
+                    Remove
+                  </button>
+                </div>
               ))}
-            </tbody>
-          </table>
-        </div>
+          </div>
+        )}
       </section>
+
+      {/* Add Admin Modal */}
+      {showAddModal && (
+        <AddAdminModal
+          onClose={() => setShowAddModal(false)}
+          onAdded={() => {
+            setShowAddModal(false);
+            fetchData();
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+function AddAdminModal({
+  onClose,
+  onAdded,
+}: {
+  onClose: () => void;
+  onAdded: () => void;
+}) {
+  const [email, setEmail] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  const handleAdd = async () => {
+    if (!email.trim()) return;
+    setBusy(true);
+    try {
+      await updateDoc(doc(db, "config", "admins"), {
+        emails: arrayUnion(email.trim()),
+      });
+      onAdded();
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+      <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-2xl">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-bold text-ink">Add Admin</h2>
+          <button onClick={onClose} className="text-muted hover:text-ink">
+            <X size={20} />
+          </button>
+        </div>
+        <p className="mt-1 text-sm text-muted">
+          Add an email to the admin whitelist. They'll need to sign up
+          and log in at /u/login to access the dashboard.
+        </p>
+        <div className="mt-5">
+          <label className="mb-1.5 block text-xs font-semibold text-ink">
+            Email Address
+          </label>
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="admin@example.com"
+            className="h-11 w-full rounded-full bg-[#F4F5F8] px-4 text-sm text-ink outline-none placeholder:text-muted"
+          />
+        </div>
+        <div className="mt-6 flex justify-end gap-3">
+          <button
+            onClick={onClose}
+            className="rounded-full border border-line px-5 py-2.5 text-sm font-medium text-ink transition hover:border-ink"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleAdd}
+            disabled={!email.trim() || busy}
+            className="rounded-full bg-ink px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-black disabled:opacity-40"
+          >
+            {busy ? "Adding..." : "Add Admin"}
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
