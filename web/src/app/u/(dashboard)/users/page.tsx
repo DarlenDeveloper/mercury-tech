@@ -141,7 +141,7 @@ export default function UsersRolesPage() {
         />
       </div>
 
-      {/* Admin list */}
+      {/* Admin table */}
       <section className="mt-5 rounded-2xl bg-white p-5">
         {loading ? (
           <div className="flex justify-center py-12">
@@ -152,46 +152,73 @@ export default function UsersRolesPage() {
             No admin users found.
           </p>
         ) : (
-          <div className="flex flex-col gap-3">
-            {filtered.map((admin) => (
-              <div
-                key={admin.id}
-                className="flex items-center justify-between rounded-xl bg-[#f8fafb] px-5 py-4"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-mercury text-sm font-bold text-white">
-                    {admin.name
-                      .split(" ")
-                      .map((n) => n[0])
-                      .join("")
-                      .slice(0, 2)
-                      .toUpperCase()}
-                  </div>
-                  <div>
-                    <p className="text-sm font-semibold text-ink">
-                      {admin.name}
-                    </p>
-                    <p className="text-[11px] text-muted">{admin.email}</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <span
-                    className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${
-                      ROLE_COLORS[admin.role] ?? ROLE_COLORS.Admin
-                    }`}
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[700px] border-collapse text-left">
+              <thead>
+                <tr className="border-b border-line text-[12px] font-medium text-muted">
+                  <th className="pb-3 pl-1 font-medium">User</th>
+                  <th className="pb-3 font-medium">Email / Phone</th>
+                  <th className="pb-3 font-medium">Role</th>
+                  <th className="pb-3 font-medium">Location</th>
+                  <th className="pb-3 font-medium"></th>
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.map((admin, i) => (
+                  <tr
+                    key={admin.id}
+                    className="border-b border-line/70 text-sm last:border-0"
                   >
-                    {admin.role}
-                  </span>
-                  <span className="text-xs text-muted">{admin.location}</span>
-                  <button
-                    onClick={() => removeAdmin(admin.email)}
-                    className="text-muted transition hover:text-red-500"
-                  >
-                    <Trash2 size={15} />
-                  </button>
-                </div>
-              </div>
-            ))}
+                    <td className="py-3 pl-1">
+                      <div className="flex items-center gap-3">
+                        <div
+                          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[11px] font-bold text-white"
+                          style={{
+                            backgroundColor:
+                              ["#1f3e97", "#0e7490", "#9f1239", "#b45309", "#7c3aed"][
+                                i % 5
+                              ],
+                          }}
+                        >
+                          {admin.name
+                            .split(" ")
+                            .map((n) => n[0])
+                            .join("")
+                            .slice(0, 2)
+                            .toUpperCase()}
+                        </div>
+                        <span className="font-medium text-ink">
+                          {admin.name}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="py-3 text-muted">
+                      {admin.email.endsWith("@mercury.phone")
+                        ? "+" + admin.email.replace("@mercury.phone", "")
+                        : admin.email}
+                    </td>
+                    <td className="py-3">
+                      <span
+                        className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${
+                          ROLE_COLORS[admin.role] ?? ROLE_COLORS.Admin
+                        }`}
+                      >
+                        {admin.role}
+                      </span>
+                    </td>
+                    <td className="py-3 text-muted">{admin.location || "\u2014"}</td>
+                    <td className="py-3 text-right">
+                      <button
+                        onClick={() => removeAdmin(admin.email)}
+                        className="text-muted transition hover:text-red-500"
+                      >
+                        <Trash2 size={15} />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         )}
 
