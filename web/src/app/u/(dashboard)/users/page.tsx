@@ -21,6 +21,7 @@ type AdminUser = {
   phone: string;
   location: string;
   role: string;
+  createdAt: Date | null;
 };
 
 const ROLE_COLORS: Record<string, string> = {
@@ -68,6 +69,7 @@ export default function UsersRolesPage() {
             phone: data.phone || "",
             location: data.location || "",
             role: data.role || "Admin",
+            createdAt: data.createdAt?.toDate?.() ?? null,
           };
         });
       setAdmins(adminUsers);
@@ -158,9 +160,10 @@ export default function UsersRolesPage() {
                 <tr className="border-b border-line text-[12px] font-medium text-muted">
                   <th className="pb-3 pl-1 font-medium">User</th>
                   <th className="pb-3 font-medium">Email / Phone</th>
+                  <th className="pb-3 font-medium">Name</th>
                   <th className="pb-3 font-medium">Role</th>
                   <th className="pb-3 font-medium">Location</th>
-                  <th className="pb-3 font-medium"></th>
+                  <th className="pb-3 font-medium">Joined</th>
                 </tr>
               </thead>
               <tbody>
@@ -197,6 +200,7 @@ export default function UsersRolesPage() {
                         ? "+" + admin.email.replace("@mercury.phone", "")
                         : admin.email}
                     </td>
+                    <td className="py-3 text-ink">{admin.name}</td>
                     <td className="py-3">
                       <span
                         className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${
@@ -207,13 +211,13 @@ export default function UsersRolesPage() {
                       </span>
                     </td>
                     <td className="py-3 text-muted">{admin.location || "\u2014"}</td>
-                    <td className="py-3 text-right">
-                      <button
-                        onClick={() => removeAdmin(admin.email)}
-                        className="text-muted transition hover:text-red-500"
-                      >
-                        <Trash2 size={15} />
-                      </button>
+                    <td className="py-3 text-muted text-xs">
+                      {admin.createdAt
+                        ? admin.createdAt.toLocaleDateString("en-UG", {
+                            month: "short",
+                            year: "numeric",
+                          })
+                        : "\u2014"}
                     </td>
                   </tr>
                 ))}
