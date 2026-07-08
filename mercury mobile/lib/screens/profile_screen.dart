@@ -141,17 +141,10 @@ class _ProfileCard extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 20),
+      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
       ),
       child: registered
           ? _RegisteredContent(user: user!)
@@ -180,84 +173,80 @@ class _RegisteredContent extends StatelessWidget {
             ? profile!.phone
             : (user.phoneNumber ?? user.email ?? 'Signed in');
 
-        return Column(
+        return Row(
           children: [
+            // Avatar
             Container(
-              width: 70,
-              height: 70,
+              width: 50,
+              height: 50,
               decoration: BoxDecoration(
-                color: const Color(0xFFEDF1F7),
+                color: AppColors.primary.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
-                border: Border.all(
-                  color: const Color(0xFFE5E7EB),
-                  width: 2,
-                ),
               ),
               child: Center(
                 child: Text(
                   displayName.isNotEmpty ? displayName[0].toUpperCase() : 'M',
                   style: const TextStyle(
-                    fontSize: 28,
+                    fontSize: 20,
                     fontWeight: FontWeight.w700,
                     color: AppColors.primary,
                   ),
                 ),
               ),
             ),
-            const SizedBox(height: 14),
-            Text(
-              displayName,
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
-                color: _ProfileScreenState._ink,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              subtitle,
-              style: const TextStyle(
-                fontSize: 13,
-                color: AppColors.inactive,
-              ),
-            ),
-            if (profile?.location.isNotEmpty == true) ...[
-              const SizedBox(height: 4),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+            const SizedBox(width: 14),
+            // Name + subtitle
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Icon(IconsaxPlusLinear.location,
-                      size: 13, color: AppColors.inactive),
-                  const SizedBox(width: 4),
                   Text(
-                    profile!.location,
+                    displayName,
                     style: const TextStyle(
-                      fontSize: 12,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: _ProfileScreenState._ink,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    style: const TextStyle(
+                      fontSize: 13,
                       color: AppColors.inactive,
                     ),
                   ),
                 ],
               ),
-            ],
-            const SizedBox(height: 16),
-            ElevatedButton.icon(
-              onPressed: () => Navigator.of(context).push(
+            ),
+            // Edit button
+            GestureDetector(
+              onTap: () => Navigator.of(context).push(
                 MaterialPageRoute(builder: (_) => const EditProfileScreen()),
               ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.accent,
-                foregroundColor: Colors.white,
-                elevation: 0,
+              child: Container(
                 padding:
-                    const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(24),
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                decoration: BoxDecoration(
+                  color: AppColors.accent,
+                  borderRadius: BorderRadius.circular(20),
                 ),
-              ),
-              icon: const Icon(IconsaxPlusLinear.edit_2, size: 16),
-              label: const Text(
-                'Edit Profile',
-                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(IconsaxPlusLinear.edit_2,
+                        size: 14, color: Colors.white),
+                    SizedBox(width: 6),
+                    Text(
+                      'Edit',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ],
