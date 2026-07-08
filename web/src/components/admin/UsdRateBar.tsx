@@ -30,7 +30,7 @@ export default function UsdRateBar({
   };
 
   return (
-    <div className="admin-card flex flex-wrap items-center justify-between gap-5 p-4">
+    <div className="flex flex-wrap items-center justify-between gap-5 rounded-2xl bg-white p-4">
       {/* Current rate */}
       <div className="flex items-center gap-3">
         <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-mint text-[#16a34a]">
