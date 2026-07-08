@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shimmer/shimmer.dart';
 
 import '../data/auth_scope.dart';
 import '../data/favorites_repository.dart';
@@ -55,12 +56,37 @@ class ProductCard extends StatelessWidget {
                     child: product.image != null
                         ? ClipRRect(
                             borderRadius: BorderRadius.circular(17),
-                            child: Image.asset(
-                              product.image!,
-                              fit: BoxFit.cover,
-                              width: double.infinity,
-                              height: double.infinity,
-                            ),
+                            child: product.image!.startsWith('http')
+                                ? Image.network(
+                                    product.image!,
+                                    fit: BoxFit.cover,
+                                    width: double.infinity,
+                                    height: double.infinity,
+                                    loadingBuilder: (context, child, progress) {
+                                      if (progress == null) return child;
+                                      return Shimmer.fromColors(
+                                        baseColor: const Color(0xFFE5E7EB),
+                                        highlightColor: const Color(0xFFF5F5F5),
+                                        child: Container(color: Colors.white),
+                                      );
+                                    },
+                                    errorBuilder: (_, __, ___) => Column(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        Icon(Icons.image_outlined, size: 28,
+                                            color: AppColors.inactive.withValues(alpha: 0.4)),
+                                        const SizedBox(height: 4),
+                                        Text('No image', style: TextStyle(fontSize: 10,
+                                            color: AppColors.inactive.withValues(alpha: 0.5))),
+                                      ],
+                                    ),
+                                  )
+                                : Image.asset(
+                                    product.image!,
+                                    fit: BoxFit.cover,
+                                    width: double.infinity,
+                                    height: double.infinity,
+                                  ),
                           )
                         : Center(
                             child: Column(

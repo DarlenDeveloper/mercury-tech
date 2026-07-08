@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:iconsax_plus/iconsax_plus.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:shimmer/shimmer.dart';
 
 import '../data/auth_scope.dart';
 import '../data/cart_repository.dart';
@@ -318,7 +319,32 @@ class _ImageArea extends StatelessWidget {
               Positioned.fill(
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(24),
-                  child: Image.asset(product.image!, fit: BoxFit.cover),
+                  child: product.image!.startsWith('http')
+                      ? Image.network(
+                          product.image!,
+                          fit: BoxFit.cover,
+                          loadingBuilder: (context, child, progress) {
+                            if (progress == null) return child;
+                            return Shimmer.fromColors(
+                              baseColor: const Color(0xFFE5E7EB),
+                              highlightColor: const Color(0xFFF5F5F5),
+                              child: Container(color: Colors.white),
+                            );
+                          },
+                          errorBuilder: (_, __, ___) => Center(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.image_outlined, size: 48,
+                                    color: AppColors.inactive.withValues(alpha: 0.4)),
+                                const SizedBox(height: 8),
+                                Text('No image', style: TextStyle(fontSize: 13,
+                                    color: AppColors.inactive.withValues(alpha: 0.5))),
+                              ],
+                            ),
+                          ),
+                        )
+                      : Image.asset(product.image!, fit: BoxFit.cover),
                 ),
               )
             else

@@ -60,6 +60,8 @@ class ProductRepository {
     final priceUsd = (data['priceUsd'] as num?)?.toDouble() ?? 0;
     final oldPriceUsd = (data['oldPriceUsd'] as num?)?.toDouble();
     final images = (data['images'] as List?)?.cast<String>() ?? const [];
+    final singleImage = data['image'] as String?;
+    final productImage = images.isNotEmpty ? images.first : singleImage;
     final specs = (data['specifications'] as Map?)?.map(
           (k, v) => MapEntry(k.toString(), v.toString()),
         ) ??
@@ -76,7 +78,7 @@ class ProductRepository {
       categoryId: (data['categoryId'] as String?),
       icon: _iconFor(category),
       accent: _pastelAccents[index % _pastelAccents.length],
-      image: images.isNotEmpty ? images.first : null,
+      image: productImage,
       isNew: (data['isNew'] as bool?) ?? false,
       specifications: specs,
     );
