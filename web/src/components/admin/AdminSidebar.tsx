@@ -30,36 +30,36 @@ type Group = { title?: string; items: Item[] };
 const GROUPS: Group[] = [
   {
     items: [
-      { label: "Dashboard", icon: House, href: "/admin" },
-      { label: "Analytics", icon: ChartNoAxesColumn, href: "/admin/analytics" },
+      { label: "Dashboard", icon: House, href: "/u" },
+      { label: "Analytics", icon: ChartNoAxesColumn, href: "/u/analytics" },
     ],
   },
   {
     title: "Store",
     items: [
-      { label: "Orders", icon: ClipboardList, href: "/admin/orders", badge: "24" },
-      { label: "Products", icon: Package, href: "/admin/products" },
-      { label: "Categories", icon: LayoutGrid, href: "/admin/categories" },
-      { label: "Customers", icon: Users, href: "/admin/customers" },
-      { label: "Repairs & Services", icon: Wrench, href: "/admin/repairs" },
+      { label: "Orders", icon: ClipboardList, href: "/u/orders", badge: "24" },
+      { label: "Products", icon: Package, href: "/u/products" },
+      { label: "Categories", icon: LayoutGrid, href: "/u/categories" },
+      { label: "Customers", icon: Users, href: "/u/customers" },
+      { label: "Repairs & Services", icon: Wrench, href: "/u/repairs" },
     ],
   },
   {
     title: "Growth",
     items: [
-      { label: "User Tracking", icon: Activity, href: "/admin/user-tracking" },
-      { label: "Financial Reports", icon: Wallet, href: "/admin/finance" },
-      { label: "Website", icon: Globe, href: "/admin/website" },
+      { label: "User Tracking", icon: Activity, href: "/u/user-tracking" },
+      { label: "Financial Reports", icon: Wallet, href: "/u/finance" },
+      { label: "Website", icon: Globe, href: "/u/website" },
     ],
   },
   {
     title: "System",
     items: [
-      { label: "Users & Roles", icon: ShieldCheck, href: "/admin/users" },
-      { label: "Notifications", icon: Bell, href: "/admin/notifications", badge: "9" },
-      { label: "Audit Logs", icon: ScrollText, href: "/admin/audit-logs" },
-      { label: "Settings", icon: Settings, href: "/admin/settings" },
-      { label: "Help", icon: CircleHelp, href: "/admin/help" },
+      { label: "Users & Roles", icon: ShieldCheck, href: "/u/users" },
+      { label: "Notifications", icon: Bell, href: "/u/notifications", badge: "9" },
+      { label: "Audit Logs", icon: ScrollText, href: "/u/audit-logs" },
+      { label: "Settings", icon: Settings, href: "/u/settings" },
+      { label: "Help", icon: CircleHelp, href: "/u/help" },
     ],
   },
 ];
@@ -75,7 +75,7 @@ export default function AdminSidebar() {
 
   const renderItem = ({ label, icon: Icon, href, badge }: Item) => {
     const isActive =
-      href === "/admin" ? pathname === "/admin" : pathname.startsWith(href);
+      href === "/u" ? pathname === "/u" : pathname.startsWith(href);
     return (
       <Link
         key={label}
@@ -106,7 +106,7 @@ export default function AdminSidebar() {
   return (
     <aside className="flex h-full w-64 shrink-0 flex-col bg-white px-4 py-6">
       {/* Brand */}
-      <Link href="/admin" className="flex items-center px-2">
+      <Link href="/u" className="flex items-center px-2">
         <Image
           src="/mercury-logo.png"
           alt="Mercury"

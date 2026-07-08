@@ -2,13 +2,15 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { doc, getDoc } from "firebase/firestore";
 import { useAuth } from "@/components/AuthProvider";
+import { db } from "@/lib/firestore";
 
 export const ADMIN_AUTH_KEY = "mercury_admin_authed";
 
 /**
- * Auth gate for admin. Uses Firebase Auth — redirects to /login if not
- * authenticated. Also sets localStorage flag for backward compat.
+ * Auth gate for admin. Checks Firebase Auth + admin whitelist stored
+ * in Firestore at config/admins. Only listed emails can access.
  */
 export default function AdminGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -19,11 +21,33 @@ export default function AdminGuard({ children }: { children: React.ReactNode }) 
     if (loading) return;
     if (!user) {
       window.localStorage.removeItem(ADMIN_AUTH_KEY);
-      router.replace("/login");
+      router.replace("/u/login");
       return;
     }
-    window.localStorage.setItem(ADMIN_AUTH_KEY, "1");
-    setReady(true);
+
+    // Check Firestore for admin access
+    const checkAdmin = async () => {
+      try {
+        const ref = doc(db, "config", "admins");
+        const snap = await getDoc(ref);
+        const emails: string[] = snap.exists()
+          ? (snap.data()?.emails ?? [])
+          : [];
+
+        if (!emails.includes(user.email ?? "")) {
+          window.localStorage.removeItem(ADMIN_AUTH_KEY);
+          router.replace("/u/login");
+          return;
+        }
+
+        window.localStorage.setItem(ADMIN_AUTH_KEY, "1");
+        setReady(true);
+      } catch {
+        router.replace("/u/login");
+      }
+    };
+
+    checkAdmin();
   }, [user, loading, router]);
 
   if (loading || !ready) {
