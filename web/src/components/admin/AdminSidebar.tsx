@@ -68,9 +68,11 @@ export default function AdminSidebar() {
   const pathname = usePathname();
   const router = useRouter();
 
-  const logout = () => {
+  const logout = async () => {
+    const { signOut } = await import("@/lib/auth");
+    await signOut();
     window.localStorage.removeItem(ADMIN_AUTH_KEY);
-    router.push("/login");
+    router.push("/u/login");
   };
 
   const renderItem = ({ label, icon: Icon, href, badge }: Item) => {

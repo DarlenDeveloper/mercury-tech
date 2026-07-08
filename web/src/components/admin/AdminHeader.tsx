@@ -1,4 +1,7 @@
+"use client";
+
 import { Search, Bell, ChevronDown } from "lucide-react";
+import { useAuth } from "@/components/AuthProvider";
 
 export default function AdminHeader({
   title,
@@ -9,6 +12,15 @@ export default function AdminHeader({
   subtitle: string;
   action?: React.ReactNode;
 }) {
+  const { user } = useAuth();
+  const displayName = user?.displayName || "Admin";
+  const initials = displayName
+    .split(" ")
+    .map((w) => w[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+
   return (
     <header className="flex flex-wrap items-center justify-between gap-4">
       <div>
@@ -44,10 +56,10 @@ export default function AdminHeader({
           className="flex items-center gap-2.5 rounded-full py-1 pl-1 pr-2 transition hover:bg-surface-soft"
         >
           <span className="flex h-9 w-9 items-center justify-center rounded-full bg-mercury text-sm font-bold text-white">
-            DO
+            {initials}
           </span>
           <span className="hidden text-sm font-semibold text-ink sm:block">
-            Daniel Okello
+            {displayName}
           </span>
           <ChevronDown size={16} className="text-muted" />
         </button>

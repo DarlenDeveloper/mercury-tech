@@ -5,17 +5,19 @@ import { useRouter } from "next/navigation";
 import { doc, getDoc } from "firebase/firestore";
 import { useAuth } from "@/components/AuthProvider";
 import { db } from "@/lib/firestore";
+import AdminProfileSetup from "@/components/admin/AdminProfileSetup";
 
 export const ADMIN_AUTH_KEY = "mercury_admin_authed";
 
 /**
  * Auth gate for admin. Checks Firebase Auth + admin whitelist stored
- * in Firestore at config/admins. Only listed emails can access.
+ * in Firestore at config/admins. Shows profile setup if no profile exists.
  */
 export default function AdminGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const { user, loading } = useAuth();
   const [ready, setReady] = useState(false);
+  const [needsProfile, setNeedsProfile] = useState(false);
 
   useEffect(() => {
     if (loading) return;
@@ -25,19 +27,27 @@ export default function AdminGuard({ children }: { children: React.ReactNode }) 
       return;
     }
 
-    // Check Firestore for admin access
     const checkAdmin = async () => {
       try {
-        const ref = doc(db, "config", "admins");
-        const snap = await getDoc(ref);
-        const emails: string[] = snap.exists()
-          ? (snap.data()?.emails ?? [])
+        // Check admin whitelist
+        const adminRef = doc(db, "config", "admins");
+        const adminSnap = await getDoc(adminRef);
+        const emails: string[] = adminSnap.exists()
+          ? (adminSnap.data()?.emails ?? [])
           : [];
 
         if (!emails.includes(user.email ?? "")) {
           window.localStorage.removeItem(ADMIN_AUTH_KEY);
           router.replace("/u/login");
           return;
+        }
+
+        // Check if user has a profile
+        const profileRef = doc(db, "users", user.uid);
+        const profileSnap = await getDoc(profileRef);
+
+        if (!profileSnap.exists() || !profileSnap.data()?.name) {
+          setNeedsProfile(true);
         }
 
         window.localStorage.setItem(ADMIN_AUTH_KEY, "1");
@@ -58,5 +68,15 @@ export default function AdminGuard({ children }: { children: React.ReactNode }) 
     );
   }
 
-  return <>{children}</>;
+  return (
+    <>
+      {needsProfile && user && (
+        <AdminProfileSetup
+          user={user}
+          onComplete={() => setNeedsProfile(false)}
+        />
+      )}
+      {children}
+    </>
+  );
 }

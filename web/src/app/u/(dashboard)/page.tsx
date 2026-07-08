@@ -11,7 +11,7 @@ export default function AdminDashboardPage() {
   return (
     <div className="px-5 py-6 lg:px-8 lg:py-7">
       <AdminHeader
-        title="Welcome Back, Daniel!"
+        title="Welcome Back!"
         subtitle="Here's what's happening with your store today"
       />
 
