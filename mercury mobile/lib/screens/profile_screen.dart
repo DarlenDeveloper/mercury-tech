@@ -48,7 +48,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
           _ProfileCard(user: AuthScope.of(context).user),
           const SizedBox(height: 24),
 
-          // First group
+          // Manage section
+          const _SectionLabel('Manage'),
+          const SizedBox(height: 8),
           _SectionCard(
             rows: [
               _ProfileRow(
@@ -84,9 +86,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
 
-          // Second group
+          // Info section
+          const _SectionLabel('Info'),
+          const SizedBox(height: 8),
           _SectionCard(
             rows: [
               _ProfileRow(
@@ -311,6 +315,25 @@ class _GuestContent extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+
+class _SectionLabel extends StatelessWidget {
+  const _SectionLabel(this.text);
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      text,
+      style: const TextStyle(
+        fontSize: 13,
+        fontWeight: FontWeight.w600,
+        color: AppColors.inactive,
+        letterSpacing: 0.3,
+      ),
     );
   }
 }
