@@ -44,11 +44,26 @@ function TrustRow({
   );
 }
 
-export default function ProductInfo({ product }: { product: Product }) {
+export default function ProductInfo({
+  product,
+  reviewAverage = 0,
+  reviewCount = 0,
+}: {
+  product: Product;
+  reviewAverage?: number;
+  reviewCount?: number;
+}) {
   const [qty, setQty] = useState(1);
   const [color, setColor] = useState(0);
   const onSale = product.oldPrice != null && product.oldPrice > product.price;
   const colors = product.colors ?? [];
+
+  // Prefer live review data; fall back to the catalog's static rating.
+  const hasReviews = reviewCount > 0;
+  const displayRating = hasReviews ? reviewAverage : product.rating;
+  const displayReviews = hasReviews
+    ? `${reviewCount} ${reviewCount === 1 ? "Review" : "Reviews"}`
+    : "No reviews yet";
 
   return (
     <div className="flex flex-col">
@@ -63,8 +78,10 @@ export default function ProductInfo({ product }: { product: Product }) {
 
       {/* Rating */}
       <div className="mt-2.5 flex items-center gap-2">
-        <Stars rating={product.rating} />
-        <span className="text-xs text-muted">({product.reviews})</span>
+        <Stars rating={displayRating} />
+        <span className="text-xs text-muted">
+          {hasReviews ? `${displayRating.toFixed(1)} (${displayReviews})` : displayReviews}
+        </span>
       </div>
 
       {/* Price */}

@@ -16,6 +16,7 @@ import {
   type CartItem,
 } from "@/lib/cart";
 import { placeOrder } from "@/lib/orders";
+import CheckoutSheet, { type PaymentMethod } from "@/components/CheckoutSheet";
 
 export default function CartPage() {
   const { user, loading } = useAuth();
@@ -23,6 +24,7 @@ export default function CartPage() {
   const [fetching, setFetching] = useState(true);
   const [placing, setPlacing] = useState(false);
   const [orderPlaced, setOrderPlaced] = useState(false);
+  const [showCheckout, setShowCheckout] = useState(false);
 
   const rate = 3780;
 
@@ -63,13 +65,17 @@ export default function CartPage() {
     setItems((prev) => prev.filter((i) => i.productId !== productId));
   };
 
-  const handleCheckout = async () => {
+  const handlePlaceOrder = async (
+    paymentMethod: PaymentMethod,
+    deliveryAddress: string
+  ) => {
     if (!user || items.length === 0) return;
     setPlacing(true);
     try {
-      await placeOrder(user.uid, items, totalUsd, "Mobile Money");
+      await placeOrder(user.uid, items, totalUsd, paymentMethod, deliveryAddress);
       await clearCart(user.uid);
       setItems([]);
+      setShowCheckout(false);
       setOrderPlaced(true);
     } catch (e) {
       console.error("Order error:", e);
@@ -219,11 +225,11 @@ export default function CartPage() {
                 </div>
               </div>
               <button
-                onClick={handleCheckout}
+                onClick={() => setShowCheckout(true)}
                 disabled={placing}
                 className="mt-6 w-full rounded-full bg-mercury py-3 text-sm font-semibold text-white transition hover:bg-mercury/90 disabled:opacity-50"
               >
-                {placing ? "Placing order..." : "Place Order"}
+                Checkout
               </button>
               <p className="mt-3 text-center text-xs text-muted">
                 Free delivery within Kampala Central
@@ -232,6 +238,15 @@ export default function CartPage() {
           </div>
         )}
       </main>
+
+      {showCheckout && (
+        <CheckoutSheet
+          totalUgx={totalUgx}
+          placing={placing}
+          onClose={() => setShowCheckout(false)}
+          onPlaceOrder={handlePlaceOrder}
+        />
+      )}
 
       <Footer />
     </>

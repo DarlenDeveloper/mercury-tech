@@ -16,6 +16,7 @@ export type Order = {
   items: CartItem[];
   totalUsd: number;
   paymentMethod: string;
+  deliveryAddress: string;
   status: string;
   createdAt: Date | null;
 };
@@ -25,7 +26,8 @@ export async function placeOrder(
   uid: string,
   items: CartItem[],
   totalUsd: number,
-  paymentMethod: string
+  paymentMethod: string,
+  deliveryAddress?: string
 ): Promise<string> {
   const ref = await addDoc(collection(db, "orders"), {
     userId: uid,
@@ -39,6 +41,7 @@ export async function placeOrder(
     })),
     totalUsd,
     paymentMethod,
+    deliveryAddress: deliveryAddress?.trim() || "Kampala, Uganda",
     status: "pending",
     createdAt: serverTimestamp(),
   });
@@ -61,6 +64,7 @@ export async function getUserOrders(uid: string): Promise<Order[]> {
       items: data.items ?? [],
       totalUsd: data.totalUsd ?? 0,
       paymentMethod: data.paymentMethod ?? "",
+      deliveryAddress: data.deliveryAddress ?? "",
       status: data.status ?? "pending",
       createdAt: data.createdAt?.toDate?.() ?? null,
     } as Order;

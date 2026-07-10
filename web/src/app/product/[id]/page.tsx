@@ -8,8 +8,9 @@ import ProductGallery from "@/components/product/ProductGallery";
 import ProductInfo from "@/components/product/ProductInfo";
 import ProductTabs from "@/components/product/ProductTabs";
 import RelatedProducts from "@/components/product/RelatedProducts";
-import { getProductById, getRelatedProducts } from "@/lib/products";
+import { getProductById } from "@/lib/products";
 import { getProductsFromFirestore } from "@/lib/getProducts";
+import { getReviews, summarize } from "@/lib/reviews";
 
 export default async function ProductPage({
   params,
@@ -26,6 +27,12 @@ export default async function ProductPage({
   const related = allProducts
     .filter((p) => p.id !== id && p.category === product!.category)
     .slice(0, 6);
+
+  // Live review summary (falls back to catalog rating when there are none
+  // or when reviews can't be loaded, e.g. before rules are deployed).
+  const reviewSummary = summarize(
+    await getReviews(id).catch(() => [])
+  );
 
   const gallery =
     product.gallery && product.gallery.length > 0
@@ -56,7 +63,11 @@ export default async function ProductPage({
         {/* Gallery + info */}
         <div className="mt-6 grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,420px)_1fr] lg:gap-12">
           <ProductGallery images={gallery} alt={product.name} />
-          <ProductInfo product={product} />
+          <ProductInfo
+            product={product}
+            reviewAverage={reviewSummary.average}
+            reviewCount={reviewSummary.count}
+          />
         </div>
 
         {/* Tabs */}

@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Star } from "lucide-react";
 import type { Product } from "@/lib/products";
+import ProductReviews from "./ProductReviews";
 
 const TABS = ["Description", "Additional Information", "Reviews"] as const;
 type Tab = (typeof TABS)[number];
@@ -43,7 +43,7 @@ export default function ProductTabs({ product }: { product: Product }) {
 
         {tab === "Additional Information" && <SpecTable product={product} />}
 
-        {tab === "Reviews" && <ReviewsPlaceholder product={product} />}
+        {tab === "Reviews" && <ProductReviews productId={product.id} />}
       </div>
     </section>
   );
@@ -97,28 +97,4 @@ function SpecTable({ product }: { product: Product }) {
   );
 }
 
-function ReviewsPlaceholder({ product }: { product: Product }) {
-  return (
-    <div className="mx-auto flex max-w-md flex-col items-center gap-2 rounded-2xl border border-line bg-white p-8 text-center">
-      <div className="flex items-center gap-1">
-        {Array.from({ length: 5 }, (_, i) => (
-          <Star
-            key={i}
-            size={18}
-            className={
-              i < Math.round(product.rating)
-                ? "fill-amber-400 text-amber-400"
-                : "text-line"
-            }
-          />
-        ))}
-      </div>
-      <p className="text-sm font-semibold text-ink">
-        {product.rating.toFixed(1)} out of 5 · {product.reviews}
-      </p>
-      <p className="text-sm text-muted">
-        Detailed customer reviews are coming soon.
-      </p>
-    </div>
-  );
-}
+
