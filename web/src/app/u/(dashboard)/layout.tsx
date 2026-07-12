@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import AdminSidebar from "@/components/admin/AdminSidebar";
 import AdminGuard from "@/components/admin/AdminGuard";
+import PageGuard from "@/components/admin/PageGuard";
 
 export const metadata: Metadata = {
   title: "Mercury Admin — Dashboard",
@@ -20,8 +21,10 @@ export default function AdminLayout({
           <AdminSidebar />
         </div>
 
-        {/* Main content */}
-        <main className="min-w-0 flex-1">{children}</main>
+        {/* Main content — access-checked per page */}
+        <main className="min-w-0 flex-1">
+          <PageGuard>{children}</PageGuard>
+        </main>
       </div>
     </AdminGuard>
   );
