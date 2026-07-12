@@ -29,7 +29,7 @@ export default function AreaChart({
   const [active, setActive] = useState(values.length - 1);
   const format = (v: number) => `${v.toFixed(decimals)}${unit}`;
 
-  const yMax = Math.max(...values) * 1.15;
+  const yMax = Math.max(...values) * 1.15 || 1;
   const xAt = (i: number) => PAD_L + (i / (months.length - 1)) * PLOT_W;
   const yAt = (v: number) => PAD_T + (1 - v / yMax) * PLOT_H;
 
@@ -71,10 +71,10 @@ export default function AreaChart({
           </linearGradient>
         </defs>
 
-        {gridVals.map((t) => {
+        {gridVals.map((t, idx) => {
           const y = yAt(t);
           return (
-            <g key={t}>
+            <g key={idx}>
               <line
                 x1={PAD_L}
                 x2={W - PAD_R}

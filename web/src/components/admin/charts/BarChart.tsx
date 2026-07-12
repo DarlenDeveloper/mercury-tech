@@ -27,7 +27,7 @@ export default function BarChart({
   const [active, setActive] = useState<number | null>(null);
   const format = (v: number) => `${v.toFixed(decimals)}${unit}`;
 
-  const yMax = Math.max(...values) * 1.15;
+  const yMax = Math.max(...values) * 1.15 || 1;
   const ticks = 4;
   const gridVals = Array.from({ length: ticks + 1 }, (_, i) => (yMax / ticks) * i);
 
@@ -37,10 +37,10 @@ export default function BarChart({
 
   return (
     <svg viewBox={`0 0 ${W} ${H}`} className="w-full">
-      {gridVals.map((t) => {
+      {gridVals.map((t, idx) => {
         const y = yAt(t);
         return (
-          <g key={t}>
+          <g key={idx}>
             <line
               x1={PAD_L}
               x2={W - PAD_R}
