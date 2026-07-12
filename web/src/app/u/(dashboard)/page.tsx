@@ -10,11 +10,13 @@ import {
   orderBy,
 } from "firebase/firestore";
 import Image from "next/image";
-import { TrendingUp, TrendingDown, BadgeCheck } from "lucide-react";
+import { TrendingUp, TrendingDown, BadgeCheck, EyeOff } from "lucide-react";
 import AdminHeader from "@/components/admin/AdminHeader";
 import Sparkline from "@/components/admin/Sparkline";
 import AreaChart from "@/components/admin/charts/AreaChart";
 import { db } from "@/lib/firestore";
+import { useAdminAccess } from "@/components/admin/AdminGuard";
+import { isSuperAdmin, hasPageAccess } from "@/lib/adminAccess";
 
 type OrderItem = {
   productId: string;
@@ -64,6 +66,9 @@ function initials(name: string) {
 }
 
 export default function AdminDashboardPage() {
+  const { adminEntry } = useAdminAccess();
+  const canSeeRevenue = isSuperAdmin(adminEntry) || hasPageAccess(adminEntry, "finance");
+
   const [orders, setOrders] = useState<Order[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
@@ -181,11 +186,11 @@ export default function AdminDashboardPage() {
     },
     {
       label: "Total Revenue",
-      value: formatUgx(totalRevenueUsd, rate),
-      delta: `${completedOrders.length} completed`,
+      value: canSeeRevenue ? formatUgx(totalRevenueUsd, rate) : "••••••",
+      delta: canSeeRevenue ? `${completedOrders.length} completed` : "Restricted",
       trend: totalRevenueUsd > 0 ? ("up" as const) : ("down" as const),
       tint: "#eef7ee",
-      spark: revenueSpark,
+      spark: canSeeRevenue ? revenueSpark : [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
     },
     {
       label: "Total Products",
@@ -291,28 +296,45 @@ export default function AdminDashboardPage() {
           </div>
 
           {/* Revenue chart from real data */}
-          <section className="admin-card p-5">
+          <section className="admin-card relative p-5 overflow-hidden">
             <div className="mb-2 flex items-center justify-between">
               <div>
                 <h3 className="text-lg font-bold text-ink">Revenue</h3>
                 <p className="text-xs text-muted">Monthly completed revenue (USh, millions) — {new Date().getFullYear()}</p>
               </div>
               <span className="text-xl font-extrabold tracking-tight text-ink">
-                {formatUgx(totalRevenueUsd, rate)}
+                {canSeeRevenue ? formatUgx(totalRevenueUsd, rate) : "••••••"}
               </span>
             </div>
-            {monthlyRevenue.some((v: number) => v > 0) ? (
-              <AreaChart
-                months={["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"]}
-                values={monthlyRevenue.map((v: number) => v / 1_000_000)}
-                color="#1f3e97"
-                unit="M"
-                decimals={2}
-              />
+
+            {canSeeRevenue ? (
+              monthlyRevenue.some((v: number) => v > 0) ? (
+                <AreaChart
+                  months={["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"]}
+                  values={monthlyRevenue.map((v: number) => v / 1_000_000)}
+                  color="#1f3e97"
+                  unit="M"
+                  decimals={2}
+                />
+              ) : (
+                <p className="py-16 text-center text-sm text-muted">
+                  No completed revenue this year yet — chart will populate as orders complete.
+                </p>
+              )
             ) : (
-              <p className="py-16 text-center text-sm text-muted">
-                No completed revenue this year yet — chart will populate as orders complete.
-              </p>
+              /* Blurred overlay for non-authorized users */
+              <div className="relative">
+                <div className="pointer-events-none select-none blur-md opacity-40">
+                  <div className="h-56 w-full rounded-xl bg-gradient-to-t from-surface-soft to-transparent" />
+                </div>
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                  <div className="flex h-14 w-14 items-center justify-center rounded-full bg-surface-soft shadow-sm">
+                    <EyeOff size={24} className="text-muted" />
+                  </div>
+                  <p className="mt-3 text-sm font-medium text-muted">Revenue data is restricted</p>
+                  <p className="mt-1 text-xs text-muted/70">Contact a Super Admin for access</p>
+                </div>
+              </div>
             )}
           </section>
 
