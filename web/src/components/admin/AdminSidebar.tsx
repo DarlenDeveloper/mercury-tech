@@ -22,6 +22,9 @@ import {
   Settings,
   CircleHelp,
   LogOut,
+  HeadphonesIcon,
+  Sparkles,
+  FileText,
   type LucideIcon,
 } from "lucide-react";
 
@@ -51,11 +54,14 @@ const GROUPS: Group[] = [
       { label: "User Tracking", icon: Activity, href: "/u/user-tracking", slug: "user-tracking" },
       { label: "Financial Reports", icon: Wallet, href: "/u/finance", slug: "finance" },
       { label: "Website", icon: Globe, href: "/u/website", slug: "website" },
+      { label: "Quotations", icon: FileText, href: "/u/quotations", slug: "quotations" },
     ],
   },
   {
     title: "System",
     items: [
+      { label: "Customer Care", icon: HeadphonesIcon, href: "/u/customer-care", slug: "customer-care" },
+      { label: "AI", icon: Sparkles, href: "/u/ai", slug: "ai" },
       { label: "Users & Roles", icon: ShieldCheck, href: "/u/users", slug: "users" },
       { label: "Notifications", icon: Bell, href: "/u/notifications", slug: "notifications" },
       { label: "Audit Logs", icon: ScrollText, href: "/u/audit-logs", slug: "audit-logs" },
