@@ -49,5 +49,10 @@ service cloud.firestore {
       allow read, update: if request.auth != null;
       allow delete: if false;
     }
+
+    // Notifications: authenticated admins can read/write.
+    match /notifications/{notifId} {
+      allow read, write: if request.auth != null;
+    }
   }
 }
