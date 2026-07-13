@@ -25,7 +25,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
-type Item = { label: string; icon: LucideIcon; href: string; slug: string; badge?: string };
+type Item = { label: string; icon: LucideIcon; href: string; slug: string };
 type Group = { title?: string; items: Item[] };
 
 const GROUPS: Group[] = [
@@ -38,7 +38,7 @@ const GROUPS: Group[] = [
   {
     title: "Store",
     items: [
-      { label: "Orders", icon: ClipboardList, href: "/u/orders", slug: "orders", badge: "24" },
+      { label: "Orders", icon: ClipboardList, href: "/u/orders", slug: "orders" },
       { label: "Products", icon: Package, href: "/u/products", slug: "products" },
       { label: "Categories", icon: LayoutGrid, href: "/u/categories", slug: "categories" },
       { label: "Customers", icon: Users, href: "/u/customers", slug: "customers" },
@@ -57,7 +57,7 @@ const GROUPS: Group[] = [
     title: "System",
     items: [
       { label: "Users & Roles", icon: ShieldCheck, href: "/u/users", slug: "users" },
-      { label: "Notifications", icon: Bell, href: "/u/notifications", slug: "notifications", badge: "9" },
+      { label: "Notifications", icon: Bell, href: "/u/notifications", slug: "notifications" },
       { label: "Audit Logs", icon: ScrollText, href: "/u/audit-logs", slug: "audit-logs" },
       { label: "Settings", icon: Settings, href: "/u/settings", slug: "settings" },
       { label: "Help", icon: CircleHelp, href: "/u/help", slug: "help" },
@@ -84,7 +84,7 @@ export default function AdminSidebar() {
     return hasPageAccess(adminEntry, item.slug);
   };
 
-  const renderItem = ({ label, icon: Icon, href, badge }: Item) => {
+  const renderItem = ({ label, icon: Icon, href }: Item) => {
     const isActive =
       href === "/u" ? pathname === "/u" : pathname.startsWith(href);
     return (
@@ -99,17 +99,6 @@ export default function AdminSidebar() {
       >
         <Icon size={18} className="shrink-0" />
         <span className="flex-1">{label}</span>
-        {badge && (
-          <span
-            className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold leading-none ${
-              isActive
-                ? "bg-white/20 text-white"
-                : "bg-mercury-accent/15 text-mercury-accent"
-            }`}
-          >
-            {badge}
-          </span>
-        )}
       </Link>
     );
   };
