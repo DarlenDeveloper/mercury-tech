@@ -5,9 +5,11 @@
   "type": "module",
   "description": "Admin/server scripts for Mercury (Firestore seeding, migrations).",
   "scripts": {
-    "seed": "node seed.mjs"
+    "seed": "node seed.mjs",
+    "scrape": "node scrape-old-site.mjs"
   },
   "dependencies": {
-    "firebase-admin": "^13.0.0"
+    "firebase-admin": "^13.0.0",
+    "puppeteer": "^23.11.1"
   }
 }

@@ -2,3 +2,7 @@ node_modules/
 service-account.json
 *-adminsdk-*.json
 .env
+
+# Scraped data (too large for GitHub)
+scraped-api-raw.json
+scraped-products.json
