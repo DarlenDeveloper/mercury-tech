@@ -9,6 +9,8 @@ import Sidebar from "@/components/Sidebar";
 import { getCategoriesFromFirestore } from "@/lib/categories";
 import { getProductsFromFirestore } from "@/lib/getProducts";
 
+export const revalidate = 300;
+
 export default async function CategoryPage({
   params,
 }: {

@@ -8,6 +8,8 @@ import SearchResults from "@/components/SearchResults";
 import { getProductsFromFirestore } from "@/lib/getProducts";
 import { searchProducts } from "@/lib/search";
 
+export const revalidate = 300;
+
 export default async function SearchPage({
   searchParams,
 }: {

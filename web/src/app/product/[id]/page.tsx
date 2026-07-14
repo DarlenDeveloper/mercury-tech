@@ -9,8 +9,10 @@ import ProductInfo from "@/components/product/ProductInfo";
 import ProductTabs from "@/components/product/ProductTabs";
 import RelatedProducts from "@/components/product/RelatedProducts";
 import { getProductById } from "@/lib/products";
-import { getProductsFromFirestore } from "@/lib/getProducts";
+import { getProductFromFirestore, getProductsFromFirestore } from "@/lib/getProducts";
 import { getReviews, summarize } from "@/lib/reviews";
+
+export const revalidate = 300;
 
 export default async function ProductPage({
   params,
@@ -19,11 +21,12 @@ export default async function ProductPage({
 }) {
   const { id } = await params;
 
-  // Try Firestore first, fall back to hardcoded data.
-  const allProducts = await getProductsFromFirestore();
-  let product = allProducts.find((p) => p.id === id) ?? getProductById(id);
+  // Fetch the single product directly (one doc read), fall back to hardcoded.
+  const product = (await getProductFromFirestore(id)) ?? getProductById(id);
   if (!product) notFound();
 
+  // Related products (from the full cached list, filtered by category).
+  const allProducts = await getProductsFromFirestore();
   const related = allProducts
     .filter((p) => p.id !== id && p.category === product!.category)
     .slice(0, 6);

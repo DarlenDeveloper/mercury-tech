@@ -8,6 +8,9 @@ import Newsletter from "@/components/Newsletter";
 import Footer from "@/components/Footer";
 import { getProductsFromFirestore } from "@/lib/getProducts";
 
+// Cache the rendered page and revalidate every 5 minutes (ISR).
+export const revalidate = 300;
+
 export default async function Home() {
   const products = await getProductsFromFirestore();
 

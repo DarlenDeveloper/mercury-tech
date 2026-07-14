@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { fetchCategories as fetchFirestoreCategories } from "./firestore";
 
 export type SubCategory = {
@@ -14,9 +15,10 @@ export type Category = {
 
 /**
  * Fetches categories from Firestore and maps to the frontend Category type.
- * Only returns active categories.
+ * Only returns active categories. Wrapped in React cache() so the Sidebar,
+ * PopularCategories and TopCategories reuse one query per render.
  */
-export async function getCategoriesFromFirestore(): Promise<Category[]> {
+export const getCategoriesFromFirestore = cache(async (): Promise<Category[]> => {
   const firestoreCategories = await fetchFirestoreCategories();
   return firestoreCategories
     .filter((c) => c.active)
@@ -29,7 +31,7 @@ export async function getCategoriesFromFirestore(): Promise<Category[]> {
         slug: child.slug,
       })),
     }));
-}
+});
 
 /**
  * Hardcoded fallback (used if Firestore is unavailable).
