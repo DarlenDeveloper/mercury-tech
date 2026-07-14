@@ -1,6 +1,6 @@
 import Image from "next/image";
 import { ArrowRight } from "lucide-react";
-import { CATEGORIES } from "@/lib/categories";
+import { getCategoriesFromFirestore, CATEGORIES } from "@/lib/categories";
 
 const TINTS = [
   "bg-sky",
@@ -11,13 +11,25 @@ const TINTS = [
   "bg-peach",
 ];
 
+// Local image fallback map (keyed by slug)
+const LOCAL_IMAGES: Record<string, string> = {
+  computers: "/cat-computers.jpeg",
+  "printers-office": "/cat-office.jpeg",
+  "components-power": "/cat-components.jpeg",
+  "networking-security": "/cat-networking.jpeg",
+  "phones-tv-audio": "/cat-phones.jpeg",
+  accessories: "/cat-accessories.jpeg",
+};
+
 // Small accent badges, mirroring the reference (-30% / New) on a few cards.
 const BADGES: Record<number, { label: string; tone: string }> = {
   0: { label: "- 30%", tone: "bg-white text-ink" },
   1: { label: "New", tone: "bg-white text-ink" },
 };
 
-export default function PopularCategories() {
+export default async function PopularCategories() {
+  const categories = await getCategoriesFromFirestore().catch(() => CATEGORIES);
+
   return (
     <section className="mt-8">
       <div className="mb-5 flex items-center justify-between">
@@ -34,8 +46,9 @@ export default function PopularCategories() {
       </div>
 
       <div className="grid grid-cols-3 gap-3 sm:grid-cols-6">
-        {CATEGORIES.map((category, i) => {
+        {categories.map((category, i) => {
           const badge = BADGES[i];
+          const image = category.image || LOCAL_IMAGES[category.slug] || "/placeholder-product.svg";
           return (
             <a
               key={category.name}
@@ -53,7 +66,7 @@ export default function PopularCategories() {
                   </span>
                 )}
                 <Image
-                  src={category.image}
+                  src={image}
                   alt={category.name}
                   fill
                   sizes="(max-width: 640px) 33vw, 16vw"
