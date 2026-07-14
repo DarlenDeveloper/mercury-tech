@@ -252,20 +252,103 @@ async function main() {
   const deleted = await deleteCollection("products");
   console.log(`   ✅ Deleted ${deleted} existing products\n`);
 
-  // Step 2: Seed categories
+  // Step 2: Seed categories (with subcategories)
   console.log("📂 Seeding categories...");
   const now = admin.firestore.FieldValue.serverTimestamp();
   let batch = db.batch();
 
+  // Build subcategory children from the CATEGORY_MAP
+  const categoryChildren = {
+    computers: [
+      { name: "Lenovo Laptops", slug: "lenovo-laptops" },
+      { name: "HP Laptops", slug: "hp-laptops" },
+      { name: "Dell Laptops", slug: "dell-laptops" },
+      { name: "Business Laptops", slug: "business-laptops" },
+      { name: "Gaming Laptops", slug: "gaming-laptops" },
+      { name: "2 in 1 laptops", slug: "2-in-1-laptops" },
+      { name: "Desktops", slug: "desktops" },
+      { name: "Dell Desktops", slug: "dell-desktops" },
+      { name: "HP Desktops", slug: "hp-desktops" },
+      { name: "Monitors", slug: "monitors" },
+      { name: "Samsung Tablets", slug: "samsung-tablets" },
+      { name: "Lenovo tablets", slug: "lenovo-tablets" },
+      { name: "Servers", slug: "servers" },
+      { name: "Thin Clients", slug: "thin-clients" },
+    ],
+    "printers-office": [
+      { name: "Color Multifunction Printers", slug: "color-multifunction-printers" },
+      { name: "Black & White Multifunction Printers", slug: "black-white-multifunction-printers" },
+      { name: "Ink Tank Printers", slug: "ink-tank-printers" },
+      { name: "Color Laser Multifunction Printers", slug: "color-laser-multifunction-printers" },
+      { name: "Photo Printers", slug: "photo-printers" },
+      { name: "A4 Black & White Laser Printers", slug: "a4-black-white-laser-printers" },
+      { name: "HP Toner Cartridges", slug: "hp-toner-cartridges" },
+      { name: "Compatible Toner Cartridge", slug: "compatible-toner-cartridge" },
+      { name: "HP Ink Cartridges", slug: "hp-ink-cartridges" },
+      { name: "HP scanners", slug: "hp-scanners" },
+      { name: "Rexel Paper Shredders", slug: "rexel-paper-shredders" },
+      { name: "Money Counting Machines", slug: "money-counting-machines" },
+      { name: "Scanners", slug: "scanners" },
+    ],
+    "components-power": [
+      { name: "APC UPS", slug: "apc-ups" },
+      { name: "APC Smart UPS", slug: "apc-smart-ups" },
+      { name: "APC Easy UPS", slug: "apc-easy-ups" },
+      { name: "Giganet UPS", slug: "giganet-ups" },
+      { name: "Computer & Office Electronics", slug: "computer-office-electronics" },
+      { name: "Laptop RAM", slug: "laptop-ram" },
+      { name: "Portable SSD", slug: "portable-ssd" },
+      { name: "Storage", slug: "storage" },
+    ],
+    "networking-security": [
+      { name: "Networking", slug: "networking" },
+      { name: "Routers", slug: "routers" },
+      { name: "4G Routers", slug: "4g-routers" },
+      { name: "Switches", slug: "switches" },
+      { name: "Hikvision Cameras", slug: "hikvision-cameras" },
+      { name: "Bullet Cameras", slug: "bullet-cameras" },
+      { name: "Security Systems", slug: "security-systems" },
+      { name: "Wi-Fi Adapters", slug: "wi-fi-adapters" },
+    ],
+    "phones-tv-audio": [
+      { name: "Apple iPhone", slug: "apple-iphone" },
+      { name: "Nokia Phones", slug: "nokia-phones" },
+      { name: "Mobile Phones", slug: "mobile-phones" },
+      { name: "Smart TV", slug: "smart-tv" },
+      { name: "Headphones", slug: "headphones" },
+      { name: "Headsets", slug: "headsets" },
+      { name: "Jabra headsets", slug: "jabra-headsets" },
+      { name: "Speakers", slug: "speakers" },
+      { name: "conference camera", slug: "conference-camera" },
+      { name: "Epson Projector", slug: "epson-projector" },
+    ],
+    accessories: [
+      { name: "Accessories", slug: "accessories" },
+      { name: "Webcams", slug: "webcams" },
+      { name: "Wireless Mouse", slug: "wireless-mouse" },
+      { name: "Laptop Chargers", slug: "laptop-chargers" },
+      { name: "Gaming Consoles", slug: "gaming-consoles" },
+      { name: "Computer Software", slug: "computer-software" },
+      { name: "Microsoft 365 Family", slug: "microsoft-365-family" },
+      { name: "Software", slug: "software" },
+    ],
+  };
+
   for (const c of CATEGORIES) {
     batch.set(
       db.collection("categories").doc(c.id),
-      { ...c, active: true, updatedAt: now },
+      {
+        ...c,
+        slug: c.id,
+        active: true,
+        children: categoryChildren[c.id] || [],
+        updatedAt: now,
+      },
       { merge: true }
     );
   }
   await batch.commit();
-  console.log(`   ✅ Seeded ${CATEGORIES.length} categories\n`);
+  console.log(`   ✅ Seeded ${CATEGORIES.length} categories with subcategories\n`);
 
   // Step 3: Seed products in batches
   console.log("📦 Seeding products...");

@@ -174,8 +174,8 @@ export default function CategoriesPage() {
       ) : (
         <div className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
           {filtered.map((c) => (
-            <div key={c.id} className="admin-card overflow-hidden">
-              <div className="relative h-32 w-full bg-surface-soft">
+            <div key={c.id} className="admin-card overflow-visible">
+              <div className="relative h-32 w-full overflow-hidden rounded-t-2xl bg-surface-soft">
                 {c.image ? (
                   <Image
                     src={c.image}

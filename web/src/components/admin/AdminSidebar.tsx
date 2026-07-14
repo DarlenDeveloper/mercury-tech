@@ -24,7 +24,6 @@ import {
   LogOut,
   HeadphonesIcon,
   Sparkles,
-  FileText,
   type LucideIcon,
 } from "lucide-react";
 
@@ -54,7 +53,6 @@ const GROUPS: Group[] = [
       { label: "User Tracking", icon: Activity, href: "/u/user-tracking", slug: "user-tracking" },
       { label: "Financial Reports", icon: Wallet, href: "/u/finance", slug: "finance" },
       { label: "Website", icon: Globe, href: "/u/website", slug: "website" },
-      { label: "Quotations", icon: FileText, href: "/u/quotations", slug: "quotations" },
     ],
   },
   {
