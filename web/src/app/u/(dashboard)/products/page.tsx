@@ -27,13 +27,16 @@ type Product = {
   id: string;
   name: string;
   description: string;
+  shortDescription?: string;
   category: string;
   categoryId: string;
+  brand?: string;
   priceUsd: number;
   oldPriceUsd?: number;
   stock?: number;
   isNew?: boolean;
   specifications?: Record<string, string>;
+  sourceUrl?: string;
 };
 
 function approxUgx(usd: number, rate: number) {
@@ -218,7 +221,7 @@ export default function ProductsPage() {
                       <div>
                         <p className="font-medium text-ink">{p.name}</p>
                         <p className="text-[11px] text-muted truncate max-w-[240px]">
-                          {p.description}
+                          {p.shortDescription || p.description}
                         </p>
                       </div>
                     </td>
@@ -301,7 +304,8 @@ function ProductForm({
 
   // Step 1: Basic info
   const [name, setName] = useState(product?.name ?? "");
-  const [description, setDescription] = useState(product?.description ?? "");
+  const [shortDescription, setShortDescription] = useState(product?.shortDescription ?? "");
+  const [brand, setBrand] = useState(product?.brand ?? "");
   const [category, setCategory] = useState(product?.category ?? "");
   const [categoryId, setCategoryId] = useState(product?.categoryId ?? "");
 
@@ -310,11 +314,12 @@ function ProductForm({
   const [oldPriceUsd, setOldPriceUsd] = useState(product?.oldPriceUsd?.toString() ?? "");
   const [stock, setStock] = useState(product?.stock?.toString() ?? "");
   const [isNew, setIsNew] = useState(product?.isNew ?? false);
+  const [status, setStatus] = useState((product as any)?.status ?? "published");
 
   // Step 3: Media & details
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState((product as any)?.image ?? "");
-  const [overview, setOverview] = useState((product as any)?.overview ?? "");
+  const [description, setDescription] = useState(product?.description ?? "");
 
   // Step 4: Specifications
   const [specs, setSpecs] = useState(
@@ -372,17 +377,19 @@ function ProductForm({
 
     const data: any = {
       name: name.trim(),
+      shortDescription: shortDescription.trim(),
       description: description.trim(),
       category: category.trim(),
       categoryId: categoryId.trim() || category.toLowerCase().replace(/[^a-z]/g, "-"),
+      brand: brand.trim(),
       priceUsd: parseFloat(priceUsd),
       stock: stock ? parseInt(stock) : 0,
       isNew,
+      status,
       specifications,
     };
     if (oldPriceUsd) data.oldPriceUsd = parseFloat(oldPriceUsd);
     if (imageUrl) data.image = imageUrl;
-    if (overview.trim()) data.overview = overview.trim();
 
     try {
       if (isEdit) {
@@ -462,7 +469,8 @@ function ProductForm({
             {step === 1 && (
               <div className="flex flex-col gap-4">
                 <Field label="Product Name" value={name} onChange={setName} placeholder="e.g. HP 250 G9 Laptop" />
-                <Field label="Short Description" value={description} onChange={setDescription} placeholder="Brief product summary" />
+                <Field label="Short Description" value={shortDescription} onChange={setShortDescription} placeholder="Brief product summary" />
+                <Field label="Brand" value={brand} onChange={setBrand} placeholder="e.g. hp, lenovo, dell" />
                 <div className="grid grid-cols-2 gap-4">
                   <Field label="Category" value={category} onChange={setCategory} placeholder="e.g. Laptops" />
                   <Field label="Category ID" value={categoryId} onChange={setCategoryId} placeholder="e.g. computers" />
@@ -479,18 +487,27 @@ function ProductForm({
                 <div className="grid grid-cols-2 gap-4">
                   <Field label="Stock Quantity" value={stock} onChange={setStock} placeholder="0" type="number" />
                   <div>
-                    <label className="mb-1.5 block text-xs font-semibold text-ink">Flags</label>
-                    <label className="flex items-center gap-2 rounded-xl border border-line bg-white px-4 py-3 text-sm cursor-pointer hover:border-mercury">
-                      <input
-                        type="checkbox"
-                        checked={isNew}
-                        onChange={(e) => setIsNew(e.target.checked)}
-                        className="rounded"
-                      />
-                      Mark as New Arrival
-                    </label>
+                    <label className="mb-1.5 block text-xs font-semibold text-ink">Status</label>
+                    <select
+                      value={status}
+                      onChange={(e) => setStatus(e.target.value)}
+                      className="h-11 w-full rounded-full bg-[#F4F5F8] px-4 text-sm text-ink outline-none"
+                    >
+                      <option value="published">Published</option>
+                      <option value="out_of_stock">Out of Stock</option>
+                      <option value="draft">Draft</option>
+                    </select>
                   </div>
                 </div>
+                <label className="flex items-center gap-2 rounded-xl border border-line bg-white px-4 py-3 text-sm cursor-pointer hover:border-mercury w-fit">
+                  <input
+                    type="checkbox"
+                    checked={isNew}
+                    onChange={(e) => setIsNew(e.target.checked)}
+                    className="rounded"
+                  />
+                  Mark as New Arrival
+                </label>
               </div>
             )}
 
@@ -532,8 +549,8 @@ function ProductForm({
                 <div>
                   <label className="mb-1.5 block text-xs font-semibold text-ink">Detailed Description</label>
                   <textarea
-                    value={overview}
-                    onChange={(e) => setOverview(e.target.value)}
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
                     placeholder="Full product description, features, marketing copy, key selling points..."
                     rows={5}
                     className="w-full rounded-2xl border border-line bg-white px-4 py-3 text-sm text-ink outline-none placeholder:text-muted resize-none focus:border-mercury"
