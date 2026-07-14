@@ -20,11 +20,8 @@ export default async function CategoryPage({
   if (!category) notFound();
 
   const allProducts = await getProductsFromFirestore();
-  // Match by categoryId or category name
-  const products = allProducts.filter(
-    (p) => p.categoryId === slug ||
-      p.category.toLowerCase().includes(category.name.toLowerCase().split(" ")[0])
-  );
+  // Match by categoryId (top-level)
+  const products = allProducts.filter((p) => p.categoryId === slug);
 
   return (
     <>

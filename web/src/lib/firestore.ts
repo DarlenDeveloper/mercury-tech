@@ -18,14 +18,18 @@ export type FirestoreProduct = {
   id: string;
   name: string;
   description: string;
+  shortDescription?: string;
   category: string;
   categoryId: string;
+  brand?: string;
   priceUsd: number;
   oldPriceUsd?: number;
   stock?: number;
   isNew?: boolean;
   image?: string;
+  images?: string[];
   specifications?: Record<string, string>;
+  sourceUrl?: string;
 };
 
 export type FirestoreCategory = {

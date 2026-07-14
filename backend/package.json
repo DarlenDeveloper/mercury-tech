@@ -6,7 +6,8 @@
   "description": "Admin/server scripts for Mercury (Firestore seeding, migrations).",
   "scripts": {
     "seed": "node seed.mjs",
-    "scrape": "node scrape-old-site.mjs"
+    "scrape": "node scrape-old-site.mjs",
+    "seed:scrape": "node seed-from-scrape.mjs"
   },
   "dependencies": {
     "firebase-admin": "^13.0.0",

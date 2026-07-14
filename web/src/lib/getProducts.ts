@@ -14,15 +14,17 @@ export async function getProductsFromFirestore(): Promise<Product[]> {
   return firestoreProducts.map((p) => ({
     id: p.id,
     name: p.name,
-    description: p.description,
+    description: p.shortDescription || p.description || "",
     category: p.category,
     categoryId: p.categoryId,
     price: Math.round(p.priceUsd * rate),
-    oldPrice: p.oldPriceUsd ? Math.round(p.oldPriceUsd * rate) : undefined,
+    oldPrice: undefined,
     rating: 4.5,
     reviews: "0 Reviews",
     image: p.image ?? "/placeholder-product.svg",
     stock: p.stock,
+    brand: p.brand,
+    overview: p.description,
     specs: p.specifications
       ? Object.entries(p.specifications).map(([spec, details]) => ({
           spec,

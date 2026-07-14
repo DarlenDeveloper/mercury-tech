@@ -21,6 +21,8 @@ export type Product = {
   rating: number;
   reviews: string;
   image: string;
+  /** Brand name (e.g. "hp", "lenovo"). */
+  brand?: string;
   /** Optional extra gallery shots; falls back to [image] when empty. */
   gallery?: string[];
   /** Optional colour variants; the "Pick a Color" selector is hidden when empty. */

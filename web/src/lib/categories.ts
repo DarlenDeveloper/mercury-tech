@@ -12,23 +12,26 @@ export type Category = {
 
 const sub = (name: string, slug: string): SubCategory => ({ name, slug });
 
-/// Full category taxonomy, ported from the site navigation (NAVIGATION.md)
-/// and the mobile app's shop screen. `children` are the meaningful leaf
-/// subcategories shown under each top-level category.
+/// Full category taxonomy mapped to actual product data from the old site.
+/// `children` are the subcategories that match the `category` field in Firestore.
 export const CATEGORIES: Category[] = [
   {
     name: "Computers",
     slug: "computers",
     image: "/cat-computers.jpeg",
     children: [
+      sub("Lenovo Laptops", "lenovo-laptops"),
+      sub("HP Laptops", "hp-laptops"),
+      sub("Dell Laptops", "dell-laptops"),
       sub("Business Laptops", "business-laptops"),
       sub("Gaming Laptops", "gaming-laptops"),
       sub("2-in-1 Laptops", "2-in-1-laptops"),
-      sub("Desktop PCs", "desktop-pcs"),
-      sub("All-in-One PCs", "all-in-one-pcs"),
+      sub("Desktops", "desktops"),
+      sub("Dell Desktops", "dell-desktops"),
+      sub("HP Desktops", "hp-desktops"),
       sub("Monitors", "monitors"),
+      sub("Samsung Tablets", "samsung-tablets"),
       sub("Servers", "servers"),
-      sub("Computer Software", "computer-software"),
     ],
   },
   {
@@ -36,14 +39,17 @@ export const CATEGORIES: Category[] = [
     slug: "printers-office",
     image: "/cat-office.jpeg",
     children: [
-      sub("All-in-One Printers", "all-in-one-printers"),
-      sub("Laser Printers", "laser-printers"),
-      sub("Inkjet Printers", "inkjet-printers"),
-      sub("Toner Cartridges", "toner-cartridges"),
-      sub("Ink Cartridges", "ink-cartridges"),
-      sub("Scanners", "scanners"),
-      sub("Projectors", "projectors"),
-      sub("Paper Shredders", "paper-shredders"),
+      sub("All-in-One Printers", "multifunction-all-in-one-printers"),
+      sub("Ink Tank Printers", "ink-tank-printers"),
+      sub("Laser Printers", "a4-black-white-laser-printers"),
+      sub("Color Laser Printers", "color-laser-multifunction-printers"),
+      sub("Photo Printers", "photo-printers"),
+      sub("HP Toner Cartridges", "hp-toner-cartridges"),
+      sub("Compatible Toner", "compatible-toner-cartridge"),
+      sub("HP Ink Cartridges", "hp-ink-cartridges"),
+      sub("Scanners", "hp-scanners"),
+      sub("Paper Shredders", "rexel-paper-shredders"),
+      sub("Money Counting Machines", "money-counting-machines"),
     ],
   },
   {
@@ -51,14 +57,13 @@ export const CATEGORIES: Category[] = [
     slug: "components-power",
     image: "/cat-components.jpeg",
     children: [
-      sub("Graphics Cards", "graphics-cards"),
+      sub("APC UPS", "apc-ups"),
+      sub("APC Smart UPS", "apc-smart-ups"),
+      sub("APC Easy UPS", "apc-easy-ups"),
+      sub("Giganet UPS", "giganet-ups"),
       sub("Laptop RAM", "laptop-ram"),
-      sub("Desktop RAM", "desktop-ram"),
-      sub("Internal Hard Drives", "internal-hard-drives"),
-      sub("External SSDs", "external-ssds"),
-      sub("Flash Disks", "flash-disks"),
-      sub("UPS", "ups"),
-      sub("Power Banks", "power-banks"),
+      sub("Portable SSD", "portable-ssd"),
+      sub("Storage", "storage"),
     ],
   },
   {
@@ -66,13 +71,14 @@ export const CATEGORIES: Category[] = [
     slug: "networking-security",
     image: "/cat-networking.jpeg",
     children: [
-      sub("Wi-Fi Routers", "wifi-routers"),
+      sub("Networking", "networking"),
+      sub("Routers", "routers"),
       sub("4G Routers", "4g-routers"),
-      sub("MiFi & Mobile WiFi", "mifi"),
-      sub("Network Switches", "network-switches"),
-      sub("Wi-Fi Access Points", "access-points"),
-      sub("CCTV & Cameras", "cctv-cameras"),
-      sub("DVRs", "dvrs"),
+      sub("Switches", "switches"),
+      sub("Hikvision Cameras", "hikvision-cameras"),
+      sub("Bullet Cameras", "bullet-cameras"),
+      sub("Security Systems", "security-systems"),
+      sub("Wi-Fi Adapters", "wi-fi-adapters"),
     ],
   },
   {
@@ -80,11 +86,15 @@ export const CATEGORIES: Category[] = [
     slug: "phones-tv-audio",
     image: "/cat-phones.jpeg",
     children: [
-      sub("Mobile Phones", "mobile-phones"),
-      sub("Tablets", "tablets"),
-      sub("Smart TVs", "smart-tvs"),
+      sub("Apple iPhone", "apple-iphone"),
+      sub("Nokia Phones", "nokia-phones"),
+      sub("Smart TV", "smart-tv"),
       sub("Headphones", "headphones"),
+      sub("Headsets", "headsets"),
+      sub("Jabra Headsets", "jabra-headsets"),
       sub("Speakers", "speakers"),
+      sub("Conference Cameras", "conference-camera"),
+      sub("Projectors", "epson-projector"),
     ],
   },
   {
@@ -92,12 +102,13 @@ export const CATEGORIES: Category[] = [
     slug: "accessories",
     image: "/cat-accessories.jpeg",
     children: [
-      sub("Mice", "mice"),
-      sub("Wireless Keyboards", "wireless-keyboards"),
+      sub("Accessories", "accessories"),
       sub("Webcams", "webcams"),
-      sub("Headsets", "headsets"),
+      sub("Wireless Mouse", "wireless-mouse"),
+      sub("Laptop Chargers", "laptop-chargers"),
       sub("Gaming Consoles", "gaming-consoles"),
-      sub("Portable Speakers", "portable-speakers"),
+      sub("Computer Software", "computer-software"),
+      sub("Microsoft Licensing", "microsoft-365-family"),
     ],
   },
 ];

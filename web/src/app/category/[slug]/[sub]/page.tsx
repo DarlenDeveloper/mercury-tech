@@ -22,12 +22,14 @@ export default async function SubCategoryPage({
   if (!subCategory) notFound();
 
   const allProducts = await getProductsFromFirestore();
-  // For subcategories, show all products in the parent category
-  // since Firestore doesn't have subcategory-level granularity yet.
-  const products = allProducts.filter(
-    (p) => p.categoryId === slug ||
-      p.category.toLowerCase().includes(category.name.toLowerCase().split(" ")[0])
-  );
+  // Filter by subcategory: match category name to sub slug
+  const products = allProducts.filter((p) => {
+    const prodCatSlug = p.category
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/(^-|-$)/g, "");
+    return prodCatSlug === sub;
+  });
 
   return (
     <>
