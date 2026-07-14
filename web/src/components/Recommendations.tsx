@@ -62,40 +62,26 @@ export default function Recommendations({ products }: { products?: Product[] }) 
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="mt-8 flex items-center justify-center gap-2">
+            <div className="mt-8 flex items-center justify-center gap-4">
               <button
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page === 1}
-                className="flex h-9 w-9 items-center justify-center rounded-full border border-line bg-white text-ink transition hover:border-mercury hover:text-mercury disabled:opacity-30"
+                className="flex items-center gap-1.5 rounded-full border border-line bg-white px-5 py-2.5 text-sm font-medium text-ink transition hover:border-mercury hover:text-mercury disabled:opacity-30"
               >
                 <ChevronLeft size={16} />
+                Previous
               </button>
 
-              {getPageNumbers(page, totalPages).map((p, i) =>
-                p === "..." ? (
-                  <span key={`dots-${i}`} className="px-1 text-sm text-muted">
-                    ...
-                  </span>
-                ) : (
-                  <button
-                    key={p}
-                    onClick={() => setPage(p as number)}
-                    className={`flex h-9 w-9 items-center justify-center rounded-full text-sm font-medium transition ${
-                      page === p
-                        ? "bg-mercury text-white"
-                        : "border border-line bg-white text-ink hover:border-mercury hover:text-mercury"
-                    }`}
-                  >
-                    {p}
-                  </button>
-                )
-              )}
+              <span className="text-sm text-muted">
+                {page} / {totalPages}
+              </span>
 
               <button
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                 disabled={page === totalPages}
-                className="flex h-9 w-9 items-center justify-center rounded-full border border-line bg-white text-ink transition hover:border-mercury hover:text-mercury disabled:opacity-30"
+                className="flex items-center gap-1.5 rounded-full border border-line bg-white px-5 py-2.5 text-sm font-medium text-ink transition hover:border-mercury hover:text-mercury disabled:opacity-30"
               >
+                Next
                 <ChevronRight size={16} />
               </button>
             </div>
@@ -104,24 +90,4 @@ export default function Recommendations({ products }: { products?: Product[] }) 
       )}
     </section>
   );
-}
-
-/** Generate page numbers with ellipsis for large page counts. */
-function getPageNumbers(current: number, total: number): (number | "...")[] {
-  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
-
-  const pages: (number | "...")[] = [];
-  pages.push(1);
-
-  if (current > 3) pages.push("...");
-
-  const start = Math.max(2, current - 1);
-  const end = Math.min(total - 1, current + 1);
-
-  for (let i = start; i <= end; i++) pages.push(i);
-
-  if (current < total - 2) pages.push("...");
-
-  pages.push(total);
-  return pages;
 }
