@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { Star, Minus, Plus, Truck, ShieldCheck, Headphones, Check } from "lucide-react";
-import { formatUgx, type Product } from "@/lib/products";
+import { type Product } from "@/lib/products";
+import { useCurrency } from "@/components/CurrencyProvider";
 import AddToCartButton from "@/components/AddToCartButton";
 
 function Stars({ rating }: { rating: number }) {
@@ -55,6 +56,7 @@ export default function ProductInfo({
 }) {
   const [qty, setQty] = useState(1);
   const [color, setColor] = useState(0);
+  const { format } = useCurrency();
   const onSale = product.oldPrice != null && product.oldPrice > product.price;
   const colors = product.colors ?? [];
 
@@ -87,11 +89,11 @@ export default function ProductInfo({
       {/* Price */}
       <div className="mt-3 flex flex-wrap items-center gap-2.5">
         <span className="text-2xl font-extrabold text-ink">
-          {formatUgx(product.price)}
+          {format(product.price)}
         </span>
         {onSale && (
           <span className="text-base font-medium text-muted line-through">
-            {formatUgx(product.oldPrice!)}
+            {format(product.oldPrice!)}
           </span>
         )}
         {onSale && (

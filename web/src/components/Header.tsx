@@ -17,6 +17,7 @@ import {
   Package,
 } from "lucide-react";
 import { useAuth } from "@/components/AuthProvider";
+import { useCurrency } from "@/components/CurrencyProvider";
 import { signOut } from "@/lib/auth";
 import { getCart, type CartItem } from "@/lib/cart";
 import { getFavorites } from "@/lib/wishlist";
@@ -163,11 +164,8 @@ export default function Header() {
               <Search size={20} />
             </button>
 
-            {/* Currency */}
-            <button className="hidden items-center gap-1 px-2 py-2 text-sm font-medium text-ink transition hover:text-mercury sm:flex">
-              USh
-              <ChevronDown size={14} className="text-muted" />
-            </button>
+            {/* Currency selector */}
+            <CurrencySelector />
 
             <span className="mx-1 hidden h-5 w-px bg-line sm:block" />
 
@@ -487,6 +485,56 @@ function MobileNavLink({ href, children }: { href: string; children: React.React
         {children}
       </Link>
     </li>
+  );
+}
+
+function CurrencySelector() {
+  const [open, setOpen] = useState(false);
+  const { currency, setCurrency } = useCurrency();
+  const ref = useRef<HTMLDivElement>(null);
+
+  const currencies = [
+    { code: "USh" as const, label: "UGX — Ugandan Shilling" },
+    { code: "USD" as const, label: "USD — US Dollar" },
+    { code: "EUR" as const, label: "EUR — Euro" },
+    { code: "GBP" as const, label: "GBP — British Pound" },
+    { code: "KES" as const, label: "KES — Kenyan Shilling" },
+  ];
+
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [open]);
+
+  return (
+    <div className="relative hidden sm:block" ref={ref}>
+      <button
+        onClick={() => setOpen(!open)}
+        className="flex items-center gap-1 px-2 py-2 text-sm font-medium text-ink transition hover:text-mercury"
+      >
+        {currency}
+        <ChevronDown size={14} className="text-muted" />
+      </button>
+      {open && (
+        <div className="absolute right-0 top-10 z-50 w-48 rounded-xl border border-line bg-white p-1.5 shadow-lg">
+          {currencies.map((c) => (
+            <button
+              key={c.code}
+              onClick={() => { setCurrency(c.code); setOpen(false); }}
+              className={`flex w-full items-center rounded-lg px-3 py-2 text-sm transition hover:bg-surface-soft ${
+                currency === c.code ? "font-semibold text-mercury" : "text-ink"
+              }`}
+            >
+              {c.label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
 

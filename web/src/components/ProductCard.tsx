@@ -1,9 +1,13 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
-import { formatUgx, type Product } from "@/lib/products";
+import { type Product } from "@/lib/products";
+import { useCurrency } from "@/components/CurrencyProvider";
 import WishlistButton from "@/components/WishlistButton";
 
 export default function ProductCard({ product }: { product: Product }) {
+  const { format } = useCurrency();
   const onSale = product.oldPrice != null && product.oldPrice > product.price;
   const href = `/product/${product.id}`;
 
@@ -50,11 +54,11 @@ export default function ProductCard({ product }: { product: Product }) {
       {/* Price + old price */}
       <div className="mt-1.5 flex items-end gap-1.5">
         <span className="text-[13px] font-semibold text-ink">
-          {formatUgx(product.price)}
+          {format(product.price)}
         </span>
         {onSale && (
           <span className="text-[10px] text-[#E11D2A] line-through">
-            {formatUgx(product.oldPrice!)}
+            {format(product.oldPrice!)}
           </span>
         )}
       </div>
