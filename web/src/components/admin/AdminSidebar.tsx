@@ -5,6 +5,8 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { ADMIN_AUTH_KEY, useAdminAccess } from "@/components/admin/AdminGuard";
 import { hasPageAccess } from "@/lib/adminAccess";
+import { logAudit } from "@/lib/auditLog";
+import { useAuth } from "@/components/AuthProvider";
 import {
   House,
   ChartNoAxesColumn,
@@ -73,8 +75,15 @@ export default function AdminSidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const { adminEntry } = useAdminAccess();
+  const { user } = useAuth();
 
   const logout = async () => {
+    logAudit({
+      actor: user?.displayName || user?.email || "Unknown",
+      actorId: user?.uid || "",
+      action: "logout",
+      target: "Admin Dashboard",
+    });
     const { signOut } = await import("@/lib/auth");
     await signOut();
     window.localStorage.removeItem(ADMIN_AUTH_KEY);

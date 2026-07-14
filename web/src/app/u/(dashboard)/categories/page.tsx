@@ -25,6 +25,8 @@ import {
 } from "firebase/firestore";
 import AdminHeader from "@/components/admin/AdminHeader";
 import { db } from "@/lib/firestore";
+import { logAudit } from "@/lib/auditLog";
+import { useAuth } from "@/components/AuthProvider";
 
 type SubCategory = { name: string; slug: string };
 
@@ -39,6 +41,7 @@ type Category = {
 };
 
 export default function CategoriesPage() {
+  const { user } = useAuth();
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -78,9 +81,16 @@ export default function CategoriesPage() {
 
   const handleDelete = async (id: string) => {
     if (!confirm("Delete this category? Products in it won't be removed.")) return;
+    const cat = categories.find((c) => c.id === id);
     await deleteDoc(doc(db, "categories", id));
     setCategories((prev) => prev.filter((c) => c.id !== id));
     setActiveMenu(null);
+    logAudit({
+      actor: user?.displayName || user?.email || "Unknown",
+      actorId: user?.uid || "",
+      action: "category_deleted",
+      target: cat?.name || id,
+    });
   };
 
   const handleToggleActive = async (cat: Category) => {
@@ -90,6 +100,13 @@ export default function CategoriesPage() {
       prev.map((c) => (c.id === cat.id ? { ...c, active: updated } : c))
     );
     setActiveMenu(null);
+    logAudit({
+      actor: user?.displayName || user?.email || "Unknown",
+      actorId: user?.uid || "",
+      action: "category_toggled",
+      target: cat.name,
+      details: updated ? "Set to Active" : "Set to Hidden",
+    });
   };
 
   const handleEdit = (cat: Category) => {

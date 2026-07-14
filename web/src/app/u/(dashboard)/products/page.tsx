@@ -22,6 +22,8 @@ import {
 import AdminHeader from "@/components/admin/AdminHeader";
 import UsdRateBar from "@/components/admin/UsdRateBar";
 import { db } from "@/lib/firestore";
+import { logAudit } from "@/lib/auditLog";
+import { useAuth } from "@/components/AuthProvider";
 
 type Product = {
   id: string;
@@ -44,6 +46,7 @@ function approxUgx(usd: number, rate: number) {
 }
 
 export default function ProductsPage() {
+  const { user } = useAuth();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [rate, setRate] = useState(3780);
@@ -88,13 +91,27 @@ export default function ProductsPage() {
       usdToUgx: value,
       updatedAt: serverTimestamp(),
     });
+    logAudit({
+      actor: user?.displayName || user?.email || "Unknown",
+      actorId: user?.uid || "",
+      action: "rate_updated",
+      target: `1 USD = ${value.toLocaleString()} UGX`,
+      details: `Changed from ${prevRate} to ${value}`,
+    });
   };
 
   const handleDelete = async (id: string) => {
     if (!confirm("Delete this product?")) return;
+    const product = products.find((p) => p.id === id);
     await deleteDoc(doc(db, "products", id));
     setProducts((prev) => prev.filter((p) => p.id !== id));
     setActiveMenu(null);
+    logAudit({
+      actor: user?.displayName || user?.email || "Unknown",
+      actorId: user?.uid || "",
+      action: "product_deleted",
+      target: product?.name || id,
+    });
   };
 
   const handleEdit = (product: Product) => {
@@ -282,6 +299,7 @@ export default function ProductsPage() {
       {showForm && (
         <ProductForm
           product={editingProduct}
+          user={user}
           onClose={() => { setShowForm(false); setEditingProduct(null); }}
           onSaved={() => { setShowForm(false); setEditingProduct(null); fetchData(); }}
         />
@@ -292,10 +310,12 @@ export default function ProductsPage() {
 
 function ProductForm({
   product,
+  user,
   onClose,
   onSaved,
 }: {
   product: Product | null;
+  user: any;
   onClose: () => void;
   onSaved: () => void;
 }) {
@@ -394,8 +414,20 @@ function ProductForm({
     try {
       if (isEdit) {
         await updateDoc(doc(db, "products", product!.id), data);
+        logAudit({
+          actor: user?.displayName || user?.email || "Unknown",
+          actorId: user?.uid || "",
+          action: "product_updated",
+          target: name.trim(),
+        });
       } else {
         await setDoc(doc(db, "products", productId), data);
+        logAudit({
+          actor: user?.displayName || user?.email || "Unknown",
+          actorId: user?.uid || "",
+          action: "product_created",
+          target: name.trim(),
+        });
       }
       onSaved();
     } catch (e) {

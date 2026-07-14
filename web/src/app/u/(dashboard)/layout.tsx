@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import AdminSidebar from "@/components/admin/AdminSidebar";
 import AdminGuard from "@/components/admin/AdminGuard";
 import PageGuard from "@/components/admin/PageGuard";
+import AuditTracker from "@/components/admin/AuditTracker";
 
 export const metadata: Metadata = {
   title: "Mercury Admin — Dashboard",
@@ -15,6 +16,7 @@ export default function AdminLayout({
 }) {
   return (
     <AdminGuard>
+      <AuditTracker />
       <div className="flex min-h-screen w-full bg-[#f6f7f9] text-ink">
         {/* Sticky full-height sidebar */}
         <div className="sticky top-0 hidden h-screen lg:block">

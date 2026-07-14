@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Mail, Lock, Eye, EyeOff, LogIn } from "lucide-react";
 import { signIn } from "@/lib/auth";
+import { logAudit } from "@/lib/auditLog";
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -20,7 +21,13 @@ export default function AdminLoginPage() {
     setError("");
     setBusy(true);
     try {
-      await signIn(email.trim(), password);
+      const cred = await signIn(email.trim(), password);
+      logAudit({
+        actor: cred.user?.displayName || email.trim(),
+        actorId: cred.user?.uid || "",
+        action: "login",
+        target: "Admin Dashboard",
+      });
       router.push("/u");
     } catch (err: any) {
       const code = err?.code ?? "";
