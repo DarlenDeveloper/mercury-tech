@@ -1,14 +1,25 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ChevronDown } from "lucide-react";
-import { CATEGORIES } from "@/lib/categories";
+import { type Category, getCategoriesFromFirestore, CATEGORIES } from "@/lib/categories";
 
 export default function Sidebar() {
-  // All categories open by default.
-  const [open, setOpen] = useState<Set<string>>(
-    new Set(CATEGORIES.map((c) => c.slug))
-  );
+  const [categories, setCategories] = useState<Category[]>(CATEGORIES);
+  const [open, setOpen] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    getCategoriesFromFirestore()
+      .then((cats) => {
+        if (cats.length > 0) setCategories(cats);
+        // Open all by default
+        setOpen(new Set(cats.map((c) => c.slug)));
+      })
+      .catch(() => {
+        // Fallback to hardcoded
+        setOpen(new Set(CATEGORIES.map((c) => c.slug)));
+      });
+  }, []);
 
   const toggle = (slug: string) => {
     setOpen((prev) => {
@@ -26,7 +37,7 @@ export default function Sidebar() {
       </h2>
 
       <nav className="flex flex-col gap-0.5">
-        {CATEGORIES.map((category) => {
+        {categories.map((category) => {
           return (
             <div key={category.slug}>
               {/* Top-level category (expand/collapse) */}

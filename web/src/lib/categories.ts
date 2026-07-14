@@ -1,3 +1,5 @@
+import { fetchCategories as fetchFirestoreCategories } from "./firestore";
+
 export type SubCategory = {
   name: string;
   slug: string;
@@ -10,28 +12,41 @@ export type Category = {
   children: SubCategory[];
 };
 
-const sub = (name: string, slug: string): SubCategory => ({ name, slug });
+/**
+ * Fetches categories from Firestore and maps to the frontend Category type.
+ * Only returns active categories.
+ */
+export async function getCategoriesFromFirestore(): Promise<Category[]> {
+  const firestoreCategories = await fetchFirestoreCategories();
+  return firestoreCategories
+    .filter((c) => c.active)
+    .map((c) => ({
+      name: c.name,
+      slug: c.slug || c.id,
+      image: c.image || "",
+      children: (c.children || []).map((child) => ({
+        name: child.name,
+        slug: child.slug,
+      })),
+    }));
+}
 
-/// Full category taxonomy mapped to actual product data from the old site.
-/// `children` are the subcategories that match the `category` field in Firestore.
+/**
+ * Hardcoded fallback (used if Firestore is unavailable).
+ */
 export const CATEGORIES: Category[] = [
   {
     name: "Computers",
     slug: "computers",
     image: "/cat-computers.jpeg",
     children: [
-      sub("Lenovo Laptops", "lenovo-laptops"),
-      sub("HP Laptops", "hp-laptops"),
-      sub("Dell Laptops", "dell-laptops"),
-      sub("Business Laptops", "business-laptops"),
-      sub("Gaming Laptops", "gaming-laptops"),
-      sub("2-in-1 Laptops", "2-in-1-laptops"),
-      sub("Desktops", "desktops"),
-      sub("Dell Desktops", "dell-desktops"),
-      sub("HP Desktops", "hp-desktops"),
-      sub("Monitors", "monitors"),
-      sub("Samsung Tablets", "samsung-tablets"),
-      sub("Servers", "servers"),
+      { name: "Lenovo Laptops", slug: "lenovo-laptops" },
+      { name: "HP Laptops", slug: "hp-laptops" },
+      { name: "Dell Laptops", slug: "dell-laptops" },
+      { name: "Business Laptops", slug: "business-laptops" },
+      { name: "Gaming Laptops", slug: "gaming-laptops" },
+      { name: "Desktops", slug: "desktops" },
+      { name: "Monitors", slug: "monitors" },
     ],
   },
   {
@@ -39,17 +54,11 @@ export const CATEGORIES: Category[] = [
     slug: "printers-office",
     image: "/cat-office.jpeg",
     children: [
-      sub("All-in-One Printers", "multifunction-all-in-one-printers"),
-      sub("Ink Tank Printers", "ink-tank-printers"),
-      sub("Laser Printers", "a4-black-white-laser-printers"),
-      sub("Color Laser Printers", "color-laser-multifunction-printers"),
-      sub("Photo Printers", "photo-printers"),
-      sub("HP Toner Cartridges", "hp-toner-cartridges"),
-      sub("Compatible Toner", "compatible-toner-cartridge"),
-      sub("HP Ink Cartridges", "hp-ink-cartridges"),
-      sub("Scanners", "hp-scanners"),
-      sub("Paper Shredders", "rexel-paper-shredders"),
-      sub("Money Counting Machines", "money-counting-machines"),
+      { name: "All-in-One Printers", slug: "multifunction-all-in-one-printers" },
+      { name: "Ink Tank Printers", slug: "ink-tank-printers" },
+      { name: "Laser Printers", slug: "a4-black-white-laser-printers" },
+      { name: "HP Toner Cartridges", slug: "hp-toner-cartridges" },
+      { name: "Scanners", slug: "hp-scanners" },
     ],
   },
   {
@@ -57,13 +66,9 @@ export const CATEGORIES: Category[] = [
     slug: "components-power",
     image: "/cat-components.jpeg",
     children: [
-      sub("APC UPS", "apc-ups"),
-      sub("APC Smart UPS", "apc-smart-ups"),
-      sub("APC Easy UPS", "apc-easy-ups"),
-      sub("Giganet UPS", "giganet-ups"),
-      sub("Laptop RAM", "laptop-ram"),
-      sub("Portable SSD", "portable-ssd"),
-      sub("Storage", "storage"),
+      { name: "APC UPS", slug: "apc-ups" },
+      { name: "Laptop RAM", slug: "laptop-ram" },
+      { name: "Storage", slug: "storage" },
     ],
   },
   {
@@ -71,14 +76,9 @@ export const CATEGORIES: Category[] = [
     slug: "networking-security",
     image: "/cat-networking.jpeg",
     children: [
-      sub("Networking", "networking"),
-      sub("Routers", "routers"),
-      sub("4G Routers", "4g-routers"),
-      sub("Switches", "switches"),
-      sub("Hikvision Cameras", "hikvision-cameras"),
-      sub("Bullet Cameras", "bullet-cameras"),
-      sub("Security Systems", "security-systems"),
-      sub("Wi-Fi Adapters", "wi-fi-adapters"),
+      { name: "Networking", slug: "networking" },
+      { name: "Routers", slug: "routers" },
+      { name: "Hikvision Cameras", slug: "hikvision-cameras" },
     ],
   },
   {
@@ -86,15 +86,10 @@ export const CATEGORIES: Category[] = [
     slug: "phones-tv-audio",
     image: "/cat-phones.jpeg",
     children: [
-      sub("Apple iPhone", "apple-iphone"),
-      sub("Nokia Phones", "nokia-phones"),
-      sub("Smart TV", "smart-tv"),
-      sub("Headphones", "headphones"),
-      sub("Headsets", "headsets"),
-      sub("Jabra Headsets", "jabra-headsets"),
-      sub("Speakers", "speakers"),
-      sub("Conference Cameras", "conference-camera"),
-      sub("Projectors", "epson-projector"),
+      { name: "Apple iPhone", slug: "apple-iphone" },
+      { name: "Smart TV", slug: "smart-tv" },
+      { name: "Headphones", slug: "headphones" },
+      { name: "Speakers", slug: "speakers" },
     ],
   },
   {
@@ -102,13 +97,9 @@ export const CATEGORIES: Category[] = [
     slug: "accessories",
     image: "/cat-accessories.jpeg",
     children: [
-      sub("Accessories", "accessories"),
-      sub("Webcams", "webcams"),
-      sub("Wireless Mouse", "wireless-mouse"),
-      sub("Laptop Chargers", "laptop-chargers"),
-      sub("Gaming Consoles", "gaming-consoles"),
-      sub("Computer Software", "computer-software"),
-      sub("Microsoft Licensing", "microsoft-365-family"),
+      { name: "Accessories", slug: "accessories" },
+      { name: "Webcams", slug: "webcams" },
+      { name: "Gaming Consoles", slug: "gaming-consoles" },
     ],
   },
 ];

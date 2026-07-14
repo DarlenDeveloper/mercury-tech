@@ -32,10 +32,19 @@ export type FirestoreProduct = {
   sourceUrl?: string;
 };
 
+export type FirestoreSubCategory = {
+  name: string;
+  slug: string;
+};
+
 export type FirestoreCategory = {
   id: string;
   name: string;
+  slug: string;
   order: number;
+  active: boolean;
+  image?: string;
+  children: FirestoreSubCategory[];
 };
 
 // ─── Queries ─────────────────────────────────────────────────────────────────
@@ -56,13 +65,22 @@ export async function fetchProductById(
   return { id: snap.id, ...snap.data() } as FirestoreProduct;
 }
 
-/** Fetch all categories, ordered by `order` field. */
+/** Fetch all categories (with children), ordered by `order` field. */
 export async function fetchCategories(): Promise<FirestoreCategory[]> {
   const q = query(collection(db, "categories"), orderBy("order"));
   const snap = await getDocs(q);
-  return snap.docs.map(
-    (d) => ({ id: d.id, ...d.data() } as FirestoreCategory)
-  );
+  return snap.docs.map((d) => {
+    const data = d.data();
+    return {
+      id: d.id,
+      name: data.name ?? "",
+      slug: data.slug ?? d.id,
+      order: data.order ?? 0,
+      active: data.active !== false,
+      image: data.image ?? "",
+      children: data.children ?? [],
+    } as FirestoreCategory;
+  });
 }
 
 /** Fetch the USD → UGX exchange rate from config/rate. */

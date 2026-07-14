@@ -6,7 +6,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ProductCard from "@/components/ProductCard";
 import Sidebar from "@/components/Sidebar";
-import { CATEGORIES } from "@/lib/categories";
+import { getCategoriesFromFirestore } from "@/lib/categories";
 import { getProductsFromFirestore } from "@/lib/getProducts";
 
 export default async function SubCategoryPage({
@@ -15,7 +15,8 @@ export default async function SubCategoryPage({
   params: Promise<{ slug: string; sub: string }>;
 }) {
   const { slug, sub } = await params;
-  const category = CATEGORIES.find((c) => c.slug === slug);
+  const categories = await getCategoriesFromFirestore();
+  const category = categories.find((c) => c.slug === slug);
   if (!category) notFound();
 
   const subCategory = category.children.find((c) => c.slug === sub);

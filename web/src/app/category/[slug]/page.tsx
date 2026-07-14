@@ -5,9 +5,8 @@ import AnnouncementBar from "@/components/AnnouncementBar";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ProductCard from "@/components/ProductCard";
-import { ProductGridSkeleton } from "@/components/ProductCardSkeleton";
 import Sidebar from "@/components/Sidebar";
-import { CATEGORIES } from "@/lib/categories";
+import { getCategoriesFromFirestore } from "@/lib/categories";
 import { getProductsFromFirestore } from "@/lib/getProducts";
 
 export default async function CategoryPage({
@@ -16,7 +15,8 @@ export default async function CategoryPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const category = CATEGORIES.find((c) => c.slug === slug);
+  const categories = await getCategoriesFromFirestore();
+  const category = categories.find((c) => c.slug === slug);
   if (!category) notFound();
 
   const allProducts = await getProductsFromFirestore();
