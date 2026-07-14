@@ -21,6 +21,7 @@ import { useCurrency } from "@/components/CurrencyProvider";
 import { signOut } from "@/lib/auth";
 import { getCart, type CartItem } from "@/lib/cart";
 import { getFavorites } from "@/lib/wishlist";
+import SearchBar from "@/components/SearchBar";
 
 export default function Header() {
   const { user } = useAuth();
@@ -109,20 +110,9 @@ export default function Header() {
 
           {/* Desktop search */}
           <div className="hidden flex-1 items-center gap-2 md:flex">
-            <form className="relative flex-1" role="search">
-              <input
-                type="text"
-                placeholder="Search for products, brands and more"
-                className="h-11 w-full rounded-full border border-line bg-white pl-5 pr-14 text-sm text-ink outline-none transition placeholder:text-muted focus:border-mercury"
-              />
-              <button
-                type="submit"
-                aria-label="Search"
-                className="absolute right-1.5 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-mercury text-white transition hover:bg-mercury-dark"
-              >
-                <Search size={16} />
-              </button>
-            </form>
+            <div className="flex-1">
+              <SearchBar variant="desktop" />
+            </div>
             {/* AI Assistant button */}
             <button
               type="button"
@@ -286,21 +276,7 @@ export default function Header() {
         {/* Mobile search bar */}
         {mobileSearchOpen && (
           <div className="border-t border-line px-4 py-3 md:hidden">
-            <form className="relative" role="search">
-              <input
-                type="text"
-                placeholder="Search products, brands..."
-                autoFocus
-                className="h-10 w-full rounded-full border border-line bg-surface-soft pl-4 pr-12 text-sm text-ink outline-none placeholder:text-muted focus:border-mercury"
-              />
-              <button
-                type="submit"
-                aria-label="Search"
-                className="absolute right-1.5 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full bg-mercury text-white"
-              >
-                <Search size={14} />
-              </button>
-            </form>
+            <SearchBar variant="mobile" onNavigate={() => setMobileSearchOpen(false)} />
           </div>
         )}
 
