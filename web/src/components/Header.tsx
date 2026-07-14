@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -30,8 +30,21 @@ export default function Header() {
   const [wishlistOpen, setWishlistOpen] = useState(false);
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [wishlistIds, setWishlistIds] = useState<Set<string>>(new Set());
+  const profileRef = useRef<HTMLDivElement>(null);
 
   const rate = 3780;
+
+  // Dismiss profile dropdown on outside click
+  useEffect(() => {
+    if (!profileOpen) return;
+    const handler = (e: MouseEvent) => {
+      if (profileRef.current && !profileRef.current.contains(e.target as Node)) {
+        setProfileOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [profileOpen]);
 
   // Refresh cart and wishlist on mount and when panels open
   useEffect(() => {
@@ -159,7 +172,7 @@ export default function Header() {
             <span className="mx-1 hidden h-5 w-px bg-line sm:block" />
 
             {/* Account */}
-            <div className="relative">
+            <div className="relative" ref={profileRef}>
               <button
                 aria-label="Account"
                 onClick={() => setProfileOpen(!profileOpen)}
