@@ -68,5 +68,16 @@ service cloud.firestore {
       allow read: if request.auth != null;
       allow write: if false;
     }
+
+    // Support conversations: shared between the customer and admin agents.
+    // Any authenticated user can read/write (admin UI is access-gated in-app,
+    // matching the existing posture for orders and ai_conversations).
+    match /support_conversations/{convId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null
+        && request.resource.data.userId == request.auth.uid;
+      allow update: if request.auth != null;
+      allow delete: if false;
+    }
   }
 }
