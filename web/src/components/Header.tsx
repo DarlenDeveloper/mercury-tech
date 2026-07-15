@@ -114,19 +114,19 @@ export default function Header() {
               <SearchBar variant="desktop" />
             </div>
             {/* AI Assistant button */}
-            <button
-              type="button"
+            <Link
+              href="/ai"
               aria-label="AI Shopping Assistant"
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-mercury transition hover:bg-mercury/10"
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition hover:bg-mercury/10"
             >
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                <path d="M6.03 18.97a.75.75 0 0 1 0-1.06l.72-.72a.75.75 0 1 1 1.06 1.06l-.72.72a.75.75 0 0 1-1.06 0Z" />
-                <path d="M3.5 14.5a.75.75 0 0 1 .75-.75h1a.75.75 0 0 1 0 1.5h-1a.75.75 0 0 1-.75-.75Z" />
-                <path d="M7.75 9.5a.75.75 0 0 1 0 .75.75.75 0 0 1-.75.75.75.75 0 0 1-.75-.75v-1a.75.75 0 0 1 1.5 0Z" />
-                <path d="M12.672 2.535a.75.75 0 0 0-1.344 0L9.06 7.67a.75.75 0 0 1-.39.39l-5.135 2.268a.75.75 0 0 0 0 1.344l5.135 2.268a.75.75 0 0 1 .39.39l2.268 5.135a.75.75 0 0 0 1.344 0l2.268-5.135a.75.75 0 0 1 .39-.39l5.135-2.268a.75.75 0 0 0 0-1.344l-5.135-2.268a.75.75 0 0 1-.39-.39L12.672 2.535Z" />
-                <path d="M18.25 2a.75.75 0 0 1 .75.75v1.5h1.5a.75.75 0 0 1 0 1.5H19v1.5a.75.75 0 0 1-1.5 0v-1.5h-1.5a.75.75 0 0 1 0-1.5H17.5v-1.5a.75.75 0 0 1 .75-.75Z" />
-              </svg>
-            </button>
+              <Image
+                src="/ai-icon.png"
+                alt="AI Assistant"
+                width={24}
+                height={24}
+                className="h-6 w-6 object-contain"
+              />
+            </Link>
           </div>
 
           {/* Support + delivery (desktop only) */}

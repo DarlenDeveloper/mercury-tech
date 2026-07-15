@@ -7,6 +7,9 @@ import { getMessaging } from "firebase-admin/messaging";
 initializeApp();
 const db = getFirestore();
 
+// AI shopping & customer-service assistant (Gemini-backed callable function).
+export { aiAgent } from "./ai-agent.js";
+
 /**
  * Triggered when a new notification document is created.
  * If status is "sent", sends push notification to all users via FCM topic.
