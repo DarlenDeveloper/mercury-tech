@@ -1,18 +1,31 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, ArrowUp, Search } from "lucide-react";
+import Image from "next/image";
+import {
+  ArrowLeft,
+  ArrowUp,
+  Search,
+  Plus,
+  Trash2,
+  PanelLeft,
+} from "lucide-react";
 import { useAuth } from "@/components/AuthProvider";
 import { askAiAgent } from "@/lib/aiAgent";
 import { fetchProducts } from "@/lib/firestore";
 import ProductCard from "@/components/ProductCard";
 import { type Product } from "@/lib/products";
+import {
+  listChats,
+  getChat,
+  saveChat,
+  deleteChat,
+  newChatId,
+  type ChatSummary,
+} from "@/lib/aiChats";
 
-type Message = {
-  text: string;
-  fromUser: boolean;
-};
+type Message = { text: string; fromUser: boolean };
 
 const SUGGESTIONS = [
   "Gaming laptop under USh 3M",
@@ -32,6 +45,9 @@ export default function AiAgentPage() {
   const [productMap, setProductMap] = useState<Map<string, Product>>(
     productMapCache ?? new Map()
   );
+  const [chats, setChats] = useState<ChatSummary[]>([]);
+  const [activeChatId, setActiveChatId] = useState<string | null>(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const hasConversation = messages.length > 0;
@@ -42,6 +58,20 @@ export default function AiAgentPage() {
       router.replace("/login?redirect=/ai");
     }
   }, [user, loading, router]);
+
+  // Load conversation list
+  const refreshChats = useCallback(async () => {
+    if (!user) return;
+    try {
+      setChats(await listChats(user.uid));
+    } catch {
+      /* ignore */
+    }
+  }, [user]);
+
+  useEffect(() => {
+    refreshChats();
+  }, [refreshChats]);
 
   // Load products for card rendering
   useEffect(() => {
@@ -79,9 +109,33 @@ export default function AiAgentPage() {
     }
   }, [messages]);
 
+  const startNewChat = () => {
+    setActiveChatId(null);
+    setMessages([]);
+    setInput("");
+    setSidebarOpen(false);
+  };
+
+  const openChat = async (chatId: string) => {
+    if (!user) return;
+    const thread = await getChat(user.uid, chatId);
+    if (thread) {
+      setActiveChatId(chatId);
+      setMessages(thread.messages);
+      setSidebarOpen(false);
+    }
+  };
+
+  const removeChat = async (chatId: string) => {
+    if (!user) return;
+    await deleteChat(user.uid, chatId);
+    if (chatId === activeChatId) startNewChat();
+    refreshChats();
+  };
+
   const send = async (text: string) => {
     const trimmed = text.trim();
-    if (!trimmed || sending) return;
+    if (!trimmed || sending || !user) return;
 
     if (!aiMode) {
       router.push(`/search?q=${encodeURIComponent(trimmed)}`);
@@ -93,15 +147,34 @@ export default function AiAgentPage() {
       role: m.fromUser ? ("user" as const) : ("assistant" as const),
       content: m.text,
     }));
-    setMessages((prev) => [...prev, { text: trimmed, fromUser: true }]);
+    const nextMessages = [...messages, { text: trimmed, fromUser: true }];
+    setMessages(nextMessages);
     setSending(true);
+
+    // Ensure we have a chat id
+    let chatId = activeChatId;
+    if (!chatId) {
+      chatId = newChatId();
+      setActiveChatId(chatId);
+    }
+
+    // Save immediately so the thread shows up in the sidebar right away.
+    try {
+      await saveChat(user.uid, chatId, nextMessages);
+      refreshChats();
+    } catch {
+      /* ignore */
+    }
 
     try {
       const reply = await askAiAgent(trimmed, history);
-      setMessages((prev) => [
-        ...prev,
+      const finalMessages = [
+        ...nextMessages,
         { text: reply || "Sorry, I couldn't process that. Please try again.", fromUser: false },
-      ]);
+      ];
+      setMessages(finalMessages);
+      await saveChat(user.uid, chatId, finalMessages);
+      refreshChats();
     } catch {
       setMessages((prev) => [
         ...prev,
@@ -121,94 +194,205 @@ export default function AiAgentPage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-[#F5F7FB]">
-      {/* Back button */}
-      <div className="px-3 pt-4">
-        <button
-          onClick={() => router.back()}
-          aria-label="Back"
-          className="flex h-10 w-10 items-center justify-center rounded-full text-ink transition hover:bg-black/5"
-        >
-          <ArrowLeft size={22} />
-        </button>
-      </div>
+    <div className="flex h-screen bg-[#F5F7FB]">
+      {/* ─── Sidebar ─── */}
+      <ChatSidebar
+        chats={chats}
+        activeChatId={activeChatId}
+        open={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+        onNewChat={startNewChat}
+        onOpenChat={openChat}
+        onDeleteChat={removeChat}
+      />
 
-      {/* Conversation or greeting */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto">
-        {hasConversation ? (
-          <div className="mx-auto max-w-2xl px-5 py-4">
-            {messages.map((m, i) => (
-              <MessageBubble key={i} message={m} productMap={productMap} />
-            ))}
-            {sending && (
-              <div className="flex py-2">
-                <div className="flex items-center gap-1 rounded-2xl rounded-bl bg-white px-4 py-3">
-                  <Dot delay={0} />
-                  <Dot delay={150} />
-                  <Dot delay={300} />
+      {/* ─── Main chat area ─── */}
+      <div className="flex min-w-0 flex-1 flex-col">
+        {/* Top bar */}
+        <div className="flex items-center gap-2 px-3 pt-4">
+          <button
+            onClick={() => setSidebarOpen(true)}
+            aria-label="Conversations"
+            className="flex h-10 w-10 items-center justify-center rounded-full text-ink transition hover:bg-black/5 lg:hidden"
+          >
+            <PanelLeft size={20} />
+          </button>
+          <button
+            onClick={() => router.back()}
+            aria-label="Back"
+            className="flex h-10 w-10 items-center justify-center rounded-full text-ink transition hover:bg-black/5"
+          >
+            <ArrowLeft size={22} />
+          </button>
+        </div>
+
+        {/* Conversation or greeting */}
+        <div ref={scrollRef} className="flex-1 overflow-y-auto">
+          {hasConversation ? (
+            <div className="mx-auto max-w-3xl px-5 py-4">
+              {messages.map((m, i) => (
+                <MessageBubble key={i} message={m} productMap={productMap} />
+              ))}
+              {sending && (
+                <div className="flex py-2">
+                  <div className="flex items-center gap-1 rounded-2xl rounded-bl bg-white px-4 py-3">
+                    <Dot delay={0} />
+                    <Dot delay={150} />
+                    <Dot delay={300} />
+                  </div>
                 </div>
-              </div>
-            )}
-          </div>
-        ) : (
-          <div className="flex h-full items-center justify-center px-9">
-            <h1 className="text-center text-[26px] font-bold leading-[1.25] text-ink">
-              Hey there, what are you
-              <br />
-              looking for today?
-            </h1>
+              )}
+            </div>
+          ) : (
+            <div className="flex h-full items-center justify-center px-9">
+              <h1 className="text-center text-[26px] font-bold leading-[1.25] text-ink">
+                Hey there, what are you
+                <br />
+                looking for today?
+              </h1>
+            </div>
+          )}
+        </div>
+
+        {/* Suggestions (only when no conversation) */}
+        {!hasConversation && (
+          <div className="mx-auto w-full max-w-3xl px-5 pb-2.5">
+            <div className="flex gap-3">
+              {SUGGESTIONS.map((s) => (
+                <button
+                  key={s}
+                  onClick={() => send(s)}
+                  className="flex-1 rounded-[14px] bg-[#F1F2F4] px-3.5 py-3 text-left text-[12.5px] leading-[1.25] text-[#4B5563] transition hover:bg-[#e8e9ec]"
+                >
+                  {s}
+                </button>
+              ))}
+            </div>
           </div>
         )}
-      </div>
 
-      {/* Suggestions (only when no conversation) */}
-      {!hasConversation && (
-        <div className="mx-auto w-full max-w-2xl px-5 pb-2.5">
-          <div className="flex gap-3">
-            {SUGGESTIONS.map((s) => (
+        {/* Composer */}
+        <div className="mx-auto w-full max-w-3xl px-5 pb-8">
+          <div className="rounded-[26px] border border-[#E5E7EB] bg-white px-[18px] pb-3 pt-3.5 shadow-[0_6px_16px_rgba(0,0,0,0.05)]">
+            <input
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  send(input);
+                }
+              }}
+              placeholder="Start searching"
+              className="w-full bg-transparent text-[15px] text-ink outline-none placeholder:text-[#9CA3AF]"
+            />
+            <div className="mt-3.5 flex items-center gap-1.5">
+              <ModeChip label="AI mode" selected={aiMode} onClick={() => setAiMode(true)} />
+              <ModeChip label="Standard" selected={!aiMode} onClick={() => setAiMode(false)} />
+              <div className="flex-1" />
               <button
-                key={s}
-                onClick={() => send(s)}
-                className="flex-1 rounded-[14px] bg-[#F1F2F4] px-3.5 py-3 text-left text-[12.5px] leading-[1.25] text-[#4B5563] transition hover:bg-[#e8e9ec]"
+                onClick={() => send(input)}
+                disabled={sending}
+                aria-label="Send"
+                className="flex h-10 w-10 items-center justify-center rounded-full bg-ink text-white transition hover:bg-black disabled:opacity-50"
               >
-                {s}
+                <ArrowUp size={20} />
               </button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Composer */}
-      <div className="mx-auto w-full max-w-2xl px-5 pb-8">
-        <div className="rounded-[26px] border border-[#E5E7EB] bg-white px-[18px] pb-3 pt-3.5 shadow-[0_6px_16px_rgba(0,0,0,0.05)]">
-          <input
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                send(input);
-              }
-            }}
-            placeholder="Start searching"
-            className="w-full bg-transparent text-[15px] text-ink outline-none placeholder:text-[#9CA3AF]"
-          />
-          <div className="mt-3.5 flex items-center gap-1.5">
-            <ModeChip label="AI mode" selected={aiMode} onClick={() => setAiMode(true)} />
-            <ModeChip label="Standard" selected={!aiMode} onClick={() => setAiMode(false)} />
-            <div className="flex-1" />
-            <button
-              onClick={() => send(input)}
-              disabled={sending}
-              aria-label="Send"
-              className="flex h-10 w-10 items-center justify-center rounded-full bg-ink text-white transition hover:bg-black disabled:opacity-50"
-            >
-              <ArrowUp size={20} />
-            </button>
+            </div>
           </div>
         </div>
       </div>
     </div>
+  );
+}
+
+function ChatSidebar({
+  chats,
+  activeChatId,
+  open,
+  onClose,
+  onNewChat,
+  onOpenChat,
+  onDeleteChat,
+}: {
+  chats: ChatSummary[];
+  activeChatId: string | null;
+  open: boolean;
+  onClose: () => void;
+  onNewChat: () => void;
+  onOpenChat: (id: string) => void;
+  onDeleteChat: (id: string) => void;
+}) {
+  const content = (
+    <div className="flex h-full w-72 flex-col border-r border-line bg-white">
+      <div className="p-3">
+        <button
+          onClick={onNewChat}
+          className="flex w-full items-center justify-center gap-2 rounded-full bg-ink py-2.5 text-sm font-semibold text-white transition hover:bg-black"
+        >
+          <Plus size={16} />
+          New chat
+        </button>
+      </div>
+      <div className="flex-1 overflow-y-auto px-2 pb-3">
+        <p className="px-3 py-2 text-[11px] font-semibold uppercase tracking-wide text-muted">
+          Recent
+        </p>
+        {chats.length === 0 ? (
+          <p className="px-3 py-4 text-center text-xs text-muted">
+            No conversations yet
+          </p>
+        ) : (
+          <ul className="flex flex-col gap-0.5">
+            {chats.map((c) => (
+              <li key={c.id}>
+                <div
+                  className={`group flex items-center gap-2 rounded-lg px-3 py-2 transition ${
+                    c.id === activeChatId ? "bg-surface-soft" : "hover:bg-surface-soft"
+                  }`}
+                >
+                  <button
+                    onClick={() => onOpenChat(c.id)}
+                    className="flex min-w-0 flex-1 items-center gap-2 text-left"
+                  >
+                    <Image
+                      src="/ai-icon.png"
+                      alt=""
+                      width={16}
+                      height={16}
+                      className="h-4 w-4 shrink-0 object-contain"
+                    />
+                    <span className="truncate text-[13px] text-ink">{c.title}</span>
+                  </button>
+                  <button
+                    onClick={() => onDeleteChat(c.id)}
+                    aria-label="Delete"
+                    className="shrink-0 text-muted opacity-0 transition hover:text-red-500 group-hover:opacity-100"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </div>
+  );
+
+  return (
+    <>
+      {/* Desktop persistent sidebar */}
+      <div className="hidden lg:block">{content}</div>
+
+      {/* Mobile drawer */}
+      {open && (
+        <>
+          <div className="fixed inset-0 z-40 bg-black/40 lg:hidden" onClick={onClose} />
+          <div className="fixed left-0 top-0 z-50 h-full lg:hidden">{content}</div>
+        </>
+      )}
+    </>
   );
 }
 
@@ -232,17 +416,13 @@ function ModeChip({
       {isAi ? (
         <span
           className="h-4 w-4 rounded-lg"
-          style={{
-            background: "linear-gradient(135deg, #FFB053, #FF7A00)",
-          }}
+          style={{ background: "linear-gradient(135deg, #FFB053, #FF7A00)" }}
         />
       ) : (
         <Search size={16} className="text-[#6B7280]" />
       )}
       <span
-        className={`text-[13px] font-semibold ${
-          selected ? "text-ink" : "text-[#6B7280]"
-        }`}
+        className={`text-[13px] font-semibold ${selected ? "text-ink" : "text-[#6B7280]"}`}
       >
         {label}
       </span>
@@ -269,7 +449,6 @@ function MessageBubble({
     );
   }
 
-  // Extract [[id:xxx]] product tags from the reply
   const { cleanText, productIds } = parseProductTags(text);
   const products = productIds
     .map((id) => productMap.get(id))
@@ -293,7 +472,6 @@ function MessageBubble({
   );
 }
 
-/** Renders text with basic markdown: **bold** and line breaks. */
 function MarkdownText({ text }: { text: string }) {
   const parts = text.split(/(\*\*[^*]+\*\*)/g);
   return (
@@ -312,7 +490,6 @@ function MarkdownText({ text }: { text: string }) {
   );
 }
 
-/** Extracts [[id:PRODUCT_ID]] tags, returns clean text and the ids. */
 function parseProductTags(text: string): { cleanText: string; productIds: string[] } {
   const ids: string[] = [];
   const cleanText = text

@@ -10,7 +10,10 @@ export default function WishlistButton({ productId }: { productId?: string }) {
   const [on, setOn] = useState(false);
   const [busy, setBusy] = useState(false);
 
-  const handleClick = async () => {
+  const handleClick = async (e: React.MouseEvent) => {
+    // Prevent the click from triggering a parent link (e.g. product card).
+    e.preventDefault();
+    e.stopPropagation();
     if (!productId) {
       setOn((v) => !v);
       return;

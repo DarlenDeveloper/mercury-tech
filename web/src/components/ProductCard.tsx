@@ -12,13 +12,10 @@ export default function ProductCard({ product }: { product: Product }) {
   const href = `/product/${product.id}`;
 
   return (
-    <div className="group flex flex-col">
+    <Link href={href} className="group flex flex-col">
       {/* Image tile */}
       <div className="relative">
-        <Link
-          href={href}
-          className="relative block aspect-square overflow-hidden rounded-[18px] border border-[#E3E5EA] bg-[#F0F1F4]"
-        >
+        <div className="relative block aspect-square overflow-hidden rounded-[18px] border border-[#E3E5EA] bg-[#F0F1F4]">
           <Image
             src={product.image}
             alt={product.name}
@@ -32,7 +29,7 @@ export default function ProductCard({ product }: { product: Product }) {
               SALE
             </span>
           )}
-        </Link>
+        </div>
 
         <div className="absolute bottom-2 right-2 z-10">
           <WishlistButton productId={product.id} />
@@ -40,11 +37,9 @@ export default function ProductCard({ product }: { product: Product }) {
       </div>
 
       {/* Name */}
-      <Link href={href}>
-        <h3 className="mt-2 truncate text-[13px] font-semibold text-ink transition group-hover:text-mercury">
-          {product.name}
-        </h3>
-      </Link>
+      <h3 className="mt-2 truncate text-[13px] font-semibold text-ink transition group-hover:text-mercury">
+        {product.name}
+      </h3>
 
       {/* Description */}
       <p className="mt-0.5 truncate text-[11px] leading-snug text-muted">
@@ -62,6 +57,6 @@ export default function ProductCard({ product }: { product: Product }) {
           </span>
         )}
       </div>
-    </div>
+    </Link>
   );
 }
