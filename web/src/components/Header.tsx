@@ -491,11 +491,12 @@ function CurrencySelector() {
   const ref = useRef<HTMLDivElement>(null);
 
   const currencies = [
-    { code: "USh" as const, label: "UGX — Ugandan Shilling" },
-    { code: "USD" as const, label: "USD — US Dollar" },
-    { code: "EUR" as const, label: "EUR — Euro" },
-    { code: "GBP" as const, label: "GBP — British Pound" },
-    { code: "KES" as const, label: "KES — Kenyan Shilling" },
+    { code: "USh" as const, label: "UGX", flag: <FlagUG /> },
+    { code: "USD" as const, label: "USD", flag: <FlagUS /> },
+    { code: "EUR" as const, label: "EUR", flag: <FlagEU /> },
+    { code: "GBP" as const, label: "GBP", flag: <FlagGB /> },
+    { code: "KES" as const, label: "KES", flag: <FlagKE /> },
+    { code: "RWF" as const, label: "RWF", flag: <FlagRW /> },
   ];
 
   useEffect(() => {
@@ -511,21 +512,23 @@ function CurrencySelector() {
     <div className="relative hidden sm:block" ref={ref}>
       <button
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-1 px-2 py-2 text-sm font-medium text-ink transition hover:text-mercury"
+        className="flex items-center gap-1.5 px-2 py-2 text-sm font-medium text-ink transition hover:text-mercury"
       >
-        {currency}
+        {currencies.find((c) => c.code === currency)?.flag}
+        {currency === "USh" ? "UGX" : currency}
         <ChevronDown size={14} className="text-muted" />
       </button>
       {open && (
-        <div className="absolute right-0 top-10 z-50 w-48 rounded-xl border border-line bg-white p-1.5 shadow-lg">
+        <div className="absolute right-0 top-10 z-50 w-44 rounded-xl border border-line bg-white p-1.5 shadow-lg">
           {currencies.map((c) => (
             <button
               key={c.code}
               onClick={() => { setCurrency(c.code); setOpen(false); }}
-              className={`flex w-full items-center rounded-lg px-3 py-2 text-sm transition hover:bg-surface-soft ${
+              className={`flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition hover:bg-surface-soft ${
                 currency === c.code ? "font-semibold text-mercury" : "text-ink"
               }`}
             >
+              {c.flag}
               {c.label}
             </button>
           ))}
@@ -533,6 +536,36 @@ function CurrencySelector() {
       )}
     </div>
   );
+}
+
+// ─── SVG Flag Icons (16x12 rounded) ─────────────────────────────────────────
+
+function FlagWrap({ children }: { children: React.ReactNode }) {
+  return <svg width="20" height="14" viewBox="0 0 20 14" className="shrink-0 rounded-[2px] overflow-hidden">{children}</svg>;
+}
+
+function FlagUG() {
+  return <FlagWrap><rect width="20" height="2.33" fill="#000"/><rect y="2.33" width="20" height="2.33" fill="#FCDC04"/><rect y="4.67" width="20" height="2.33" fill="#D90000"/><rect y="7" width="20" height="2.33" fill="#000"/><rect y="9.33" width="20" height="2.33" fill="#FCDC04"/><rect y="11.67" width="20" height="2.33" fill="#D90000"/><circle cx="10" cy="7" r="3" fill="#fff"/></FlagWrap>;
+}
+
+function FlagUS() {
+  return <FlagWrap><rect width="20" height="14" fill="#B22234"/><rect y="1.08" width="20" height="1.08" fill="#fff"/><rect y="3.23" width="20" height="1.08" fill="#fff"/><rect y="5.38" width="20" height="1.08" fill="#fff"/><rect y="7.54" width="20" height="1.08" fill="#fff"/><rect y="9.69" width="20" height="1.08" fill="#fff"/><rect y="11.85" width="20" height="1.08" fill="#fff"/><rect width="8" height="7.54" fill="#3C3B6E"/></FlagWrap>;
+}
+
+function FlagEU() {
+  return <FlagWrap><rect width="20" height="14" fill="#003399"/><circle cx="10" cy="7" r="3.5" fill="none" stroke="#FFCC00" strokeWidth="0.8"/></FlagWrap>;
+}
+
+function FlagGB() {
+  return <FlagWrap><rect width="20" height="14" fill="#012169"/><path d="M0 0L20 14M20 0L0 14" stroke="#fff" strokeWidth="2.5"/><path d="M0 0L20 14M20 0L0 14" stroke="#C8102E" strokeWidth="1.5"/><path d="M10 0V14M0 7H20" stroke="#fff" strokeWidth="4"/><path d="M10 0V14M0 7H20" stroke="#C8102E" strokeWidth="2.5"/></FlagWrap>;
+}
+
+function FlagKE() {
+  return <FlagWrap><rect width="20" height="4.67" fill="#000"/><rect y="4.67" width="20" height="1" fill="#fff"/><rect y="5.67" width="20" height="3.67" fill="#BB0000"/><rect y="9.33" width="20" height="1" fill="#fff"/><rect y="10.33" width="20" height="3.67" fill="#006600"/></FlagWrap>;
+}
+
+function FlagRW() {
+  return <FlagWrap><rect width="20" height="7" fill="#00A1DE"/><rect y="7" width="20" height="3.5" fill="#FAD201"/><rect y="10.5" width="20" height="3.5" fill="#20603D"/></FlagWrap>;
 }
 
 function InfoBlock({

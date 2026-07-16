@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useState, type ReactNode } from "react";
 
-export type CurrencyCode = "USh" | "USD" | "EUR" | "GBP" | "KES";
+export type CurrencyCode = "USh" | "USD" | "EUR" | "GBP" | "KES" | "RWF";
 
 type CurrencyInfo = {
   code: CurrencyCode;
@@ -16,6 +16,7 @@ const CURRENCIES: Record<CurrencyCode, CurrencyInfo> = {
   EUR: { code: "EUR", symbol: "€", rate: 4100 },
   GBP: { code: "GBP", symbol: "£", rate: 4750 },
   KES: { code: "KES", symbol: "KSh", rate: 29 },
+  RWF: { code: "RWF", symbol: "RWF", rate: 2.8 },
 };
 
 type CurrencyCtx = {
