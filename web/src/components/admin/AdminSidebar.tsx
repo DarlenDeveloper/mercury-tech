@@ -55,6 +55,7 @@ const GROUPS: Group[] = [
       { label: "User Tracking", icon: Activity, href: "/u/user-tracking", slug: "user-tracking" },
       { label: "Financial Reports", icon: Wallet, href: "/u/finance", slug: "finance" },
       { label: "Website", icon: Globe, href: "/u/website", slug: "website" },
+      { label: "Quotations", icon: ScrollText, href: "/u/quotations", slug: "quotations" },
     ],
   },
   {

@@ -5,6 +5,7 @@ import { Star, Minus, Plus, Truck, ShieldCheck, Headphones, Check } from "lucide
 import { type Product } from "@/lib/products";
 import { useCurrency } from "@/components/CurrencyProvider";
 import AddToCartButton from "@/components/AddToCartButton";
+import RequestQuoteButton from "@/components/RequestQuoteButton";
 
 function Stars({ rating }: { rating: number }) {
   return (
@@ -166,13 +167,18 @@ export default function ProductInfo({
       </div>
 
       {/* CTAs */}
-      <div className="mt-5 flex flex-wrap gap-3">
+      <div className="mt-5 grid grid-cols-2 gap-3">
         <AddToCartButton
           productId={product.id}
           name={product.name}
           category={product.category}
           priceUsd={product.price / 3780}
           image={product.image}
+        />
+        <RequestQuoteButton
+          productId={product.id}
+          productName={product.name}
+          productPrice={product.price}
         />
       </div>
 

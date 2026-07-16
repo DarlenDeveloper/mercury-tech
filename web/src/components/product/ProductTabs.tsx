@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Sparkles, BookOpen, Lightbulb } from "lucide-react";
 import type { Product } from "@/lib/products";
 import ProductReviews from "./ProductReviews";
 
@@ -83,7 +84,9 @@ function DescriptionContent({ text }: { text: string }) {
       {sections.features.length > 0 && (
         <div className="rounded-2xl border border-line bg-white p-5">
           <h3 className="mb-3 flex items-center gap-2 text-sm font-bold text-ink">
-            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-mercury/10 text-mercury">✦</span>
+            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-mercury/10 text-mercury">
+              <Sparkles size={15} />
+            </span>
             Key Features
           </h3>
           <ul className="space-y-2">
@@ -101,7 +104,9 @@ function DescriptionContent({ text }: { text: string }) {
       {sections.howToUse.length > 0 && (
         <div className="rounded-2xl border border-line bg-white p-5">
           <h3 className="mb-3 flex items-center gap-2 text-sm font-bold text-ink">
-            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-50 text-mercury">📖</span>
+            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-50 text-mercury">
+              <BookOpen size={15} />
+            </span>
             How to Use
           </h3>
           <ol className="space-y-2">
@@ -121,7 +126,9 @@ function DescriptionContent({ text }: { text: string }) {
       {sections.tips.length > 0 && (
         <div className="rounded-2xl border border-line bg-white p-5">
           <h3 className="mb-3 flex items-center gap-2 text-sm font-bold text-ink">
-            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-50 text-amber-600">💡</span>
+            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-50 text-amber-600">
+              <Lightbulb size={15} />
+            </span>
             Tips & Care
           </h3>
           <ul className="space-y-2">

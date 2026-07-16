@@ -79,5 +79,13 @@ service cloud.firestore {
       allow update: if request.auth != null;
       allow delete: if false;
     }
+
+    // Quotations: customers can create; admins can read/update.
+    match /quotations/{quoteId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null;
+      allow update: if request.auth != null;
+      allow delete: if false;
+    }
   }
 }
