@@ -1,12 +1,15 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { collection, query, where, onSnapshot } from "firebase/firestore";
 import { ADMIN_AUTH_KEY, useAdminAccess } from "@/components/admin/AdminGuard";
 import { hasPageAccess } from "@/lib/adminAccess";
 import { logAudit } from "@/lib/auditLog";
 import { useAuth } from "@/components/AuthProvider";
+import { db } from "@/lib/firestore";
 import {
   House,
   ChartNoAxesColumn,
@@ -77,6 +80,32 @@ export default function AdminSidebar() {
   const router = useRouter();
   const { adminEntry } = useAdminAccess();
   const { user } = useAuth();
+  const [badges, setBadges] = useState<Record<string, number>>({});
+
+  // Real-time badge counts
+  useEffect(() => {
+    const unsubs: (() => void)[] = [];
+
+    // Pending orders
+    const ordersQ = query(collection(db, "orders"), where("status", "==", "pending"));
+    unsubs.push(onSnapshot(ordersQ, (snap) => {
+      setBadges((prev) => ({ ...prev, orders: snap.size }));
+    }, () => {}));
+
+    // Pending quotations
+    const quotesQ = query(collection(db, "quotations"), where("status", "==", "pending"));
+    unsubs.push(onSnapshot(quotesQ, (snap) => {
+      setBadges((prev) => ({ ...prev, quotations: snap.size }));
+    }, () => {}));
+
+    // Open support conversations
+    const supportQ = query(collection(db, "support_conversations"), where("status", "==", "open"));
+    unsubs.push(onSnapshot(supportQ, (snap) => {
+      setBadges((prev) => ({ ...prev, "customer-care": snap.size }));
+    }, () => {}));
+
+    return () => unsubs.forEach((u) => u());
+  }, []);
 
   const logout = async () => {
     logAudit({
@@ -98,9 +127,10 @@ export default function AdminSidebar() {
     return hasPageAccess(adminEntry, item.slug);
   };
 
-  const renderItem = ({ label, icon: Icon, href }: Item) => {
+  const renderItem = ({ label, icon: Icon, href, slug }: Item) => {
     const isActive =
       href === "/u" ? pathname === "/u" : pathname.startsWith(href);
+    const badge = badges[slug] || 0;
     return (
       <Link
         key={label}
@@ -113,6 +143,13 @@ export default function AdminSidebar() {
       >
         <Icon size={18} className="shrink-0" />
         <span className="flex-1">{label}</span>
+        {badge > 0 && (
+          <span className={`flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-[10px] font-bold leading-none ${
+            isActive ? "bg-white/20 text-white" : "bg-mercury-accent text-white"
+          }`}>
+            {badge > 99 ? "99+" : badge}
+          </span>
+        )}
       </Link>
     );
   };
