@@ -83,7 +83,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
           alignment: Alignment.center,
-          padding: EdgeInsets.only(top: topPadding - 4, bottom: 24),
+          padding: EdgeInsets.only(top: (topPadding - 4).clamp(0, double.infinity), bottom: 24),
           child: GestureDetector(
             onTap: () {
               // TODO: navigate to deals
