@@ -204,7 +204,6 @@ export default function QuotationsPage() {
             <div className="mt-4 space-y-3 text-sm">
               <Row label="Product" value={selected.productName} />
               <Row label="Customer" value={`${selected.userName} (${selected.userEmail})`} />
-              <Row label="Phone" value={selected.userPhone || "—"} />
               <Row label="Listed Price" value={format(selected.productPrice)} />
               {selected.message && <Row label="Customer note" value={selected.message} />}
             </div>

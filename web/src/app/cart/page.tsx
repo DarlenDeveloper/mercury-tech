@@ -27,7 +27,7 @@ export default function CartPage() {
   const [orderPlaced, setOrderPlaced] = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
   const [showQuote, setShowQuote] = useState(false);
-  const [quotePhone, setQuotePhone] = useState("");
+  const [quotePreferredPrice, setQuotePreferredPrice] = useState("");
   const [quoteMessage, setQuoteMessage] = useState("");
   const [quoteSent, setQuoteSent] = useState(false);
   const [quoteBusy, setQuoteBusy] = useState(false);
@@ -296,13 +296,16 @@ export default function CartPage() {
                 </div>
 
                 <div className="mt-4 flex flex-col gap-3">
-                  <input
-                    type="tel"
-                    value={quotePhone}
-                    onChange={(e) => setQuotePhone(e.target.value)}
-                    placeholder="Phone number (+256 7XX XXX XXX)"
-                    className="h-11 w-full rounded-xl border border-line bg-[#FAFBFC] px-4 text-sm text-ink outline-none focus:border-mercury"
-                  />
+                  <div>
+                    <label className="mb-1 block text-xs font-semibold text-ink">Your preferred price (UGX)</label>
+                    <input
+                      type="number"
+                      value={quotePreferredPrice}
+                      onChange={(e) => setQuotePreferredPrice(e.target.value)}
+                      placeholder="e.g. 3,000,000"
+                      className="h-11 w-full rounded-xl border border-line bg-[#FAFBFC] px-4 text-sm text-ink outline-none focus:border-mercury"
+                    />
+                  </div>
                   <textarea
                     value={quoteMessage}
                     onChange={(e) => setQuoteMessage(e.target.value)}
@@ -325,14 +328,14 @@ export default function CartPage() {
                         userId: user.uid,
                         userName: user.displayName || "",
                         userEmail: user.email || "",
-                        userPhone: quotePhone.trim(),
-                        message: quoteMessage.trim(),
+                        userPhone: "",
+                        message: `Preferred price: USh ${Number(quotePreferredPrice || 0).toLocaleString("en-UG")}${quoteMessage ? `. ${quoteMessage.trim()}` : ""}`,
                       });
                       setQuoteSent(true);
                       setTimeout(() => {
                         setShowQuote(false);
                         setQuoteSent(false);
-                        setQuotePhone("");
+                        setQuotePreferredPrice("");
                         setQuoteMessage("");
                       }, 2500);
                     } catch (e) {
