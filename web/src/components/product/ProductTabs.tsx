@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Sparkles, BookOpen, Lightbulb } from "lucide-react";
+import { Zap, BookOpen, Lightbulb } from "lucide-react";
 import type { Product } from "@/lib/products";
 import ProductReviews from "./ProductReviews";
 
@@ -85,7 +85,7 @@ function DescriptionContent({ text }: { text: string }) {
         <div className="rounded-2xl border border-line bg-white p-5">
           <h3 className="mb-3 flex items-center gap-2 text-sm font-bold text-ink">
             <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-mercury/10 text-mercury">
-              <Sparkles size={15} />
+              <Zap size={15} />
             </span>
             Key Features
           </h3>
