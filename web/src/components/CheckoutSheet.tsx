@@ -1,18 +1,17 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
-import { X, MapPin, ShieldCheck } from "lucide-react";
+import { X, MapPin, ShieldCheck, Banknote, Store } from "lucide-react";
 
-export type PaymentMethod = "MTN Mobile Money" | "Airtel Money";
+export type PaymentMethod = "Cash on Delivery" | "Pickup from Store";
 
 const PAYMENT_OPTIONS: {
   method: PaymentMethod;
   subtitle: string;
-  logo: string;
+  icon: typeof Banknote;
 }[] = [
-  { method: "MTN Mobile Money", subtitle: "Pay with MTN MoMo", logo: "/mtn-logo.jpeg" },
-  { method: "Airtel Money", subtitle: "Pay with Airtel Money", logo: "/airtel-logo.jpeg" },
+  { method: "Cash on Delivery", subtitle: "Pay when your order arrives", icon: Banknote },
+  { method: "Pickup from Store", subtitle: "Pay & collect at Kamwokya, Kira Road", icon: Store },
 ];
 
 function formatUgx(n: number) {
@@ -30,7 +29,7 @@ export default function CheckoutSheet({
   onClose: () => void;
   onPlaceOrder: (paymentMethod: PaymentMethod, deliveryAddress: string) => void;
 }) {
-  const [selected, setSelected] = useState<PaymentMethod>("MTN Mobile Money");
+  const [selected, setSelected] = useState<PaymentMethod>("Cash on Delivery");
   const [address, setAddress] = useState("");
 
   return (
@@ -69,14 +68,12 @@ export default function CheckoutSheet({
                   active ? "bg-[#1A2E3B] text-white" : "bg-surface-soft text-ink"
                 }`}
               >
-                <span className="h-10 w-10 shrink-0 overflow-hidden rounded-xl bg-white">
-                  <Image
-                    src={opt.logo}
-                    alt={opt.method}
-                    width={40}
-                    height={40}
-                    className="h-full w-full object-cover"
-                  />
+                <span
+                  className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${
+                    active ? "bg-white/15" : "bg-white"
+                  }`}
+                >
+                  <opt.icon size={20} className={active ? "text-white" : "text-ink"} />
                 </span>
                 <span className="flex-1">
                   <span className="block text-sm font-semibold">{opt.method}</span>

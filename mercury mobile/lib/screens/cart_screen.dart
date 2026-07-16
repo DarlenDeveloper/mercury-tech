@@ -492,7 +492,7 @@ class _DashedLinePainter extends CustomPainter {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Order confirmation bottom sheet (MTN & Airtel)
+// Order confirmation bottom sheet (Cash on Delivery / Pickup)
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _OrderConfirmationSheet extends StatefulWidget {
@@ -507,7 +507,7 @@ class _OrderConfirmationSheet extends StatefulWidget {
 }
 
 class _OrderConfirmationSheetState extends State<_OrderConfirmationSheet> {
-  int _selectedPayment = 0; // 0 = MTN, 1 = Airtel
+  int _selectedPayment = 0; // 0 = Cash on Delivery, 1 = Pickup
 
   static const _ink = Color(0xFF1F2937);
   static const _dark = Color(0xFF1A2E3B);
@@ -542,22 +542,22 @@ class _OrderConfirmationSheetState extends State<_OrderConfirmationSheet> {
             ),
           ),
           const SizedBox(height: 20),
-          // MTN Mobile Money
+          // Cash on Delivery
           _PaymentOption(
             selected: _selectedPayment == 0,
             onTap: () => setState(() => _selectedPayment = 0),
-            label: 'MTN Mobile Money',
-            subtitle: 'Pay with MTN MoMo',
-            logo: 'assets/images/mtn-logo.jpeg',
+            label: 'Cash on Delivery',
+            subtitle: 'Pay when your order arrives',
+            icon: IconsaxPlusLinear.money_recive,
           ),
           const SizedBox(height: 10),
-          // Airtel Money
+          // Pickup from Store
           _PaymentOption(
             selected: _selectedPayment == 1,
             onTap: () => setState(() => _selectedPayment = 1),
-            label: 'Airtel Money',
-            subtitle: 'Pay with Airtel Money',
-            logo: 'assets/images/airtel-logo.jpeg',
+            label: 'Pickup from Store',
+            subtitle: 'Pay & collect at Kamwokya, Kira Road',
+            icon: IconsaxPlusLinear.shop,
           ),
           const SizedBox(height: 24),
           // Divider
@@ -666,8 +666,8 @@ class _OrderConfirmationSheetState extends State<_OrderConfirmationSheet> {
                 child: InkWell(
                   onTap: () {
                     final method = _selectedPayment == 0
-                        ? 'MTN Mobile Money'
-                        : 'Airtel Money';
+                        ? 'Cash on Delivery'
+                        : 'Pickup from Store';
                     widget.onPlaceOrder(method);
                   },
                   borderRadius: BorderRadius.circular(30),
@@ -707,14 +707,14 @@ class _PaymentOption extends StatelessWidget {
     required this.onTap,
     required this.label,
     required this.subtitle,
-    required this.logo,
+    required this.icon,
   });
 
   final bool selected;
   final VoidCallback onTap;
   final String label;
   final String subtitle;
-  final String logo;
+  final IconData icon;
 
   @override
   Widget build(BuildContext context) {
@@ -732,10 +732,16 @@ class _PaymentOption extends StatelessWidget {
               width: 40,
               height: 40,
               decoration: BoxDecoration(
+                color: selected
+                    ? Colors.white.withValues(alpha: 0.15)
+                    : const Color(0xFFE8E9EC),
                 borderRadius: BorderRadius.circular(10),
               ),
-              clipBehavior: Clip.antiAlias,
-              child: Image.asset(logo, fit: BoxFit.cover),
+              child: Icon(
+                icon,
+                size: 20,
+                color: selected ? Colors.white : const Color(0xFF1F2937),
+              ),
             ),
             const SizedBox(width: 12),
             Expanded(
