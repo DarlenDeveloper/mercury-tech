@@ -4,7 +4,7 @@ import { ChevronRight } from "lucide-react";
 import AnnouncementBar from "@/components/AnnouncementBar";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import ProductCard from "@/components/ProductCard";
+import FilteredProductGrid from "@/components/FilteredProductGrid";
 import Sidebar from "@/components/Sidebar";
 import { getCategoriesFromFirestore } from "@/lib/categories";
 import { getProductsFromFirestore } from "@/lib/getProducts";
@@ -22,7 +22,6 @@ export default async function CategoryPage({
   if (!category) notFound();
 
   const allProducts = await getProductsFromFirestore();
-  // Match by categoryId (top-level)
   const products = allProducts.filter((p) => p.categoryId === slug);
 
   return (
@@ -48,17 +47,7 @@ export default async function CategoryPage({
                 {category.name}
               </h1>
 
-              {products.length === 0 ? (
-                <p className="text-muted">
-                  No products found in this category yet.
-                </p>
-              ) : (
-                <div className="grid grid-cols-[repeat(auto-fill,minmax(172px,1fr))] gap-3">
-                  {products.map((product) => (
-                    <ProductCard key={product.id} product={product} />
-                  ))}
-                </div>
-              )}
+              <FilteredProductGrid products={products} />
             </div>
           </div>
         </section>
