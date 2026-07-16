@@ -11,6 +11,19 @@ export default function ProductCard({ product }: { product: Product }) {
   const onSale = product.oldPrice != null && product.oldPrice > product.price;
   const href = `/product/${product.id}`;
 
+  // Compact format for card display only (e.g. 1.2M, 478K, 67K)
+  const formatCompact = (n: number) => {
+    if (n >= 1_000_000) {
+      const m = n / 1_000_000;
+      return `USh ${m % 1 === 0 ? m.toFixed(0) : m.toFixed(1)}M`;
+    }
+    if (n >= 1_000) {
+      const k = n / 1_000;
+      return `USh ${k % 1 === 0 ? k.toFixed(0) : k.toFixed(0)}K`;
+    }
+    return `USh ${n.toLocaleString("en-UG")}`;
+  };
+
   return (
     <Link href={href} className="group flex flex-col">
       {/* Image tile */}
@@ -49,11 +62,11 @@ export default function ProductCard({ product }: { product: Product }) {
       {/* Price + old price */}
       <div className="mt-1.5 flex items-end gap-1.5">
         <span className="text-[13px] font-semibold text-ink">
-          {format(product.price)}
+          {formatCompact(product.price)}
         </span>
         {onSale && (
           <span className="text-[10px] text-[#E11D2A] line-through">
-            {format(product.oldPrice!)}
+            {formatCompact(product.oldPrice!)}
           </span>
         )}
       </div>
