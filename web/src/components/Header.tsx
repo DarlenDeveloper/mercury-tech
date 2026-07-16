@@ -19,7 +19,7 @@ import {
 import { useAuth } from "@/components/AuthProvider";
 import { useCurrency } from "@/components/CurrencyProvider";
 import { signOut } from "@/lib/auth";
-import { getCart, type CartItem } from "@/lib/cart";
+import { getCart, clearCart, type CartItem } from "@/lib/cart";
 import { getFavorites } from "@/lib/wishlist";
 import SearchBar from "@/components/SearchBar";
 
@@ -53,6 +53,16 @@ export default function Header() {
     if (!user) return;
     getCart(user.uid).then(setCartItems).catch(() => {});
     getFavorites(user.uid).then(setWishlistIds).catch(() => {});
+  }, [user]);
+
+  // Listen for cart-updated events (fired by AddToCartButton)
+  useEffect(() => {
+    const handler = () => {
+      if (!user) return;
+      getCart(user.uid).then(setCartItems).catch(() => {});
+    };
+    window.addEventListener("cart-updated", handler);
+    return () => window.removeEventListener("cart-updated", handler);
   }, [user]);
 
   const refreshCart = () => {
@@ -387,6 +397,17 @@ export default function Header() {
                 >
                   View Cart & Checkout
                 </Link>
+                <button
+                  onClick={async () => {
+                    if (!user) return;
+                    await clearCart(user.uid);
+                    setCartItems([]);
+                    window.dispatchEvent(new Event("cart-updated"));
+                  }}
+                  className="mt-2 w-full rounded-full border border-line py-2.5 text-center text-sm font-medium text-muted transition hover:border-red-300 hover:text-red-500"
+                >
+                  Clear Cart
+                </button>
               </div>
             )}
           </div>

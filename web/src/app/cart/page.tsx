@@ -16,6 +16,7 @@ import {
   type CartItem,
 } from "@/lib/cart";
 import { placeOrder } from "@/lib/orders";
+import { requestQuote } from "@/lib/quotations";
 import CheckoutSheet, { type PaymentMethod } from "@/components/CheckoutSheet";
 
 export default function CartPage() {
@@ -25,6 +26,11 @@ export default function CartPage() {
   const [placing, setPlacing] = useState(false);
   const [orderPlaced, setOrderPlaced] = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
+  const [showQuote, setShowQuote] = useState(false);
+  const [quotePhone, setQuotePhone] = useState("");
+  const [quoteMessage, setQuoteMessage] = useState("");
+  const [quoteSent, setQuoteSent] = useState(false);
+  const [quoteBusy, setQuoteBusy] = useState(false);
 
   const rate = 3780;
 
@@ -231,6 +237,12 @@ export default function CartPage() {
               >
                 Checkout
               </button>
+              <button
+                onClick={() => setShowQuote(true)}
+                className="mt-2 w-full rounded-full border border-line py-3 text-sm font-semibold text-ink transition hover:border-mercury hover:text-mercury"
+              >
+                Request Quote for All Items
+              </button>
               <p className="mt-3 text-center text-xs text-muted">
                 Free delivery within Kampala Central
               </p>
@@ -246,6 +258,98 @@ export default function CartPage() {
           onClose={() => setShowCheckout(false)}
           onPlaceOrder={handlePlaceOrder}
         />
+      )}
+
+      {/* Bulk Quote Modal */}
+      {showQuote && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
+          onClick={() => setShowQuote(false)}
+        >
+          <div
+            className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {quoteSent ? (
+              <div className="py-8 text-center">
+                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-[#e7f6ee]">
+                  <ShoppingBag size={24} className="text-[#16a34a]" />
+                </div>
+                <h3 className="mt-4 text-lg font-bold text-ink">Quote requested!</h3>
+                <p className="mt-1 text-sm text-muted">
+                  We&apos;ll get back to you with a custom price for all {items.length} items.
+                </p>
+              </div>
+            ) : (
+              <>
+                <h3 className="text-lg font-bold text-ink">Request Quote for Cart</h3>
+                <p className="mt-1 text-sm text-muted">
+                  Get a bulk price for all {items.length} items ({formatUgx(totalUgx)} listed total)
+                </p>
+
+                <div className="mt-4 max-h-32 overflow-y-auto rounded-xl bg-surface-soft p-3">
+                  {items.map((item) => (
+                    <p key={item.productId} className="text-xs text-ink truncate">
+                      {item.qty}× {item.name}
+                    </p>
+                  ))}
+                </div>
+
+                <div className="mt-4 flex flex-col gap-3">
+                  <input
+                    type="tel"
+                    value={quotePhone}
+                    onChange={(e) => setQuotePhone(e.target.value)}
+                    placeholder="Phone number (+256 7XX XXX XXX)"
+                    className="h-11 w-full rounded-xl border border-line bg-[#FAFBFC] px-4 text-sm text-ink outline-none focus:border-mercury"
+                  />
+                  <textarea
+                    value={quoteMessage}
+                    onChange={(e) => setQuoteMessage(e.target.value)}
+                    placeholder="Note (e.g. bulk discount, corporate purchase)"
+                    rows={2}
+                    className="w-full rounded-xl border border-line bg-[#FAFBFC] px-4 py-3 text-sm text-ink outline-none resize-none focus:border-mercury"
+                  />
+                </div>
+
+                <button
+                  onClick={async () => {
+                    if (!user) return;
+                    setQuoteBusy(true);
+                    try {
+                      const productNames = items.map((i) => `${i.qty}× ${i.name}`).join(", ");
+                      await requestQuote({
+                        productId: "bulk-cart",
+                        productName: `Cart (${items.length} items): ${productNames}`,
+                        productPrice: totalUgx,
+                        userId: user.uid,
+                        userName: user.displayName || "",
+                        userEmail: user.email || "",
+                        userPhone: quotePhone.trim(),
+                        message: quoteMessage.trim(),
+                      });
+                      setQuoteSent(true);
+                      setTimeout(() => {
+                        setShowQuote(false);
+                        setQuoteSent(false);
+                        setQuotePhone("");
+                        setQuoteMessage("");
+                      }, 2500);
+                    } catch (e) {
+                      console.error("Quote error:", e);
+                    } finally {
+                      setQuoteBusy(false);
+                    }
+                  }}
+                  disabled={quoteBusy}
+                  className="mt-4 w-full rounded-full bg-ink py-3 text-sm font-semibold text-white transition hover:bg-black disabled:opacity-50"
+                >
+                  {quoteBusy ? "Sending..." : "Submit Quote Request"}
+                </button>
+              </>
+            )}
+          </div>
+        </div>
       )}
 
       <Footer />

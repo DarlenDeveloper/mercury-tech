@@ -6,3 +6,4 @@ service-account.json
 # Scraped data (too large for GitHub)
 scraped-api-raw.json
 scraped-products.json
+product-images/

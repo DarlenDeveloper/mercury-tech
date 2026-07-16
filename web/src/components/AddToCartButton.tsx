@@ -41,6 +41,8 @@ export default function AddToCartButton({
         image,
       });
       setAdded(true);
+      // Signal header to refresh cart count
+      window.dispatchEvent(new Event("cart-updated"));
       setTimeout(() => setAdded(false), 2000);
     } catch (e) {
       console.error("Add to cart error:", e);
