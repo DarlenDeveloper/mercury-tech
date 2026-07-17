@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:iconsax_plus/iconsax_plus.dart';
 
 import '../data/auth_scope.dart';
+import '../data/currency_service.dart';
 import '../data/user_repository.dart';
 import '../theme/app_colors.dart';
 import 'auth_flow.dart';
@@ -117,6 +118,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
           const SizedBox(height: 16),
 
+          // Currency
+          _SectionCard(
+            rows: [
+              _ProfileRow(
+                icon: IconsaxPlusLinear.dollar_circle,
+                label: 'Currency',
+                trailing: Text(
+                  CurrencyScope.of(context).info.label.split(' — ').first,
+                  style: const TextStyle(fontSize: 13, color: AppColors.inactive),
+                ),
+                onTap: () => _showCurrencyPicker(context),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+
           // Log out
           _SectionCard(
             rows: [
@@ -129,6 +146,49 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ],
           ),
         ],
+      ),
+    );
+  }
+
+  void _showCurrencyPicker(BuildContext context) {
+    final scope = CurrencyScope.of(context);
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(width: 36, height: 4, decoration: BoxDecoration(color: const Color(0xFFD1D5DB), borderRadius: BorderRadius.circular(2))),
+              ),
+              const SizedBox(height: 16),
+              const Text('Select currency', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+              const SizedBox(height: 12),
+              ...currencies.values.map((c) {
+                final selected = scope.currency == c.code;
+                return ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(c.label, style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                    color: selected ? AppColors.primary : const Color(0xFF1F2937),
+                  )),
+                  trailing: selected ? const Icon(Icons.check_circle, color: AppColors.primary, size: 20) : null,
+                  onTap: () {
+                    scope.setCurrency(c.code);
+                    Navigator.pop(context);
+                  },
+                );
+              }),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -382,12 +442,14 @@ class _ProfileRow extends StatelessWidget {
     required this.label,
     this.onTap,
     this.danger = false,
+    this.trailing,
   });
 
   final IconData icon;
   final String label;
   final VoidCallback? onTap;
   final bool danger;
+  final Widget? trailing;
 
   @override
   Widget build(BuildContext context) {
@@ -413,6 +475,7 @@ class _ProfileRow extends StatelessWidget {
                 ),
               ),
             ),
+            if (trailing != null) ...[trailing!, const SizedBox(width: 8)],
             if (!danger)
               const Icon(Icons.chevron_right,
                   color: AppColors.inactive, size: 20),

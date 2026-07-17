@@ -5,6 +5,7 @@ import 'package:lottie/lottie.dart';
 
 import 'data/auth_scope.dart';
 import 'data/catalog_scope.dart';
+import 'data/currency_service.dart';
 import 'firebase_options.dart';
 import 'theme/app_colors.dart';
 import 'screens/main_navigation_screen.dart';
@@ -29,8 +30,9 @@ class MercuryApp extends StatelessWidget {
 
     final navigatorKey = GlobalKey<NavigatorState>();
 
-    return AuthGate(
-      child: MaterialApp(
+    return CurrencyProvider(
+      child: AuthGate(
+        child: MaterialApp(
         title: 'Mercury Mobile',
         debugShowCheckedModeBanner: false,
         navigatorKey: navigatorKey,
@@ -46,6 +48,7 @@ class MercuryApp extends StatelessWidget {
         },
         home: const _SplashGate(),
       ),
+    ),
     );
   }
 }

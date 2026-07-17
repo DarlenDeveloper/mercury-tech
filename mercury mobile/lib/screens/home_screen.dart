@@ -12,6 +12,7 @@ import '../widgets/product_card.dart';
 import '../widgets/product_card_skeleton.dart';
 import '../widgets/ai_search_button.dart';
 import 'product_detail_screen.dart';
+import 'search_screen.dart';
 
 /// Image + circle color for each Home filter chip.
 ({String image, Color color}) _chipStyle(String label) {
@@ -1068,30 +1069,36 @@ class _FloatingSearchBar extends StatelessWidget {
     return Row(
       children: [
         Expanded(
-          child: Container(
-            height: 46,
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.92),
-              borderRadius: BorderRadius.circular(28),
+          child: GestureDetector(
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const SearchScreen()),
             ),
-            child: Row(
-              children: [
-                const Expanded(
-                  child: Text(
-                    'Search for brands or products',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: AppColors.inactive,
+            child: Container(
+              height: 46,
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.92),
+                borderRadius: BorderRadius.circular(28),
+              ),
+              child: Row(
+                children: [
+                  const Expanded(
+                    child: Text(
+                      'Search for brands or products',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: AppColors.inactive,
+                      ),
                     ),
                   ),
-                ),
-                Icon(
-                  IconsaxPlusLinear.search_normal,
-                  size: 20,
-                  color: AppColors.inactive,
-                ),
-              ],
+                  Icon(
+                    IconsaxPlusLinear.search_normal,
+                    size: 20,
+                    color: AppColors.inactive,
+                  ),
+                ],
+              ),
             ),
           ),
         ),

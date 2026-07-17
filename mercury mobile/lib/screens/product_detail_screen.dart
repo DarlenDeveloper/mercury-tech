@@ -5,6 +5,7 @@ import 'package:shimmer/shimmer.dart';
 
 import '../data/auth_scope.dart';
 import '../data/cart_repository.dart';
+import '../data/navigation_scope.dart';
 import '../data/favorites_repository.dart';
 import '../models/product.dart';
 import '../theme/app_colors.dart';
@@ -222,6 +223,11 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
             duration: const Duration(seconds: 1),
           ),
         );
+
+      // Navigate to cart tab
+      if (!mounted) return;
+      Navigator.of(context).popUntil((route) => route.isFirst);
+      NavigationScope.of(context)?.switchTab(2);
     } catch (e) {
       debugPrint('[addToCart] error: $e');
       if (!mounted) return;

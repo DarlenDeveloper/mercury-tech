@@ -11,19 +11,14 @@ class MercuryNavItem {
     required this.icon,
     required this.activeIcon,
     this.showBadge = false,
+    this.badgeCount = 0,
   });
 
-  /// Text shown beneath the icon.
   final String label;
-
-  /// Outline (linear) icon shown when the item is not selected.
   final IconData icon;
-
-  /// Filled (bold) icon shown when the item is selected.
   final IconData activeIcon;
-
-  /// Whether to show a small accent dot on the icon (e.g. notifications).
   final bool showBadge;
+  final int badgeCount;
 }
 
 /// Rounded, floating bottom navigation bar for Mercury Mobile.
@@ -117,22 +112,38 @@ class _NavBarItem extends StatelessWidget {
                     color: color,
                     size: 22,
                   ),
-                  if (item.showBadge)
+                  if (item.showBadge || item.badgeCount > 0)
                     Positioned(
-                      right: -2,
-                      top: -1,
-                      child: Container(
-                        width: 9,
-                        height: 9,
-                        decoration: BoxDecoration(
-                          color: AppColors.accent,
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: AppColors.primary,
-                            width: 1.5,
-                          ),
-                        ),
-                      ),
+                      right: -6,
+                      top: -4,
+                      child: item.badgeCount > 0
+                          ? Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                              decoration: BoxDecoration(
+                                color: AppColors.accent,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+                              child: Center(
+                                child: Text(
+                                  item.badgeCount > 99 ? '99+' : '${item.badgeCount}',
+                                  style: const TextStyle(
+                                    fontSize: 9,
+                                    fontWeight: FontWeight.w700,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                            )
+                          : Container(
+                              width: 9,
+                              height: 9,
+                              decoration: BoxDecoration(
+                                color: AppColors.accent,
+                                shape: BoxShape.circle,
+                                border: Border.all(color: AppColors.primary, width: 1.5),
+                              ),
+                            ),
                     ),
                 ],
               ),

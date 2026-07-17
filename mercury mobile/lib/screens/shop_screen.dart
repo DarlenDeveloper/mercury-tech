@@ -6,6 +6,7 @@ import '../models/category.dart';
 import '../theme/app_colors.dart';
 import '../widgets/ai_search_button.dart';
 import 'category_screen.dart';
+import 'search_screen.dart';
 
 class ShopScreen extends StatelessWidget {
   const ShopScreen({super.key});
@@ -22,23 +23,29 @@ class ShopScreen extends StatelessWidget {
           child: Row(
             children: [
               Expanded(
-                child: Container(
-                  height: 50,
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFEDF1F7),
-                    borderRadius: BorderRadius.circular(30),
+                child: GestureDetector(
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const SearchScreen()),
                   ),
-                  child: Row(
-                    children: const [
-                      Icon(IconsaxPlusLinear.search_normal,
-                          size: 20, color: AppColors.inactive),
-                      SizedBox(width: 12),
-                      Text(
-                        'What are you looking for?',
-                        style: TextStyle(fontSize: 14, color: AppColors.inactive),
-                      ),
-                    ],
+                  child: Container(
+                    height: 50,
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFEDF1F7),
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                    child: Row(
+                      children: const [
+                        Icon(IconsaxPlusLinear.search_normal,
+                            size: 20, color: AppColors.inactive),
+                        SizedBox(width: 12),
+                        Text(
+                          'What are you looking for?',
+                          style: TextStyle(fontSize: 14, color: AppColors.inactive),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),

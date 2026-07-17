@@ -1,13 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:iconsax_plus/iconsax_plus.dart';
 
 import '../screens/ai_agent_screen.dart';
-import '../theme/app_colors.dart';
 
-/// Brand-blue AI shortcut shown at the right edge of search bars.
-///
-/// Opens the [AiAgentScreen] shopping assistant. This replaces the old
-/// "AI" tab that used to live in the bottom navigation bar.
+/// Brand AI shortcut shown at the right edge of search bars.
+/// Opens the [AiAgentScreen] shopping assistant.
 class AiSearchButton extends StatelessWidget {
   const AiSearchButton({super.key, this.size = 38});
 
@@ -24,10 +20,13 @@ class AiSearchButton extends StatelessWidget {
       child: SizedBox(
         width: size,
         height: size,
-        child: Icon(
-          IconsaxPlusBold.magic_star,
-          size: size * 0.6,
-          color: AppColors.primary,
+        child: Center(
+          child: Image.asset(
+            'assets/images/ai-icon.png',
+            width: size * 0.6,
+            height: size * 0.6,
+            fit: BoxFit.contain,
+          ),
         ),
       ),
     );
