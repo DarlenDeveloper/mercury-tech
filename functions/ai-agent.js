@@ -11,7 +11,7 @@ const MODEL = "gemini-3-flash-preview";
 const DEFAULT_STORE_INFO = `
 Mercury Computers Limited — Uganda's trusted ICT & electronics retailer.
 - Location: Plot 91, Kamwokya, Kira Road, Kampala, Uganda (near Rubis Petrol Station).
-- Phone: 0414256136 / 0414347229 / 0707749506 / 0757346747
+- Phone: 0707749501 / 0704823800
 - Email: customercare@mercurycomputerslimited.com, sales@mercurycomputerslimited.com
 - Delivery: Free delivery within Uganda on eligible items.
 - Products: Official & brand new — laptops, desktops, printers, monitors, components,
