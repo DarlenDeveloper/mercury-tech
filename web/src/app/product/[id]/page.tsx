@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ChevronRight } from "lucide-react";
@@ -13,6 +14,50 @@ import { getProductFromFirestore, getProductsFromFirestore } from "@/lib/getProd
 import { getReviews, summarize } from "@/lib/reviews";
 
 export const revalidate = 300;
+
+const SITE_NAME = "Computer Shop, Kampala Uganda";
+const SITE_URL = "https://mercurycomputerslimited.com";
+
+// ─── Dynamic SEO metadata (mirrors the old site's title pattern) ──────────
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const { id } = await params;
+  const product = (await getProductFromFirestore(id)) ?? getProductById(id);
+
+  if (!product) {
+    return { title: `Product — ${SITE_NAME}` };
+  }
+
+  const title = `${product.name} – ${SITE_NAME}`;
+  const description =
+    (product.overview || product.description || product.name)
+      .replace(/\s+/g, " ")
+      .slice(0, 155);
+  const image = product.image?.startsWith("http") ? product.image : undefined;
+
+  return {
+    title,
+    description,
+    alternates: { canonical: `${SITE_URL}/product/${id}` },
+    openGraph: {
+      title,
+      description,
+      url: `${SITE_URL}/product/${id}`,
+      type: "website",
+      siteName: SITE_NAME,
+      images: image ? [{ url: image }] : undefined,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: image ? [image] : undefined,
+    },
+  };
+}
 
 export default async function ProductPage({
   params,
@@ -42,8 +87,34 @@ export default async function ProductPage({
       ? product.gallery
       : [product.image];
 
+  // Product structured data (JSON-LD) for rich search results.
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: product.name,
+    description: (product.overview || product.description || "").slice(0, 300),
+    image: gallery.filter((g) => g?.startsWith("http")),
+    brand: product.brand ? { "@type": "Brand", name: product.brand } : undefined,
+    category: product.category,
+    offers: {
+      "@type": "Offer",
+      priceCurrency: "UGX",
+      price: product.price,
+      availability:
+        (product.stock ?? 0) > 0
+          ? "https://schema.org/InStock"
+          : "https://schema.org/OutOfStock",
+      url: `${SITE_URL}/product/${id}`,
+      seller: { "@type": "Organization", name: "Mercury Computers Limited" },
+    },
+  };
+
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <AnnouncementBar />
       <Header />
 

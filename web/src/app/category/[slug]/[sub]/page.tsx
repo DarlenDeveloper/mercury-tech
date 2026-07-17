@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ChevronRight } from "lucide-react";
@@ -10,6 +11,29 @@ import { getCategoriesFromFirestore } from "@/lib/categories";
 import { getProductsFromFirestore } from "@/lib/getProducts";
 
 export const revalidate = 300;
+
+const SITE_NAME = "Computer Shop, Kampala Uganda";
+const SITE_URL = "https://mercurycomputerslimited.com";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string; sub: string }>;
+}): Promise<Metadata> {
+  const { slug, sub } = await params;
+  const categories = await getCategoriesFromFirestore();
+  const category = categories.find((c) => c.slug === slug);
+  const subCategory = category?.children.find((c) => c.slug === sub);
+  const name = subCategory?.name || category?.name || "Shop";
+  const title = `${name} – ${SITE_NAME}`;
+  const description = `Buy ${name} in Uganda at Mercury Computers. Official & brand new, best prices, free delivery within Uganda.`;
+  return {
+    title,
+    description,
+    alternates: { canonical: `${SITE_URL}/category/${slug}/${sub}` },
+    openGraph: { title, description, url: `${SITE_URL}/category/${slug}/${sub}`, siteName: SITE_NAME },
+  };
+}
 
 export default async function SubCategoryPage({
   params,

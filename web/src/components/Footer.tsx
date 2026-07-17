@@ -95,7 +95,7 @@ export default function Footer() {
             <a href="#" className="transition hover:text-mercury">
               Terms of Service
             </a>
-            <a href="#" className="transition hover:text-mercury">
+            <a href="/privacy" className="transition hover:text-mercury">
               Privacy Policy
             </a>
           </div>
