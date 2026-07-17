@@ -164,6 +164,21 @@ export default function Header() {
               <Search size={20} />
             </button>
 
+            {/* Mobile AI button */}
+            <Link
+              href="/ai"
+              aria-label="AI Assistant"
+              className="flex h-9 w-9 items-center justify-center rounded-full transition hover:bg-surface-soft md:hidden"
+            >
+              <Image
+                src="/ai-icon.png"
+                alt="AI"
+                width={20}
+                height={20}
+                className="h-5 w-5 object-contain"
+              />
+            </Link>
+
             {/* Currency selector */}
             <CurrencySelector />
 
