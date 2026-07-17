@@ -89,8 +89,8 @@ export default function CustomerCarePage() {
     });
 
   const doIntervene = async () => {
-    if (!active) return;
-    await interveneConversation(active.id);
+    if (!active || !user) return;
+    await interveneConversation(active.id, user.email || user.displayName || "admin");
     logAudit({
       actor: user?.displayName || user?.email || "Unknown",
       actorId: user?.uid || "",
@@ -106,11 +106,11 @@ export default function CustomerCarePage() {
 
   const doSend = async () => {
     const text = reply.trim();
-    if (!text || !active || busy) return;
+    if (!text || !active || busy || !user) return;
     setBusy(true);
     setReply("");
     try {
-      if (!active.intervened) await interveneConversation(active.id);
+      if (!active.intervened) await interveneConversation(active.id, user.email || "admin");
       await sendAdminMessage(active.id, text);
     } finally {
       setBusy(false);
@@ -221,7 +221,7 @@ export default function CustomerCarePage() {
                   </span>
                   {active.intervened ? (
                     <span className="flex items-center gap-1 rounded-full border border-mercury/30 bg-mercury/10 px-3 py-1.5 text-[12px] font-semibold text-mercury">
-                      <Headphones size={13} /> Live
+                      <Headphones size={13} /> {active.intervenedBy || "Agent"}
                     </span>
                   ) : (
                     <button
@@ -248,9 +248,9 @@ export default function CustomerCarePage() {
                 ))}
               </div>
 
-              {/* Reply composer (only when intervened) */}
+              {/* Reply composer (only when intervened by current admin) */}
               <div className="border-t border-line px-4 py-3">
-                {active.intervened ? (
+                {active.intervened && active.intervenedBy === (user?.email || "") ? (
                   <div className="flex items-center gap-2">
                     <input
                       value={reply}
@@ -270,6 +270,11 @@ export default function CustomerCarePage() {
                       <Send size={17} />
                     </button>
                   </div>
+                ) : active.intervened ? (
+                  <p className="py-1 text-center text-[12px] text-muted">
+                    This conversation is being handled by{" "}
+                    <span className="font-semibold text-ink">{active.intervenedBy}</span>.
+                  </p>
                 ) : (
                   <p className="py-1 text-center text-[12px] text-muted">
                     The AI is handling this chat. Click{" "}

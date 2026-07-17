@@ -29,6 +29,7 @@ export type SupportConversation = {
   messages: SupportMessage[];
   status: "open" | "resolved";
   intervened: boolean;
+  intervenedBy: string;
   updatedAt: Date;
 };
 
@@ -44,6 +45,7 @@ function toConversation(id: string, data: any): SupportConversation {
     messages: (data.messages || []) as SupportMessage[],
     status: data.status || "open",
     intervened: data.intervened || false,
+    intervenedBy: data.intervenedBy || "",
     updatedAt: data.updatedAt instanceof Timestamp ? data.updatedAt.toDate() : new Date(),
   };
 }
@@ -109,9 +111,13 @@ export function watchAllConversations(cb: (convs: SupportConversation[]) => void
   });
 }
 
-/** Admin takes over a conversation — the AI stops responding. */
-export async function interveneConversation(convId: string): Promise<void> {
-  await updateDoc(doc(db, COL, convId), { intervened: true, updatedAt: serverTimestamp() });
+/** Admin takes over a conversation — the AI stops responding. Locks to this admin. */
+export async function interveneConversation(convId: string, adminEmail: string): Promise<void> {
+  await updateDoc(doc(db, COL, convId), {
+    intervened: true,
+    intervenedBy: adminEmail,
+    updatedAt: serverTimestamp(),
+  });
 }
 
 /** Admin resolves (and hands back / closes) a conversation. */

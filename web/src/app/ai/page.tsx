@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { ArrowLeft, ArrowUp, Search, Plus, Trash2, PanelLeft, Headphones } from "lucide-react";
+import { ArrowLeft, ArrowUp, Search, Plus, Trash2, PanelLeft } from "lucide-react";
 import { useAuth } from "@/components/AuthProvider";
 import { askAiAgent } from "@/lib/aiAgent";
 import { fetchProducts } from "@/lib/firestore";
@@ -213,13 +213,7 @@ export default function AiAgentPage() {
           </button>
         </div>
 
-        {/* Intervene banner */}
-        {intervened && hasConversation && (
-          <div className="mx-auto mt-2 flex w-full max-w-3xl items-center gap-2 rounded-full bg-mercury/10 px-4 py-2 text-[13px] font-medium text-mercury">
-            <Headphones size={15} />
-            A Mercury agent has joined the chat and will assist you directly.
-          </div>
-        )}
+        {/* Intervene banner removed — seamless chat */}
 
         <div ref={scrollRef} className="flex-1 overflow-y-auto">
           {hasConversation ? (
@@ -275,7 +269,7 @@ export default function AiAgentPage() {
                   send(input);
                 }
               }}
-              placeholder={intervened ? "Message the agent…" : "Start searching"}
+              placeholder="Start searching"
               className="w-full bg-transparent text-[15px] text-ink outline-none placeholder:text-[#9CA3AF]"
             />
             <div className="mt-3.5 flex items-center gap-1.5">
@@ -402,9 +396,6 @@ function MessageBubble({ message, productMap }: { message: SupportMessage; produ
 
   return (
     <div className="flex flex-col items-start py-1.5">
-      {isAdmin && (
-        <span className="mb-1 ml-1 text-[11px] font-semibold text-mercury">Mercury Agent</span>
-      )}
       <div
         className={`max-w-[80%] rounded-2xl rounded-bl-[4px] px-4 py-3 text-[14px] leading-[1.35] ${
           isAdmin ? "bg-mercury/10 text-ink" : "bg-white text-ink"
