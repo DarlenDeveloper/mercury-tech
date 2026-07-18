@@ -1,11 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:iconsax_plus/iconsax_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../theme/app_colors.dart';
 
 /// WhatsApp brand green.
 const Color _whatsappGreen = Color(0xFF25D366);
+
+void _launchUrl(String url) async {
+  final uri = Uri.parse(url);
+  if (await canLaunchUrl(uri)) {
+    await launchUrl(uri, mode: LaunchMode.externalApplication);
+  }
+}
 
 /// A floating, draggable customer-service shortcut that can be moved anywhere
 /// on screen. It snaps to the nearest horizontal edge when released and stays
@@ -146,19 +154,38 @@ class _DraggableSupportButtonState extends State<DraggableSupportButton> {
                 ),
                 const SizedBox(height: 16),
                 _SupportTile(
-                  icon: IconsaxPlusBold.message_text_1,
-                  label: 'Live chat',
-                  onTap: () => Navigator.of(context).pop(),
+                  icon: Icons.chat_bubble_outline,
+                  label: 'WhatsApp (0707749501)',
+                  iconColor: _whatsappGreen,
+                  onTap: () {
+                    Navigator.of(context).pop();
+                    _launchUrl('https://wa.me/256707749501?text=Hi!%20I%20need%20help.');
+                  },
+                ),
+                _SupportTile(
+                  icon: Icons.chat_bubble_outline,
+                  label: 'WhatsApp (0704823800)',
+                  iconColor: _whatsappGreen,
+                  onTap: () {
+                    Navigator.of(context).pop();
+                    _launchUrl('https://wa.me/256704823800?text=Hi!%20I%20need%20help.');
+                  },
                 ),
                 _SupportTile(
                   icon: IconsaxPlusBold.call,
-                  label: 'Call us',
-                  onTap: () => Navigator.of(context).pop(),
+                  label: 'Call 0707749501',
+                  onTap: () {
+                    Navigator.of(context).pop();
+                    _launchUrl('tel:0707749501');
+                  },
                 ),
                 _SupportTile(
                   icon: IconsaxPlusBold.sms,
                   label: 'Email support',
-                  onTap: () => Navigator.of(context).pop(),
+                  onTap: () {
+                    Navigator.of(context).pop();
+                    _launchUrl('mailto:customercare@mercurycomputerslimited.com');
+                  },
                 ),
               ],
             ),
@@ -174,11 +201,13 @@ class _SupportTile extends StatelessWidget {
     required this.icon,
     required this.label,
     required this.onTap,
+    this.iconColor,
   });
 
   final IconData icon;
   final String label;
   final VoidCallback onTap;
+  final Color? iconColor;
 
   @override
   Widget build(BuildContext context) {
@@ -196,7 +225,7 @@ class _SupportTile extends StatelessWidget {
                 color: AppColors.primary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(icon, color: AppColors.primary, size: 20),
+              child: Icon(icon, color: iconColor ?? AppColors.primary, size: 20),
             ),
             const SizedBox(width: 14),
             Text(
