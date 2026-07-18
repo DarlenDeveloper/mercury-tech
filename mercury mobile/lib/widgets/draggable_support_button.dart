@@ -204,11 +204,7 @@ class _DraggableSupportButtonState extends State<DraggableSupportButton> {
               const Text('Choose a number', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Color(0xFF1F2937))),
               const SizedBox(height: 16),
               ListTile(
-                leading: Container(
-                  width: 40, height: 40,
-                  decoration: BoxDecoration(color: _whatsappGreen.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12)),
-                  child: const Icon(Icons.chat, color: _whatsappGreen, size: 20),
-                ),
+                leading: const Icon(Icons.chat, color: _whatsappGreen, size: 22),
                 title: const Text('0707 749 501', style: TextStyle(fontWeight: FontWeight.w600)),
                 onTap: () {
                   Navigator.pop(ctx);
@@ -216,11 +212,7 @@ class _DraggableSupportButtonState extends State<DraggableSupportButton> {
                 },
               ),
               ListTile(
-                leading: Container(
-                  width: 40, height: 40,
-                  decoration: BoxDecoration(color: _whatsappGreen.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12)),
-                  child: const Icon(Icons.chat, color: _whatsappGreen, size: 20),
-                ),
+                leading: const Icon(Icons.chat, color: _whatsappGreen, size: 22),
                 title: const Text('0704 823 800', style: TextStyle(fontWeight: FontWeight.w600)),
                 onTap: () {
                   Navigator.pop(ctx);
@@ -257,15 +249,7 @@ class _SupportTile extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 12),
         child: Row(
           children: [
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(icon, color: iconColor ?? AppColors.primary, size: 20),
-            ),
+            Icon(icon, color: iconColor ?? AppColors.primary, size: 22),
             const SizedBox(width: 14),
             Text(
               label,

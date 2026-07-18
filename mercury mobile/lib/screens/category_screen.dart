@@ -5,6 +5,7 @@ import '../data/catalog_scope.dart';
 import '../data/currency_service.dart';
 import '../models/category.dart';
 import '../models/product.dart';
+import '../theme/app_colors.dart';
 import '../widgets/product_card.dart';
 import 'product_detail_screen.dart';
 
@@ -195,10 +196,10 @@ class _CategoryScreenState extends State<CategoryScreen> {
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                         decoration: BoxDecoration(
-                          color: _hasActiveFilters ? _ink : const Color(0xFFF3F4F6),
+                          color: _hasActiveFilters ? AppColors.accent : const Color(0xFFF3F4F6),
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(
-                            color: _hasActiveFilters ? _ink : const Color(0xFFD1D5DB),
+                            color: _hasActiveFilters ? AppColors.accent : const Color(0xFFD1D5DB),
                             width: 1.5,
                           ),
                         ),

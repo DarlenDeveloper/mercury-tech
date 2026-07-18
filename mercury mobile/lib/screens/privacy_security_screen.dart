@@ -190,7 +190,6 @@ class _PrivacySecurityScreenState extends State<PrivacySecurityScreen> {
                     decoration: BoxDecoration(
                       color: const Color(0xFFFEF2F2),
                       borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: const Color(0xFFFECACA)),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -208,11 +207,12 @@ class _PrivacySecurityScreenState extends State<PrivacySecurityScreen> {
                         SizedBox(
                           width: double.infinity,
                           height: 48,
-                          child: OutlinedButton.icon(
+                          child: ElevatedButton.icon(
                             onPressed: _openDeleteDialog,
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: const Color(0xFFDC2626),
-                              side: const BorderSide(color: Color(0xFFDC2626)),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFFDC2626),
+                              foregroundColor: Colors.white,
+                              elevation: 0,
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(26)),
                             ),
                             icon: const Icon(IconsaxPlusLinear.trash, size: 18),
