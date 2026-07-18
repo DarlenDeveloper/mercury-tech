@@ -461,23 +461,25 @@ export default function AdminDashboardPage() {
               <ul className="mt-4 flex flex-col gap-4">
                 {recentOrders.map((o) => {
                   const firstItem = o.items[0];
+                  const orderName = firstItem?.name ?? "Order #" + o.id.slice(0, 6);
+                  const totalUgx = Math.round((o.totalUsd || 0) * rate);
                   return (
                     <li key={o.id} className="flex items-center gap-3">
-                      <span className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-xl bg-surface-soft">
+                      <span className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-surface-soft">
                         {firstItem?.image ? (
-                          <Image src={firstItem.image} alt={firstItem.name} width={40} height={40} className="h-8 w-8 object-contain" />
+                          <Image src={firstItem.image} alt={orderName} width={40} height={40} className="h-8 w-8 object-contain" />
                         ) : (
-                          <span className="text-lg text-muted"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg></span>
+                          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>
                         )}
                       </span>
-                      <div className="flex-1">
+                      <div className="min-w-0 flex-1">
                         <p className="truncate text-sm font-semibold text-ink">
-                          {firstItem?.name ?? "Order"}
+                          {orderName}
                         </p>
-                        <p className="text-[11px] text-muted capitalize">{o.status}</p>
+                        <p className="text-[11px] font-medium capitalize text-muted">{o.status}</p>
                       </div>
-                      <span className="text-sm font-semibold text-ink">
-                        {formatUgx(o.totalUsd, rate)}
+                      <span className="shrink-0 text-sm font-semibold text-ink">
+                        {totalUgx > 0 ? formatUgx(o.totalUsd, rate) : "—"}
                       </span>
                     </li>
                   );
