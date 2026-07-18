@@ -148,7 +148,7 @@ export default function Header() {
             />
             <InfoBlock
               icon={<Truck size={24} className="text-mercury" />}
-              title="Uganda-wide"
+              title="Kampala Central"
               highlight="Free Delivery"
             />
           </div>

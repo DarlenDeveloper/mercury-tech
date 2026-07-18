@@ -183,7 +183,7 @@ ${faqText}`;
 }
 
 const DEFAULT_FAQ = [
-  { q: "Do you offer delivery?", a: "Yes, we offer free delivery within Kampala and Uganda-wide delivery on most items." },
+  { q: "Do you offer delivery?", a: "Yes, we offer free delivery within Kampala Central." },
   { q: "Where are you located?", a: "Plot 91, Kira Road, Kamwokya, Kampala, Uganda (near Rubis Petrol Station)." },
   { q: "What is your return policy?", a: "Items can be returned within the period stated in our Sales, Refunds & Returns Policy, provided they are in original condition." },
   { q: "Are your products genuine?", a: "Yes, all our products are official and brand new with manufacturer warranty." },

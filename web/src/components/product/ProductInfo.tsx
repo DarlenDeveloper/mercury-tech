@@ -188,7 +188,7 @@ export default function ProductInfo({
         <TrustRow
           icon={<Truck size={16} />}
           title="Free Delivery"
-          subtitle="Free delivery within Kampala on this order"
+          subtitle="Free delivery within Kampala Central on this order"
         />
         <TrustRow
           icon={<ShieldCheck size={16} />}

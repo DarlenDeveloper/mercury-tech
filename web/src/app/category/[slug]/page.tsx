@@ -25,7 +25,7 @@ export async function generateMetadata({
   const category = categories.find((c) => c.slug === slug);
   const name = category?.name || "Shop";
   const title = `${name} – ${SITE_NAME}`;
-  const description = `Shop ${name} at Mercury Computers, Uganda's trusted ICT retailer. Official & brand new, free delivery within Uganda.`;
+  const description = `Shop ${name} at Mercury Computers, Uganda's trusted ICT retailer. Official & brand new, free delivery within Kampala Central.`;
   return {
     title,
     description,

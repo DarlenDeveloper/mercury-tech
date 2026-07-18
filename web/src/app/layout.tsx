@@ -20,7 +20,7 @@ export const metadata: Metadata = {
     template: "%s",
   },
   description:
-    "Mercury Computers is one of Uganda's leading independent retailers of laptops, printers and desktop computers. We stock hundreds of products from big brands like Lenovo, HP, Dell and Microsoft at the best prices. Free delivery within Uganda.",
+    "Mercury Computers is one of Uganda's leading independent retailers of laptops, printers and desktop computers. We stock hundreds of products from big brands like Lenovo, HP, Dell and Microsoft at the best prices. Free delivery within Kampala Central.",
   keywords: [
     "computer shop Kampala",
     "laptops Uganda",
@@ -38,7 +38,7 @@ export const metadata: Metadata = {
     url: SITE_URL,
     title: "Computer Shop, Kampala Uganda – Laptops, Printers & Electronics",
     description:
-      "Uganda's trusted ICT retailer. Official & brand new laptops, printers, desktops and more, with free delivery.",
+      "Uganda's trusted ICT retailer. Official & brand new laptops, printers, desktops and more, with free delivery within Kampala Central.",
   },
   robots: { index: true, follow: true },
 };

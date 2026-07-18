@@ -26,7 +26,7 @@ export async function generateMetadata({
   const subCategory = category?.children.find((c) => c.slug === sub);
   const name = subCategory?.name || category?.name || "Shop";
   const title = `${name} – ${SITE_NAME}`;
-  const description = `Buy ${name} in Uganda at Mercury Computers. Official & brand new, best prices, free delivery within Uganda.`;
+  const description = `Buy ${name} in Uganda at Mercury Computers. Official & brand new, best prices, free delivery within Kampala Central.`;
   return {
     title,
     description,

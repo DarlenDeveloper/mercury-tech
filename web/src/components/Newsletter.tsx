@@ -49,7 +49,7 @@ export default function Newsletter() {
             <p className="mt-2 text-sm leading-relaxed text-white/70">
               We&apos;ll listen to your needs, recommend the right hardware, and
               set up a complete IT solution that&apos;s right for you — backed by
-              free delivery across Uganda.
+              free delivery across Kampala Central.
             </p>
           </div>
         </div>
