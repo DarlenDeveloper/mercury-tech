@@ -5,7 +5,6 @@ import '../data/catalog_scope.dart';
 import '../data/currency_service.dart';
 import '../models/category.dart';
 import '../models/product.dart';
-import '../widgets/mercury_filter_chip.dart';
 import '../widgets/product_card.dart';
 import 'product_detail_screen.dart';
 
@@ -19,8 +18,6 @@ class CategoryScreen extends StatefulWidget {
 }
 
 class _CategoryScreenState extends State<CategoryScreen> {
-  int _selected = 0;
-
   static const _ink = Color(0xFF1F2937);
 
   // Filter state
@@ -46,13 +43,6 @@ class _CategoryScreenState extends State<CategoryScreen> {
     var result = parentId != null
         ? all.where((p) => p.categoryId == parentId).toList()
         : List<Product>.from(all);
-
-    // Subcategory filter
-    if (_selected > 0 && _selected < category.subcategories.length) {
-      final label = category.subcategories[_selected].label;
-      final filtered = result.where((p) => p.category == label).toList();
-      if (filtered.isNotEmpty) result = filtered;
-    }
 
     // Brand filter
     if (_brandFilter.isNotEmpty) {
@@ -121,10 +111,12 @@ class _CategoryScreenState extends State<CategoryScreen> {
   void _openFilterSheet(List<Product> categoryProducts) {
     final brands = _getBrands(categoryProducts);
     final (minP, maxP) = _getPriceRange(categoryProducts);
+    final currentProducts = _productsFrom(CatalogScope.of(context).products);
 
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -136,6 +128,7 @@ class _CategoryScreenState extends State<CategoryScreen> {
         minPrice: minP,
         maxPrice: maxP,
         sortBy: _sortBy,
+        resultCount: currentProducts.length,
         onApply: (brands, inStock, priceRange, sort) {
           setState(() {
             _brandFilter
@@ -183,14 +176,16 @@ class _CategoryScreenState extends State<CategoryScreen> {
                       color: _ink,
                     ),
                     Expanded(
-                      child: Text(
-                        category.name,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.w700,
-                          color: _ink,
+                      child: Center(
+                        child: Text(
+                          category.name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w700,
+                            color: _ink,
+                          ),
                         ),
                       ),
                     ),
@@ -202,6 +197,10 @@ class _CategoryScreenState extends State<CategoryScreen> {
                         decoration: BoxDecoration(
                           color: _hasActiveFilters ? _ink : const Color(0xFFF3F4F6),
                           borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: _hasActiveFilters ? _ink : const Color(0xFFD1D5DB),
+                            width: 1.5,
+                          ),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
@@ -209,15 +208,15 @@ class _CategoryScreenState extends State<CategoryScreen> {
                             Icon(
                               IconsaxPlusLinear.setting_4,
                               size: 16,
-                              color: _hasActiveFilters ? Colors.white : const Color(0xFF6B7280),
+                              color: _hasActiveFilters ? Colors.white : _ink,
                             ),
                             const SizedBox(width: 4),
                             Text(
                               'Filters',
                               style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                                color: _hasActiveFilters ? Colors.white : const Color(0xFF6B7280),
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700,
+                                color: _hasActiveFilters ? Colors.white : _ink,
                               ),
                             ),
                           ],
@@ -225,25 +224,6 @@ class _CategoryScreenState extends State<CategoryScreen> {
                       ),
                     ),
                   ],
-                ),
-              ),
-            ),
-            // Subcategory chips
-            SliverToBoxAdapter(
-              child: SizedBox(
-                height: 40,
-                child: ListView.separated(
-                  scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.fromLTRB(20, 4, 20, 4),
-                  itemCount: category.subcategories.length,
-                  separatorBuilder: (_, __) => const SizedBox(width: 10),
-                  itemBuilder: (context, i) => MercuryFilterChip(
-                    label: category.subcategories[i].label,
-                    icon: category.subcategories[i].icon,
-                    image: category.subcategories[i].image,
-                    accent: category.color,
-                    onTap: () => setState(() => _selected = i),
-                  ),
                 ),
               ),
             ),
@@ -288,16 +268,6 @@ class _CategoryScreenState extends State<CategoryScreen> {
                   ),
                 ),
               ),
-            // Result count
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 12, 20, 4),
-                child: Text(
-                  '${products.length} product${products.length == 1 ? '' : 's'}',
-                  style: const TextStyle(fontSize: 13, color: Color(0xFF6B7280)),
-                ),
-              ),
-            ),
             // Product grid
             if (products.isEmpty)
               const SliverFillRemaining(
@@ -394,7 +364,7 @@ class _BrandOption {
   final int count;
 }
 
-// ─── Filter Bottom Sheet ─────────────────────────────────────────────────────
+// ─── Filter Sheet (multi-page: main → brand list) ────────────────────────────
 
 class _FilterSheet extends StatefulWidget {
   const _FilterSheet({
@@ -405,6 +375,7 @@ class _FilterSheet extends StatefulWidget {
     required this.minPrice,
     required this.maxPrice,
     required this.sortBy,
+    required this.resultCount,
     required this.onApply,
   });
 
@@ -415,7 +386,8 @@ class _FilterSheet extends StatefulWidget {
   final int minPrice;
   final int maxPrice;
   final String sortBy;
-  final void Function(Set<String> brands, bool inStock, RangeValues? priceRange, String sort) onApply;
+  final int resultCount;
+  final void Function(Set<String>, bool, RangeValues?, String) onApply;
 
   @override
   State<_FilterSheet> createState() => _FilterSheetState();
@@ -429,220 +401,274 @@ class _FilterSheetState extends State<_FilterSheet> {
   late RangeValues _range;
   late String _sort;
   bool _priceActive = false;
+  bool _showBrandPage = false;
+  String _brandSearch = '';
 
   @override
   void initState() {
     super.initState();
     _brands = Set.from(widget.selectedBrands);
     _inStock = widget.inStockOnly;
-    _range = widget.priceRange ?? RangeValues(widget.minPrice.toDouble(), widget.maxPrice.toDouble());
+    _range = widget.priceRange ??
+        RangeValues(widget.minPrice.toDouble(), widget.maxPrice.toDouble());
     _priceActive = widget.priceRange != null;
     _sort = widget.sortBy;
   }
+
+  void _reset() {
+    setState(() {
+      _brands.clear();
+      _inStock = false;
+      _priceActive = false;
+      _range = RangeValues(widget.minPrice.toDouble(), widget.maxPrice.toDouble());
+      _sort = 'relevance';
+    });
+  }
+
+  int get _activeCount =>
+      _brands.length + (_inStock ? 1 : 0) + (_priceActive ? 1 : 0) + (_sort != 'relevance' ? 1 : 0);
 
   @override
   Widget build(BuildContext context) {
     final currency = CurrencyScope.of(context);
     return DraggableScrollableSheet(
-      initialChildSize: 0.7,
-      minChildSize: 0.4,
-      maxChildSize: 0.9,
+      initialChildSize: 0.8,
+      minChildSize: 0.5,
+      maxChildSize: 0.95,
       expand: false,
       builder: (context, scrollController) {
-        return Padding(
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(child: Container(width: 36, height: 4, decoration: BoxDecoration(color: const Color(0xFFD1D5DB), borderRadius: BorderRadius.circular(2)))),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  const Expanded(
-                    child: Text('Filters', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: _ink)),
-                  ),
-                  GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        _brands.clear();
-                        _inStock = false;
-                        _priceActive = false;
-                        _range = RangeValues(widget.minPrice.toDouble(), widget.maxPrice.toDouble());
-                        _sort = 'relevance';
-                      });
-                    },
-                    child: const Text('Reset', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFFEF4444))),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              Expanded(
-                child: ListView(
-                  controller: scrollController,
-                  children: [
-                    // Sort
-                    const Text('Sort by', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: _ink)),
-                    const SizedBox(height: 8),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: [
-                        _SortChip(label: 'Relevant', value: 'relevance', selected: _sort, onTap: (v) => setState(() => _sort = v)),
-                        _SortChip(label: 'Price ↑', value: 'price_asc', selected: _sort, onTap: (v) => setState(() => _sort = v)),
-                        _SortChip(label: 'Price ↓', value: 'price_desc', selected: _sort, onTap: (v) => setState(() => _sort = v)),
-                        _SortChip(label: 'A → Z', value: 'name_asc', selected: _sort, onTap: (v) => setState(() => _sort = v)),
-                      ],
-                    ),
-                    const SizedBox(height: 20),
-                    // In stock
-                    Row(
-                      children: [
-                        const Text('In Stock Only', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: _ink)),
-                        const Spacer(),
-                        Switch.adaptive(
-                          value: _inStock,
-                          activeTrackColor: _ink,
-                          onChanged: (v) => setState(() => _inStock = v),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    // Price range
-                    Row(
-                      children: [
-                        const Text('Price Range', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: _ink)),
-                        const Spacer(),
-                        Switch.adaptive(
-                          value: _priceActive,
-                          activeTrackColor: _ink,
-                          onChanged: (v) => setState(() => _priceActive = v),
-                        ),
-                      ],
-                    ),
-                    if (_priceActive && widget.maxPrice > widget.minPrice) ...[
-                      const SizedBox(height: 8),
-                      RangeSlider(
-                        values: _range,
-                        min: widget.minPrice.toDouble(),
-                        max: widget.maxPrice.toDouble(),
-                        activeColor: _ink,
-                        inactiveColor: const Color(0xFFE5E7EB),
-                        onChanged: (v) => setState(() => _range = v),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 4),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              currency.formatCompact(_range.start.round()),
-                              style: const TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
-                            ),
-                            Text(
-                              currency.formatCompact(_range.end.round()),
-                              style: const TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                    const SizedBox(height: 20),
-                    // Brands
-                    if (widget.brands.isNotEmpty) ...[
-                      const Text('Brand', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: _ink)),
-                      const SizedBox(height: 8),
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: widget.brands.take(12).map((b) {
-                          final selected = _brands.contains(b.name);
-                          return GestureDetector(
-                            onTap: () => setState(() {
-                              if (selected) {
-                                _brands.remove(b.name);
-                              } else {
-                                _brands.add(b.name);
-                              }
-                            }),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                              decoration: BoxDecoration(
-                                color: selected ? _ink : const Color(0xFFF3F4F6),
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: Text(
-                                '${b.name} (${b.count})',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                  color: selected ? Colors.white : const Color(0xFF374151),
-                                ),
-                              ),
-                            ),
-                          );
-                        }).toList(),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-              const SizedBox(height: 12),
-              // Apply button
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () {
-                    widget.onApply(
-                      _brands,
-                      _inStock,
-                      _priceActive ? _range : null,
-                      _sort,
-                    );
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: _ink,
-                    foregroundColor: Colors.white,
-                    elevation: 0,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                  ),
-                  child: const Text('Apply Filters', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
-                ),
-              ),
-            ],
-          ),
-        );
+        if (_showBrandPage) {
+          return _buildBrandPage(context);
+        }
+        return _buildMainPage(context, scrollController, currency);
       },
     );
   }
-}
 
-class _SortChip extends StatelessWidget {
-  const _SortChip({required this.label, required this.value, required this.selected, required this.onTap});
-  final String label;
-  final String value;
-  final String selected;
-  final ValueChanged<String> onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final isActive = value == selected;
-    return GestureDetector(
-      onTap: () => onTap(value),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-        decoration: BoxDecoration(
-          color: isActive ? const Color(0xFF1F2937) : const Color(0xFFF3F4F6),
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-            color: isActive ? Colors.white : const Color(0xFF374151),
+  Widget _buildMainPage(BuildContext context, ScrollController sc, CurrencyScope currency) {
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 16, 16, 0),
+          child: Row(
+            children: [
+              const Text('Filter', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: _ink)),
+              const Spacer(),
+              IconButton(icon: const Icon(Icons.close, size: 22, color: _ink), onPressed: () => Navigator.pop(context)),
+            ],
           ),
         ),
+        const Divider(height: 24, color: Color(0xFFF3F4F6)),
+        Expanded(
+          child: ListView(
+            controller: sc,
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+            children: [
+              // Brand row
+              _buildNavRow('Brand', _brands.isEmpty ? null : '${_brands.length} selected', () => setState(() => _showBrandPage = true)),
+              const Divider(height: 1, color: Color(0xFFF3F4F6)),
+              // In stock
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 6),
+                child: Row(
+                  children: [
+                    const Text('In Stock Only', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: _ink)),
+                    const Spacer(),
+                    Switch.adaptive(value: _inStock, activeTrackColor: _ink, onChanged: (v) => setState(() => _inStock = v)),
+                  ],
+                ),
+              ),
+              const Divider(height: 1, color: Color(0xFFF3F4F6)),
+              // Price
+              Padding(
+                padding: const EdgeInsets.only(top: 14, bottom: 6),
+                child: Row(
+                  children: [
+                    const Text('Price', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: _ink)),
+                    const Spacer(),
+                    Switch.adaptive(value: _priceActive, activeTrackColor: _ink, onChanged: (v) => setState(() => _priceActive = v)),
+                  ],
+                ),
+              ),
+              if (_priceActive && widget.maxPrice > widget.minPrice) ...[
+                RangeSlider(values: _range, min: widget.minPrice.toDouble(), max: widget.maxPrice.toDouble(), activeColor: _ink, inactiveColor: const Color(0xFFE5E7EB), onChanged: (v) => setState(() => _range = v)),
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    _priceBox(currency.formatCompact(_range.start.round())),
+                    const Padding(padding: EdgeInsets.symmetric(horizontal: 12), child: Text('–', style: TextStyle(color: Color(0xFF9CA3AF)))),
+                    _priceBox(currency.formatCompact(_range.end.round())),
+                  ],
+                ),
+              ],
+              const SizedBox(height: 16),
+              const Divider(height: 1, color: Color(0xFFF3F4F6)),
+              // Sort
+              const Padding(padding: EdgeInsets.only(top: 14, bottom: 8), child: Text('Sort by', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: _ink))),
+              Wrap(spacing: 8, runSpacing: 8, children: [
+                _sortChip('Relevant', 'relevance'),
+                _sortChip('Price ↑', 'price_asc'),
+                _sortChip('Price ↓', 'price_desc'),
+                _sortChip('A → Z', 'name_asc'),
+              ]),
+              const SizedBox(height: 24),
+            ],
+          ),
+        ),
+        _buildBottomBar(context),
+      ],
+    );
+  }
+
+  Widget _buildBrandPage(BuildContext context) {
+    final filtered = _brandSearch.isEmpty
+        ? widget.brands
+        : widget.brands.where((b) => b.name.toLowerCase().contains(_brandSearch.toLowerCase())).toList();
+
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(8, 16, 16, 0),
+          child: Row(
+            children: [
+              IconButton(icon: const Icon(Icons.arrow_back, size: 22, color: _ink), onPressed: () => setState(() => _showBrandPage = false)),
+              const Expanded(child: Center(child: Text('Brand', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: _ink)))),
+              IconButton(icon: const Icon(Icons.close, size: 22, color: _ink), onPressed: () => Navigator.pop(context)),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 8),
+          child: Container(
+            height: 44,
+            padding: const EdgeInsets.symmetric(horizontal: 14),
+            decoration: BoxDecoration(color: const Color(0xFFF3F4F6), borderRadius: BorderRadius.circular(12)),
+            child: Row(
+              children: [
+                const Icon(Icons.search, size: 20, color: Color(0xFF9CA3AF)),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: TextField(
+                    onChanged: (v) => setState(() => _brandSearch = v),
+                    decoration: const InputDecoration(hintText: 'Search', border: InputBorder.none, isCollapsed: true, contentPadding: EdgeInsets.symmetric(vertical: 12), hintStyle: TextStyle(color: Color(0xFF9CA3AF), fontSize: 14)),
+                    style: const TextStyle(fontSize: 14),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        Expanded(
+          child: ListView.builder(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            itemCount: filtered.length,
+            itemBuilder: (context, i) {
+              final brand = filtered[i];
+              final isSelected = _brands.contains(brand.name);
+              return InkWell(
+                onTap: () => setState(() => isSelected ? _brands.remove(brand.name) : _brands.add(brand.name)),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 32, height: 32,
+                        decoration: BoxDecoration(color: const Color(0xFFF3F4F6), borderRadius: BorderRadius.circular(8)),
+                        alignment: Alignment.center,
+                        child: Text(brand.name.isNotEmpty ? brand.name[0].toUpperCase() : '?', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: _ink)),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(child: Text(brand.name, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: _ink))),
+                      Text('${brand.count}', style: const TextStyle(fontSize: 13, color: Color(0xFF9CA3AF))),
+                      const SizedBox(width: 12),
+                      Container(
+                        width: 22, height: 22,
+                        decoration: BoxDecoration(color: isSelected ? _ink : Colors.transparent, borderRadius: BorderRadius.circular(5), border: Border.all(color: isSelected ? _ink : const Color(0xFFD1D5DB), width: 1.5)),
+                        child: isSelected ? const Icon(Icons.check, size: 14, color: Colors.white) : null,
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+        _buildBottomBar(context, clearLabel: 'Clear filter', clearAction: () => setState(() => _brands.clear())),
+      ],
+    );
+  }
+
+  Widget _buildBottomBar(BuildContext context, {String? clearLabel, VoidCallback? clearAction}) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
+      child: Row(
+        children: [
+          Expanded(
+            child: OutlinedButton(
+              onPressed: _activeCount > 0 ? (clearAction ?? _reset) : null,
+              style: OutlinedButton.styleFrom(
+                foregroundColor: _ink,
+                side: const BorderSide(color: Color(0xFFE5E7EB)),
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+              ),
+              child: Text(clearLabel ?? 'Clear all${_activeCount > 0 ? ' ($_activeCount)' : ''}', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: ElevatedButton(
+              onPressed: () => widget.onApply(_brands, _inStock, _priceActive ? _range : null, _sort),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: _ink,
+                foregroundColor: Colors.white,
+                elevation: 0,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+              ),
+              child: Text('Show ${widget.resultCount}', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNavRow(String title, String? trailing, VoidCallback onTap) {
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        child: Row(
+          children: [
+            Text(title, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: _ink)),
+            const Spacer(),
+            if (trailing != null) ...[Text(trailing, style: const TextStyle(fontSize: 13, color: Color(0xFF6B7280))), const SizedBox(width: 8)],
+            const Icon(Icons.chevron_right, size: 20, color: Color(0xFF9CA3AF)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _priceBox(String value) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: BoxDecoration(border: Border.all(color: const Color(0xFFE5E7EB)), borderRadius: BorderRadius.circular(10)),
+        child: Text(value, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: _ink)),
+      ),
+    );
+  }
+
+  Widget _sortChip(String label, String value) {
+    final isActive = value == _sort;
+    return GestureDetector(
+      onTap: () => setState(() => _sort = value),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        decoration: BoxDecoration(color: isActive ? _ink : const Color(0xFFF3F4F6), borderRadius: BorderRadius.circular(20)),
+        child: Text(label, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: isActive ? Colors.white : const Color(0xFF374151))),
       ),
     );
   }

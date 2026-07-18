@@ -174,13 +174,7 @@ class _ContactCard extends StatelessWidget {
           padding: const EdgeInsets.all(14),
           child: Row(
             children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(color: iconColor.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12)),
-                alignment: Alignment.center,
-                child: icon,
-              ),
+              icon,
               const SizedBox(width: 14),
               Expanded(
                 child: Column(
