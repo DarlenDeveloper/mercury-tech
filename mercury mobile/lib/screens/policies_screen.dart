@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../theme/app_colors.dart';
 
@@ -6,6 +7,14 @@ class PoliciesScreen extends StatelessWidget {
   const PoliciesScreen({super.key});
 
   static const _ink = Color(0xFF1F2937);
+  static const _websiteUrl = 'https://www.mercurycomputerslimited.com';
+
+  static void _launchWebsite() async {
+    final uri = Uri.parse(_websiteUrl);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
+  }
 
   static const _sections = <(String, String)>[
     (
@@ -67,6 +76,29 @@ class PoliciesScreen extends StatelessWidget {
                           Text(s.$1, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: _ink)),
                           const SizedBox(height: 8),
                           Text(s.$2, style: const TextStyle(fontSize: 13.5, height: 1.6, color: AppColors.inactive)),
+                          const SizedBox(height: 10),
+                          InkWell(
+                            onTap: _launchWebsite,
+                            borderRadius: BorderRadius.circular(6),
+                            child: const Padding(
+                              padding: EdgeInsets.symmetric(vertical: 2),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    'Read more',
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w600,
+                                      color: AppColors.primary,
+                                    ),
+                                  ),
+                                  SizedBox(width: 4),
+                                  Icon(Icons.arrow_outward, size: 14, color: AppColors.primary),
+                                ],
+                              ),
+                            ),
+                          ),
                         ],
                       ),
                     ),
