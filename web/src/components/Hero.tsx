@@ -21,17 +21,18 @@ type Slide = {
 const GREEN_GRADIENT = "from-[#eaf4ee] via-[#e8f3df] to-[#cfe8a3]";
 
 const SLIDES: Slide[] = [
-  {
-    badge: "NOW AVAILABLE",
-    title: "Shop smarter with the Mercury app",
-    subtitle:
-      "Browse products, track orders, and access exclusive deals — all from your pocket.",
-    cta: "Download Now",
-    image: "/hero-mercury-app.png",
-    bg: GREEN_GRADIENT,
-    showcase: true,
-    href: "#",
-  },
+  // App promo slide — uncomment when mobile app is released
+  // {
+  //   badge: "NOW AVAILABLE",
+  //   title: "Shop smarter with the Mercury app",
+  //   subtitle:
+  //     "Browse products, track orders, and access exclusive deals — all from your pocket.",
+  //   cta: "Download Now",
+  //   image: "/hero-mercury-app.png",
+  //   bg: GREEN_GRADIENT,
+  //   showcase: true,
+  //   href: "#",
+  // },
   {
     badge: "TRUSTED SINCE 2007",
     title: "Premium tech. Honest prices.",
