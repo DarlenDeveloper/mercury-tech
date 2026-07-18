@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { X, MapPin, ShieldCheck, Banknote, Store } from "lucide-react";
+import { useCurrency } from "@/components/CurrencyProvider";
 
 export type PaymentMethod = "Cash on Delivery" | "Pickup from Store";
 
@@ -13,10 +14,6 @@ const PAYMENT_OPTIONS: {
   { method: "Cash on Delivery", subtitle: "Pay when your order arrives", icon: Banknote },
   { method: "Pickup from Store", subtitle: "Pay & collect at Kamwokya, Kira Road", icon: Store },
 ];
-
-function formatUgx(n: number) {
-  return `USh ${n.toLocaleString("en-UG")}`;
-}
 
 export default function CheckoutSheet({
   totalUgx,
@@ -31,6 +28,7 @@ export default function CheckoutSheet({
 }) {
   const [selected, setSelected] = useState<PaymentMethod>("Cash on Delivery");
   const [address, setAddress] = useState("");
+  const { format: formatUgx } = useCurrency();
 
   return (
     <div

@@ -8,6 +8,7 @@ import AnnouncementBar from "@/components/AnnouncementBar";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { useAuth } from "@/components/AuthProvider";
+import { useCurrency } from "@/components/CurrencyProvider";
 import {
   getCart,
   updateCartQty,
@@ -21,6 +22,7 @@ import CheckoutSheet, { type PaymentMethod } from "@/components/CheckoutSheet";
 
 export default function CartPage() {
   const { user, loading } = useAuth();
+  const { format: formatCurrency } = useCurrency();
   const [items, setItems] = useState<CartItem[]>([]);
   const [fetching, setFetching] = useState(true);
   const [placing, setPlacing] = useState(false);
@@ -49,8 +51,7 @@ export default function CartPage() {
   const totalUsd = items.reduce((s, i) => s + i.priceUsd * i.qty, 0);
   const totalUgx = Math.round(totalUsd * rate);
 
-  const formatUgx = (n: number) =>
-    `USh ${n.toLocaleString("en-UG")}`;
+  const formatUgx = (n: number) => formatCurrency(n);
 
   const handleQty = async (productId: string, newQty: number) => {
     if (!user) return;

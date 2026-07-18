@@ -25,7 +25,7 @@ export default async function Home() {
           <div className="flex gap-8">
             <Sidebar />
             <div className="min-w-0 flex-1">
-              <Hero />
+              {/* <Hero /> — hidden until mobile app is published */}
               <PopularCategories />
               <Recommendations products={products} />
             </div>

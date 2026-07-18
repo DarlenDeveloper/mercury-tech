@@ -28,6 +28,7 @@ import SearchBar from "@/components/SearchBar";
 
 export default function Header() {
   const { user } = useAuth();
+  const { format } = useCurrency();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
@@ -102,7 +103,7 @@ export default function Header() {
     cartItems.reduce((s, i) => s + i.priceUsd * i.qty, 0) * rate
   );
 
-  const formatUgx = (n: number) => `USh ${n.toLocaleString("en-UG")}`;
+  const formatUgx = (n: number) => format(n);
 
   return (
     <>

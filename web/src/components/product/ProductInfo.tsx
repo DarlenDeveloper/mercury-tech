@@ -90,9 +90,8 @@ export default function ProductInfo({
 
       {/* Price */}
       <div className="mt-3 flex flex-wrap items-center gap-2.5">
-        <span className="text-2xl text-ink">
-          <span className="font-medium">USh</span>{" "}
-          <span className="font-extrabold">{Math.round(product.price).toLocaleString("en-UG")}</span>
+        <span className="text-2xl font-extrabold text-ink">
+          {format(product.price)}
         </span>
         {onSale && (
           <span className="text-base font-medium text-muted line-through">
