@@ -34,7 +34,7 @@ class MercuryApp extends StatelessWidget {
     return CurrencyProvider(
       child: AuthGate(
         child: MaterialApp(
-        title: 'Mercury Mobile',
+        title: 'Mercury Shop',
         debugShowCheckedModeBanner: false,
         navigatorKey: navigatorKey,
         theme: baseTheme.copyWith(
@@ -69,7 +69,7 @@ class _SplashGateState extends State<_SplashGate> {
   @override
   void initState() {
     super.initState();
-    Future.delayed(const Duration(milliseconds: 2800), () {
+    Future.delayed(const Duration(milliseconds: 4000), () {
       if (mounted) setState(() => _showHome = true);
     });
   }
@@ -95,6 +95,7 @@ class _SplashGateState extends State<_SplashGate> {
                   width: 200,
                   height: 200,
                   fit: BoxFit.contain,
+                  repeat: true,
                 ),
               ),
             ),
