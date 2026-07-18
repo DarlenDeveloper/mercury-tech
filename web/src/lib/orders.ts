@@ -13,6 +13,8 @@ import type { CartItem } from "./cart";
 export type Order = {
   id: string;
   userId: string;
+  userName?: string;
+  userEmail?: string;
   items: CartItem[];
   totalUsd: number;
   paymentMethod: string;

@@ -218,10 +218,10 @@ export default function AnalyticsPage() {
           <button
             onClick={() => {
               import("@/lib/exportCsv").then(({ exportToCsv }) => {
-                exportToCsv("mercury-analytics", stats.map((s) => ({
+                exportToCsv("mercury-analytics", kpis.map((s) => ({
                   metric: s.label,
                   value: s.value,
-                  change: s.change,
+                  detail: s.detail,
                 })));
               });
             }}

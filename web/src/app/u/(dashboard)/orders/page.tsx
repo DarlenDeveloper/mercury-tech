@@ -35,6 +35,8 @@ type OrderItem = {
 type Order = {
   id: string;
   userId: string;
+  userName?: string;
+  userEmail?: string;
   items: OrderItem[];
   totalUsd: number;
   paymentMethod: string;
@@ -147,12 +149,12 @@ export default function OrdersPage() {
               import("@/lib/exportCsv").then(({ exportToCsv }) => {
                 exportToCsv("mercury-orders", orders.map((o) => ({
                   id: o.id,
-                  customer: o.userName || o.userEmail,
-                  email: o.userEmail,
+                  customer: o.userName || o.userEmail || '',
+                  email: o.userEmail || '',
                   total_usd: o.totalUsd,
                   status: o.status,
                   payment: o.paymentMethod,
-                  date: o.createdAt.toISOString(),
+                  date: o.createdAt?.toISOString() ?? '',
                 })));
               });
             }}

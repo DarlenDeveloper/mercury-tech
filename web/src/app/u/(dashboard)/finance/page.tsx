@@ -28,6 +28,8 @@ type OrderItem = {
 type Order = {
   id: string;
   userId: string;
+  userName?: string;
+  userEmail?: string;
   items: OrderItem[];
   totalUsd: number;
   paymentMethod: string;
@@ -226,12 +228,12 @@ export default function FinancePage() {
               import("@/lib/exportCsv").then(({ exportToCsv }) => {
                 exportToCsv("mercury-financial-report", orders.map((o) => ({
                   id: o.id,
-                  customer: o.userName || o.userEmail,
+                  customer: o.userName || o.userEmail || '',
                   total_usd: o.totalUsd,
                   total_ugx: Math.round(o.totalUsd * rate),
                   status: o.status,
                   payment: o.paymentMethod,
-                  date: o.createdAt.toISOString(),
+                  date: o.createdAt?.toISOString() ?? '',
                 })));
               });
             }}
