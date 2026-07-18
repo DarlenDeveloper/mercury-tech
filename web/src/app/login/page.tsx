@@ -154,6 +154,13 @@ export default function LoginPage() {
           >
             {phoneMode ? "Use email instead" : "Use phone number instead"}
           </button>
+
+          <Link
+            href="/u/login"
+            className="mt-4 block w-full text-center text-[11px] text-muted transition hover:text-ink"
+          >
+            Admin? Sign in here →
+          </Link>
         </div>
       </div>
     </div>
