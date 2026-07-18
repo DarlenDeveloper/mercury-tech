@@ -86,12 +86,7 @@ export default function CustomersPage() {
       <AdminHeader
         title="Customers"
         subtitle="View registered users and their profiles"
-        action={
-          <button className="flex items-center gap-2 rounded-full bg-ink px-4 py-2 text-sm font-semibold text-white transition hover:bg-black">
-            <Download size={16} />
-            Export
-          </button>
-        }
+        action={undefined}
       />
 
       {/* Summary */}

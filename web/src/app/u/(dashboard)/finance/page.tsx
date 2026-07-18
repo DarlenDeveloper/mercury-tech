@@ -221,7 +221,22 @@ export default function FinancePage() {
         title="Financial Reports"
         subtitle="Revenue, payments and transactions from real orders"
         action={
-          <button className="flex items-center gap-2 rounded-full bg-ink px-4 py-2 text-sm font-semibold text-white transition hover:bg-black">
+          <button
+            onClick={() => {
+              import("@/lib/exportCsv").then(({ exportToCsv }) => {
+                exportToCsv("mercury-financial-report", orders.map((o) => ({
+                  id: o.id,
+                  customer: o.userName || o.userEmail,
+                  total_usd: o.totalUsd,
+                  total_ugx: Math.round(o.totalUsd * rate),
+                  status: o.status,
+                  payment: o.paymentMethod,
+                  date: o.createdAt.toISOString(),
+                })));
+              });
+            }}
+            className="flex items-center gap-2 rounded-full bg-ink px-4 py-2 text-sm font-semibold text-white transition hover:bg-black"
+          >
             <Download size={16} />
             Export
           </button>

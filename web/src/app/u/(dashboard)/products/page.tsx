@@ -37,6 +37,8 @@ type Product = {
   oldPriceUsd?: number;
   stock?: number;
   isNew?: boolean;
+  image?: string;
+  images?: string[];
   specifications?: Record<string, string>;
   sourceUrl?: string;
 };
@@ -338,7 +340,7 @@ function ProductForm({
 
   // Step 3: Media & details
   const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState((product as any)?.image ?? "");
+  const [imagePreview, setImagePreview] = useState(product?.image ?? "");
   const [description, setDescription] = useState(product?.description ?? "");
 
   // Step 4: Specifications

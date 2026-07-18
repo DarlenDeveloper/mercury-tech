@@ -215,7 +215,18 @@ export default function AnalyticsPage() {
         title="Analytics"
         subtitle="Track store performance and customer trends"
         action={
-          <button className="flex items-center gap-2 rounded-full bg-ink px-4 py-2 text-sm font-semibold text-white transition hover:bg-black">
+          <button
+            onClick={() => {
+              import("@/lib/exportCsv").then(({ exportToCsv }) => {
+                exportToCsv("mercury-analytics", stats.map((s) => ({
+                  metric: s.label,
+                  value: s.value,
+                  change: s.change,
+                })));
+              });
+            }}
+            className="flex items-center gap-2 rounded-full bg-ink px-4 py-2 text-sm font-semibold text-white transition hover:bg-black"
+          >
             <Download size={15} />
             Export
           </button>

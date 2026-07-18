@@ -142,7 +142,22 @@ export default function OrdersPage() {
         title="Orders"
         subtitle="View and manage customer orders"
         action={
-          <button className="flex items-center gap-2 rounded-full bg-ink px-4 py-2 text-sm font-semibold text-white transition hover:bg-black">
+          <button
+            onClick={() => {
+              import("@/lib/exportCsv").then(({ exportToCsv }) => {
+                exportToCsv("mercury-orders", orders.map((o) => ({
+                  id: o.id,
+                  customer: o.userName || o.userEmail,
+                  email: o.userEmail,
+                  total_usd: o.totalUsd,
+                  status: o.status,
+                  payment: o.paymentMethod,
+                  date: o.createdAt.toISOString(),
+                })));
+              });
+            }}
+            className="flex items-center gap-2 rounded-full bg-ink px-4 py-2 text-sm font-semibold text-white transition hover:bg-black"
+          >
             <Download size={16} />
             Export
           </button>

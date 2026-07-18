@@ -1,12 +1,18 @@
-import {
-  Store,
-  CreditCard,
-  Truck,
-  Bell,
-  ShieldCheck,
-  type LucideIcon,
-} from "lucide-react";
+import { Store, Bell, Lock, type LucideIcon } from "lucide-react";
 import AdminHeader from "@/components/admin/AdminHeader";
+import PasswordChangeCard from "@/components/admin/PasswordChangeCard";
+
+function Field({ label, value }: { label: string; value: string }) {
+  return (
+    <label className="block">
+      <span className="text-xs font-medium text-muted">{label}</span>
+      <input
+        defaultValue={value}
+        className="mt-1.5 w-full rounded-xl border border-line bg-surface-soft px-3.5 py-2.5 text-sm text-ink outline-none transition focus:border-mercury focus:bg-white"
+      />
+    </label>
+  );
+}
 
 function Toggle({ on }: { on: boolean }) {
   return (
@@ -21,18 +27,6 @@ function Toggle({ on }: { on: boolean }) {
         }`}
       />
     </span>
-  );
-}
-
-function Field({ label, value }: { label: string; value: string }) {
-  return (
-    <label className="block">
-      <span className="text-xs font-medium text-muted">{label}</span>
-      <input
-        defaultValue={value}
-        className="mt-1.5 w-full rounded-xl border border-line bg-surface-soft px-3.5 py-2.5 text-sm text-ink outline-none transition focus:border-mercury focus:bg-white"
-      />
-    </label>
   );
 }
 
@@ -75,12 +69,7 @@ export default function SettingsPage() {
     <div className="px-5 py-6 lg:px-8 lg:py-7">
       <AdminHeader
         title="Settings"
-        subtitle="Configure your store and preferences"
-        action={
-          <button className="rounded-full bg-ink px-4 py-2 text-sm font-semibold text-white transition hover:bg-black">
-            Save changes
-          </button>
-        }
+        subtitle="Configure your store details and preferences"
       />
 
       <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
@@ -88,37 +77,19 @@ export default function SettingsPage() {
           <div className="flex flex-col gap-4">
             <Field label="Store name" value="Mercury Computers Limited" />
             <Field label="Support email" value="customercare@mercurycomputerslimited.com" />
-            <Field label="Phone" value="+256 704 823 800" />
-            <Field label="Address" value="Plot 91, Kira Road, Kampala" />
+            <Field label="Phone" value="0707 749 501" />
+            <Field label="WhatsApp" value="0704 823 800" />
+            <Field label="Address" value="Plot 91, Kamwokya, Kira Road, Kampala" />
           </div>
-        </Card>
-
-        <Card icon={CreditCard} title="Payments">
-          <Row title="Mobile Money" desc="MTN & Airtel collections" on={true} />
-          <Row title="Card payments" desc="Visa & Mastercard" on={true} />
-          <Row title="Bank transfer" desc="Manual confirmation" on={true} />
-          <Row title="Cash on delivery" desc="Kampala only" on={false} />
-        </Card>
-
-        <Card icon={Truck} title="Shipping">
-          <div className="mb-2 flex flex-col gap-4">
-            <Field label="Free delivery threshold (USh)" value="500,000" />
-            <Field label="Standard delivery fee (USh)" value="15,000" />
-          </div>
-          <Row title="Free delivery within Kampala" desc="Waive fees inside the city" on={true} />
         </Card>
 
         <Card icon={Bell} title="Notifications">
           <Row title="New order alerts" desc="Notify admins on every order" on={true} />
           <Row title="Low stock warnings" desc="Alert when stock < 5" on={true} />
-          <Row title="Weekly summary email" desc="Every Monday morning" on={false} />
+          <Row title="New repair requests" desc="Alert when a repair ticket is submitted" on={true} />
         </Card>
 
-        <Card icon={ShieldCheck} title="Security">
-          <Row title="Two-factor authentication" desc="Require 2FA for admins" on={true} />
-          <Row title="Session timeout" desc="Auto sign-out after 30 min idle" on={true} />
-          <Row title="IP allowlist" desc="Restrict admin access by IP" on={false} />
-        </Card>
+        <PasswordChangeCard />
       </div>
     </div>
   );
