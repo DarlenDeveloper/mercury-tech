@@ -81,6 +81,8 @@ class ProductRepository {
       image: productImage,
       isNew: (data['isNew'] as bool?) ?? false,
       specifications: specs,
+      brand: (data['brand'] as String?)?.trim(),
+      stock: (data['stock'] as num?)?.toInt(),
     );
   }
 

@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:iconsax_plus/iconsax_plus.dart';
 import 'package:share_plus/share_plus.dart';
@@ -151,6 +152,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       bottomNavigationBar: _BottomBar(
         total: product.price * _qty,
         onAddToCart: _addToCart,
+        onRequestQuote: _requestQuote,
       ),
     );
   }
@@ -186,6 +188,88 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
           ),
         );
     }
+  }
+
+  void _requestQuote() {
+    final user = AuthScope.of(context).user;
+    if (user == null) return;
+
+    final priceCtrl = TextEditingController();
+    final noteCtrl = TextEditingController();
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (ctx) => Padding(
+        padding: EdgeInsets.fromLTRB(20, 16, 20, MediaQuery.of(ctx).viewInsets.bottom + 20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(child: Container(width: 36, height: 4, decoration: BoxDecoration(color: const Color(0xFFD1D5DB), borderRadius: BorderRadius.circular(2)))),
+            const SizedBox(height: 16),
+            const Text('Request Quote', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+            const SizedBox(height: 4),
+            Text('Get a custom price for ${product.name}', style: const TextStyle(fontSize: 13, color: Color(0xFF6B7280))),
+            const SizedBox(height: 16),
+            TextField(
+              controller: priceCtrl,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(
+                labelText: 'Your preferred price (UGX)',
+                border: OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(12))),
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: noteCtrl,
+              maxLines: 2,
+              decoration: const InputDecoration(
+                labelText: 'Note (optional)',
+                hintText: 'e.g. bulk order, corporate',
+                border: OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(12))),
+              ),
+            ),
+            const SizedBox(height: 20),
+            SizedBox(
+              width: double.infinity,
+              height: 48,
+              child: ElevatedButton(
+                onPressed: () async {
+                  await FirebaseFirestore.instance.collection('quotations').add({
+                    'productId': product.id,
+                    'productName': product.name,
+                    'productPrice': product.price,
+                    'userId': user.uid,
+                    'userName': user.displayName ?? '',
+                    'userEmail': user.email ?? '',
+                    'userPhone': '',
+                    'message': 'Preferred price: USh ${priceCtrl.text.trim()}${noteCtrl.text.trim().isNotEmpty ? ". ${noteCtrl.text.trim()}" : ""}',
+                    'status': 'pending',
+                    'adminNote': '',
+                    'quotedPrice': null,
+                    'createdAt': FieldValue.serverTimestamp(),
+                    'updatedAt': FieldValue.serverTimestamp(),
+                  });
+                  if (ctx.mounted) Navigator.pop(ctx);
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Quote requested!'), behavior: SnackBarBehavior.floating),
+                    );
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF1F2937),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                ),
+                child: const Text('Submit', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   Future<void> _addToCart() async {
@@ -658,10 +742,11 @@ class _ReviewsPlaceholder extends StatelessWidget {
 }
 
 class _BottomBar extends StatelessWidget {
-  const _BottomBar({required this.total, required this.onAddToCart});
+  const _BottomBar({required this.total, required this.onAddToCart, required this.onRequestQuote});
 
   final int total;
   final VoidCallback onAddToCart;
+  final VoidCallback onRequestQuote;
 
   @override
   Widget build(BuildContext context) {
@@ -716,7 +801,19 @@ class _BottomBar extends StatelessWidget {
                   ),
                 ],
               ),
-              const SizedBox(width: 16),
+              const SizedBox(width: 12),
+              // Request Quote
+              IconButton(
+                onPressed: onRequestQuote,
+                tooltip: 'Request Quote',
+                style: IconButton.styleFrom(
+                  backgroundColor: const Color(0xFFF0F1F4),
+                  shape: const CircleBorder(),
+                  padding: const EdgeInsets.all(12),
+                ),
+                icon: const Icon(IconsaxPlusLinear.document_text, size: 20, color: _ProductDetailScreenState._ink),
+              ),
+              const SizedBox(width: 8),
               Expanded(
                 child: ElevatedButton.icon(
                   onPressed: onAddToCart,

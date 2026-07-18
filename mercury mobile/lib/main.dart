@@ -5,6 +5,7 @@ import 'package:lottie/lottie.dart';
 
 import 'data/auth_scope.dart';
 import 'data/catalog_scope.dart';
+import 'data/category_scope.dart';
 import 'data/currency_service.dart';
 import 'firebase_options.dart';
 import 'theme/app_colors.dart';
@@ -42,8 +43,10 @@ class MercuryApp extends StatelessWidget {
               GoogleFonts.poppinsTextTheme(baseTheme.primaryTextTheme),
         ),
         builder: (context, child) {
-          return CatalogLoader(
-            child: child ?? const SizedBox.shrink(),
+          return CategoryLoader(
+            child: CatalogLoader(
+              child: child ?? const SizedBox.shrink(),
+            ),
           );
         },
         home: const _SplashGate(),

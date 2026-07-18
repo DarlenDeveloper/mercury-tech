@@ -151,4 +151,57 @@ class AuthService {
     await _auth.signOut();
     await ensureSignedIn();
   }
+
+  // --- Account management ----------------------------------------------------
+
+  /// Whether the current user signed in with an email/password provider
+  /// (only these accounts can change their password in-app).
+  bool get hasPasswordProvider =>
+      _auth.currentUser?.providerData
+          .any((p) => p.providerId == EmailAuthProvider.PROVIDER_ID) ??
+      false;
+
+  /// Re-authenticates the user with their current password. Required before
+  /// sensitive operations (change password, delete account).
+  Future<void> _reauthenticateWithPassword(String currentPassword) async {
+    final user = _auth.currentUser;
+    final email = user?.email;
+    if (user == null || email == null) {
+      throw FirebaseAuthException(
+        code: 'no-email',
+        message: 'This account has no email to re-authenticate with.',
+      );
+    }
+    final cred =
+        EmailAuthProvider.credential(email: email, password: currentPassword);
+    await user.reauthenticateWithCredential(cred);
+  }
+
+  /// Changes the signed-in user's password (re-authenticates first).
+  Future<void> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    await _reauthenticateWithPassword(currentPassword);
+    await _auth.currentUser!.updatePassword(newPassword);
+  }
+
+  /// Submits a deletion request (saved to Firestore) and logs the user out.
+  /// The actual account deletion is handled manually by the admin team.
+  Future<void> requestAccountDeletion({String? reason}) async {
+    final user = _auth.currentUser;
+    if (user == null) return;
+
+    // Record the deletion request for the admin to process.
+    try {
+      await _userRepo.recordDeletion(
+        uid: user.uid,
+        email: user.email ?? '',
+        reason: reason ?? '',
+      );
+    } catch (_) {}
+
+    // Log the user out.
+    await signOut();
+  }
 }

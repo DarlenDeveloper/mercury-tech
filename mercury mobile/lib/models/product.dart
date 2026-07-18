@@ -19,6 +19,8 @@ class Product {
     this.oldPrice,
     this.isNew = false,
     this.specifications = const {},
+    this.brand,
+    this.stock,
   });
 
   final String id;
@@ -51,5 +53,12 @@ class Product {
   /// Ordered label -> value specification rows.
   final Map<String, String> specifications;
 
+  /// Brand name (e.g. "HP", "Dell", "Samsung").
+  final String? brand;
+
+  /// Stock quantity. Null or 0 means out of stock.
+  final int? stock;
+
   bool get isOnSale => oldPrice != null && oldPrice! > price;
+  bool get inStock => (stock ?? 0) > 0;
 }

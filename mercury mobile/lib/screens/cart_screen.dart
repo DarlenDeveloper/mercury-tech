@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:iconsax_plus/iconsax_plus.dart';
 import 'package:lottie/lottie.dart';
@@ -71,6 +72,104 @@ class _CartScreenState extends State<CartScreen> {
               );
           }
         },
+      ),
+    );
+  }
+
+  void _requestBulkQuote(List<CartItem> items) {
+    final user = AuthScope.of(context).user;
+    if (user == null || user.isAnonymous) return;
+
+    final prefPriceController = TextEditingController();
+    final messageController = TextEditingController();
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) => Padding(
+        padding: EdgeInsets.fromLTRB(20, 16, 20, MediaQuery.of(ctx).viewInsets.bottom + 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(child: Container(width: 36, height: 4, decoration: BoxDecoration(color: const Color(0xFFD1D5DB), borderRadius: BorderRadius.circular(2)))),
+            const SizedBox(height: 16),
+            const Text('Request Bulk Quote', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+            const SizedBox(height: 4),
+            Text(
+              '${items.length} item${items.length > 1 ? 's' : ''} in cart',
+              style: const TextStyle(fontSize: 13, color: Color(0xFF6B7280)),
+            ),
+            const SizedBox(height: 16),
+            const Text('Your preferred total price (optional)', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+            const SizedBox(height: 8),
+            Container(
+              decoration: BoxDecoration(color: const Color(0xFFF9FAFB), borderRadius: BorderRadius.circular(12), border: Border.all(color: const Color(0xFFE5E7EB))),
+              padding: const EdgeInsets.symmetric(horizontal: 14),
+              child: TextField(
+                controller: prefPriceController,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(hintText: 'e.g. 2,500,000', border: InputBorder.none, hintStyle: TextStyle(color: Color(0xFF9CA3AF))),
+              ),
+            ),
+            const SizedBox(height: 12),
+            const Text('Message (optional)', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+            const SizedBox(height: 8),
+            Container(
+              decoration: BoxDecoration(color: const Color(0xFFF9FAFB), borderRadius: BorderRadius.circular(12), border: Border.all(color: const Color(0xFFE5E7EB))),
+              padding: const EdgeInsets.symmetric(horizontal: 14),
+              child: TextField(
+                controller: messageController,
+                maxLines: 2,
+                decoration: const InputDecoration(hintText: 'Any details or notes...', border: InputBorder.none, hintStyle: TextStyle(color: Color(0xFF9CA3AF))),
+              ),
+            ),
+            const SizedBox(height: 20),
+            SizedBox(
+              width: double.infinity,
+              height: 52,
+              child: ElevatedButton(
+                onPressed: () async {
+                  final productNames = items.map((i) => '${i.name} x${i.qty}').join(', ');
+                  final totalUsd = items.fold<double>(0, (s, e) => s + e.priceUsd * e.qty);
+                  await FirebaseFirestore.instance.collection('quotations').add({
+                    'productId': 'bulk_cart',
+                    'productName': productNames,
+                    'productPrice': totalUsd,
+                    'preferredPrice': prefPriceController.text.trim(),
+                    'userId': user.uid,
+                    'userName': user.displayName ?? '',
+                    'userEmail': user.email ?? '',
+                    'userPhone': user.phoneNumber ?? '',
+                    'message': messageController.text.trim(),
+                    'status': 'pending',
+                    'adminNote': '',
+                    'quotedPrice': null,
+                    'createdAt': FieldValue.serverTimestamp(),
+                    'updatedAt': FieldValue.serverTimestamp(),
+                  });
+                  if (ctx.mounted) {
+                    Navigator.of(ctx).pop();
+                    ScaffoldMessenger.of(context)
+                      ..hideCurrentSnackBar()
+                      ..showSnackBar(const SnackBar(content: Text('Quote requested for all items!'), behavior: SnackBarBehavior.floating));
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+                ),
+                child: const Text('Submit Quote Request', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -217,6 +316,30 @@ class _CartScreenState extends State<CartScreen> {
                   ],
                 ),
                 const SizedBox(height: 24),
+                // Request bulk quote
+                GestureDetector(
+                  onTap: () => _requestBulkQuote(items),
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF0F1F4),
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                    child: const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(IconsaxPlusLinear.document_text, size: 18, color: _ink),
+                        SizedBox(width: 8),
+                        Text(
+                          'Request Quote for All',
+                          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: _ink),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
                 Row(
                   children: [
                     Column(

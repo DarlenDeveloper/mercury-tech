@@ -9,7 +9,11 @@ import '../theme/app_colors.dart';
 import 'auth_flow.dart';
 import 'edit_profile_screen.dart';
 import 'favorites_screen.dart';
+import 'help_support_screen.dart';
+import 'notifications_settings_screen.dart';
 import 'order_history_screen.dart';
+import 'policies_screen.dart';
+import 'privacy_security_screen.dart';
 import 'repairs_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -86,20 +90,39 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 onTap: () => _showCurrencyPicker(context),
               ),
               _ProfileRow(
-                icon: IconsaxPlusLinear.clock,
-                label: 'Recently Viewed',
-                onTap: () {},
-              ),
-              _ProfileRow(
-                icon: IconsaxPlusLinear.refresh,
-                label: 'Returns & Exchanges',
-                onTap: () {},
-              ),
-              _ProfileRow(
                 icon: IconsaxPlusLinear.location,
                 label: 'My Location',
                 onTap: () => Navigator.of(context).push(
                   MaterialPageRoute(builder: (_) => const EditProfileScreen()),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+
+          // Account section
+          const _SectionLabel('Account'),
+          const SizedBox(height: 8),
+          _SectionCard(
+            rows: [
+              _ProfileRow(
+                icon: IconsaxPlusLinear.shield_tick,
+                label: 'Privacy & Security',
+                onTap: () => _requireAuthThen(
+                  context,
+                  () => Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const PrivacySecurityScreen()),
+                  ),
+                ),
+              ),
+              _ProfileRow(
+                icon: IconsaxPlusLinear.notification,
+                label: 'Notifications',
+                onTap: () => _requireAuthThen(
+                  context,
+                  () => Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const NotificationsSettingsScreen()),
+                  ),
                 ),
               ),
             ],
@@ -114,22 +137,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
               _ProfileRow(
                 icon: IconsaxPlusLinear.message_question,
                 label: 'Help & Support',
-                onTap: () {},
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const HelpSupportScreen()),
+                ),
               ),
               _ProfileRow(
-                icon: IconsaxPlusLinear.shield_tick,
+                icon: IconsaxPlusLinear.document_text,
                 label: 'Policies',
-                onTap: () {},
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const PoliciesScreen()),
+                ),
               ),
               _ProfileRow(
-                icon: IconsaxPlusLinear.notification,
-                label: 'Notifications',
-                onTap: () {},
-              ),
-              _ProfileRow(
-                icon: IconsaxPlusLinear.setting_4,
-                label: 'Preferences',
-                onTap: () {},
+                icon: IconsaxPlusLinear.refresh,
+                label: 'Returns & Exchanges',
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const PoliciesScreen()),
+                ),
               ),
             ],
           ),
@@ -149,6 +173,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ],
       ),
     );
+  }
+
+  /// Runs [action] only after ensuring the user has a real account.
+  Future<void> _requireAuthThen(BuildContext context, VoidCallback action) async {
+    final ok = await requireAccount(context, reason: 'Sign in to manage your account.');
+    if (ok) action();
   }
 
   void _showCurrencyPicker(BuildContext context) {

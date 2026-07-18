@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:iconsax_plus/iconsax_plus.dart';
 
-import '../data/categories.dart';
+import '../data/category_scope.dart';
 import '../models/category.dart';
 import '../theme/app_colors.dart';
 import '../widgets/ai_search_button.dart';
@@ -57,9 +57,9 @@ class ShopScreen extends StatelessWidget {
         const SizedBox(height: 8),
         // Category cards — Phones & Accessories first
         for (final category in [
-          ...kShopCategories.where((c) =>
+          ...CategoryScope.of(context).where((c) =>
               c.name == 'Phones, TV & Audio' || c.name == 'Accessories'),
-          ...kShopCategories.where((c) =>
+          ...CategoryScope.of(context).where((c) =>
               c.name != 'Phones, TV & Audio' && c.name != 'Accessories'),
         ])
           _ShopCategoryCard(
