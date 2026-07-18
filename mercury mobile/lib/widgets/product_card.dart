@@ -169,7 +169,7 @@ class ProductCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text(
-                  currency.formatCompact(product.price),
+                  currency.format(product.price),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
@@ -182,7 +182,7 @@ class ProductCard extends StatelessWidget {
                   const SizedBox(width: 6),
                   Flexible(
                     child: Text(
-                      currency.formatCompact(product.oldPrice!),
+                      currency.format(product.oldPrice!),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
