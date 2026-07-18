@@ -154,21 +154,12 @@ class _DraggableSupportButtonState extends State<DraggableSupportButton> {
                 ),
                 const SizedBox(height: 16),
                 _SupportTile(
-                  icon: Icons.chat_bubble_outline,
-                  label: 'WhatsApp (0707749501)',
+                  icon: Icons.chat,
+                  label: 'WhatsApp',
                   iconColor: _whatsappGreen,
                   onTap: () {
                     Navigator.of(context).pop();
-                    _launchUrl('https://wa.me/256707749501?text=Hi!%20I%20need%20help.');
-                  },
-                ),
-                _SupportTile(
-                  icon: Icons.chat_bubble_outline,
-                  label: 'WhatsApp (0704823800)',
-                  iconColor: _whatsappGreen,
-                  onTap: () {
-                    Navigator.of(context).pop();
-                    _launchUrl('https://wa.me/256704823800?text=Hi!%20I%20need%20help.');
+                    _showWhatsAppPicker(sheetContext);
                   },
                 ),
                 _SupportTile(
@@ -192,6 +183,54 @@ class _DraggableSupportButtonState extends State<DraggableSupportButton> {
           ),
         );
       },
+    );
+  }
+
+  void _showWhatsAppPicker(BuildContext context) {
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Center(child: Container(width: 36, height: 4, decoration: BoxDecoration(color: const Color(0xFFE2E8F0), borderRadius: BorderRadius.circular(2)))),
+              const SizedBox(height: 16),
+              const Text('Choose a number', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Color(0xFF1F2937))),
+              const SizedBox(height: 16),
+              ListTile(
+                leading: Container(
+                  width: 40, height: 40,
+                  decoration: BoxDecoration(color: _whatsappGreen.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12)),
+                  child: const Icon(Icons.chat, color: _whatsappGreen, size: 20),
+                ),
+                title: const Text('0707 749 501', style: TextStyle(fontWeight: FontWeight.w600)),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _launchUrl('https://wa.me/256707749501?text=Hi!%20I%20need%20help.');
+                },
+              ),
+              ListTile(
+                leading: Container(
+                  width: 40, height: 40,
+                  decoration: BoxDecoration(color: _whatsappGreen.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12)),
+                  child: const Icon(Icons.chat, color: _whatsappGreen, size: 20),
+                ),
+                title: const Text('0704 823 800', style: TextStyle(fontWeight: FontWeight.w600)),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _launchUrl('https://wa.me/256704823800?text=Hi!%20I%20need%20help.');
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
