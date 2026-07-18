@@ -47,8 +47,9 @@ class CurrencyScope extends InheritedWidget {
   String format(int ugx) {
     final i = info;
     if (i.rate == 1) {
-      // Compact format for UGX on cards
-      return 'USh ${_groupDigits(ugx)}';
+      // Round to nearest 1,000 for UGX
+      final rounded = ((ugx / 1000).round()) * 1000;
+      return 'USh ${_groupDigits(rounded)}';
     }
     final converted = (ugx / i.rate).round();
     return '${i.symbol}${_groupDigits(converted)}';

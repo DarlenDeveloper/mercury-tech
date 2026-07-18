@@ -7,30 +7,17 @@ import { useCurrency } from "@/components/CurrencyProvider";
 import WishlistButton from "@/components/WishlistButton";
 
 export default function ProductCard({ product }: { product: Product }) {
-  const { format, currency } = useCurrency();
+  const { format } = useCurrency();
   const onSale = product.oldPrice != null && product.oldPrice > product.price;
   const href = `/product/${product.id}`;
 
-  // Compact format for card display (e.g. 1.2M, 478K, 67K)
-  const formatCompact = (n: number): { prefix: string; value: string } => {
-    // For non-UGX currencies, use the context format directly
-    if (currency !== "USh") {
-      const formatted = format(n);
-      // Split into symbol and number
-      const match = formatted.match(/^([^\d]*)([\d,.]+.*)$/);
-      if (match) return { prefix: match[1].trim(), value: match[2] };
-      return { prefix: "", value: formatted };
-    }
-    // UGX compact formatting
-    if (n >= 1_000_000) {
-      const m = n / 1_000_000;
-      return { prefix: "USh", value: `${m % 1 === 0 ? m.toFixed(0) : m.toFixed(1)}M` };
-    }
-    if (n >= 1_000) {
-      const k = Math.round(n / 1_000);
-      return { prefix: "USh", value: `${k}K` };
-    }
-    return { prefix: "USh", value: n.toLocaleString("en-UG") };
+  // Full format for card display (e.g. USh 370,000)
+  const formatPrice = (n: number): { prefix: string; value: string } => {
+    const formatted = format(n);
+    // Split into symbol/prefix and number
+    const match = formatted.match(/^([^\d]*)([\d,.]+.*)$/);
+    if (match) return { prefix: match[1].trim(), value: match[2] };
+    return { prefix: "", value: formatted };
   };
 
   return (
@@ -71,12 +58,12 @@ export default function ProductCard({ product }: { product: Product }) {
       {/* Price + old price */}
       <div className="mt-1.5 flex items-end gap-1.5">
         <span className="text-[13px] text-ink">
-          <span className="font-normal">{formatCompact(product.price).prefix}</span>{" "}
-          <span className="font-bold">{formatCompact(product.price).value}</span>
+          <span className="font-normal">{formatPrice(product.price).prefix}</span>{" "}
+          <span className="font-bold">{formatPrice(product.price).value}</span>
         </span>
         {onSale && (
           <span className="text-[10px] text-muted line-through">
-            {formatCompact(product.oldPrice!).prefix} {formatCompact(product.oldPrice!).value}
+            {formatPrice(product.oldPrice!).prefix} {formatPrice(product.oldPrice!).value}
           </span>
         )}
       </div>

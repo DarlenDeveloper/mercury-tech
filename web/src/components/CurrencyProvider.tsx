@@ -47,7 +47,9 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
   const format = (ugx: number): string => {
     const info = CURRENCIES[currency];
     if (info.rate === 1) {
-      return `USh ${ugx.toLocaleString("en-UG")}`;
+      // Round to nearest 1,000 for UGX
+      const rounded = Math.round(ugx / 1000) * 1000;
+      return `USh ${rounded.toLocaleString("en-UG")}`;
     }
     const converted = convert(ugx);
     return `${info.symbol}${converted.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
