@@ -10,6 +10,7 @@ import 'auth_flow.dart';
 import 'edit_profile_screen.dart';
 import 'favorites_screen.dart';
 import 'order_history_screen.dart';
+import 'repairs_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -66,6 +67,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 label: 'My Favorites',
                 onTap: () => Navigator.of(context).push(
                   MaterialPageRoute(builder: (_) => const FavoritesScreen()),
+                ),
+              ),
+              _ProfileRow(
+                icon: IconsaxPlusLinear.cpu_setting,
+                label: 'Repairs & Services',
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const RepairsScreen()),
                 ),
               ),
               _ProfileRow(

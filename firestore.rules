@@ -87,5 +87,13 @@ service cloud.firestore {
       allow update: if request.auth != null;
       allow delete: if false;
     }
+
+    // Repair tickets: customers can create their own; admins can read/update all.
+    match /repair_tickets/{ticketId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null;
+      allow update: if request.auth != null;
+      allow delete: if false;
+    }
   }
 }
