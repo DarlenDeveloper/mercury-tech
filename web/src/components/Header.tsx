@@ -60,11 +60,18 @@ export default function Header() {
     getFavorites(user.uid).then(setWishlistIds).catch(() => {});
     }, [user]);
 
-  // Check if user is an admin (exists in admins collection)
+  // Check if user is an admin (listed in config/admins)
   useEffect(() => {
     if (!user) { setIsAdmin(false); return; }
-    getDoc(doc(db, "admins", user.uid)).then((snap) => {
-      setIsAdmin(snap.exists());
+    getDoc(doc(db, "config", "admins")).then((snap) => {
+      if (!snap.exists()) { setIsAdmin(false); return; }
+      const data = snap.data();
+      const userEmail = (user.email ?? "").toLowerCase();
+      const admins: { email: string }[] = data?.admins ?? [];
+      const legacyEmails: string[] = data?.emails ?? [];
+      const found = admins.some((a) => a.email.toLowerCase() === userEmail) ||
+                    legacyEmails.some((e) => e.toLowerCase() === userEmail);
+      setIsAdmin(found);
     }).catch(() => setIsAdmin(false));
   }, [user]);
 
