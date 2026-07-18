@@ -15,12 +15,15 @@ import {
   X,
   LogOut,
   Package,
+  Shield,
 } from "lucide-react";
 import { useAuth } from "@/components/AuthProvider";
 import { useCurrency } from "@/components/CurrencyProvider";
 import { signOut } from "@/lib/auth";
 import { getCart, clearCart, type CartItem } from "@/lib/cart";
 import { getFavorites } from "@/lib/wishlist";
+import { doc, getDoc } from "firebase/firestore";
+import { db } from "@/lib/firestore";
 import SearchBar from "@/components/SearchBar";
 
 export default function Header() {
@@ -32,6 +35,7 @@ export default function Header() {
   const [wishlistOpen, setWishlistOpen] = useState(false);
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [wishlistIds, setWishlistIds] = useState<Set<string>>(new Set());
+  const [isAdmin, setIsAdmin] = useState(false);
   const profileRef = useRef<HTMLDivElement>(null);
 
   const rate = 3780;
@@ -53,6 +57,14 @@ export default function Header() {
     if (!user) return;
     getCart(user.uid).then(setCartItems).catch(() => {});
     getFavorites(user.uid).then(setWishlistIds).catch(() => {});
+    }, [user]);
+
+  // Check if user is an admin (exists in admins collection)
+  useEffect(() => {
+    if (!user) { setIsAdmin(false); return; }
+    getDoc(doc(db, "admins", user.uid)).then((snap) => {
+      setIsAdmin(snap.exists());
+    }).catch(() => setIsAdmin(false));
   }, [user]);
 
   // Listen for cart-updated events (fired by AddToCartButton)
@@ -230,6 +242,16 @@ export default function Header() {
                         My Wishlist
                       </Link>
                       <hr className="my-1 border-line" />
+                      {isAdmin && (
+                        <Link
+                          href="/u"
+                          onClick={() => setProfileOpen(false)}
+                          className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-semibold text-mercury transition hover:bg-surface-soft"
+                        >
+                          <Shield size={16} />
+                          Admin Dashboard
+                        </Link>
+                      )}
                       <button
                         onClick={() => {
                           signOut();
