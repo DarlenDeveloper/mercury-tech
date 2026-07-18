@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:shimmer/shimmer.dart';
 
 import '../data/auth_scope.dart';
+import '../data/currency_service.dart';
 import '../data/favorites_repository.dart';
 import '../models/product.dart';
 import '../screens/auth_flow.dart';
 import '../theme/app_colors.dart';
-import '../utils/format.dart';
 
 /// Universal product card: a grey image tile with a wishlist heart,
 /// followed by the product name, description, and price.
@@ -163,36 +163,39 @@ class ProductCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 5),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                formatUgx(product.price),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                  color: _ink,
-                ),
-              ),
-              if (product.isOnSale) ...[
-                const SizedBox(width: 6),
-                Flexible(
-                  child: Text(
-                    formatUgx(product.oldPrice!),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontSize: 8.5,
-                      color: Color(0xFFE11D2A),
-                      decoration: TextDecoration.lineThrough,
-                    ),
+          Builder(builder: (context) {
+            final currency = CurrencyScope.of(context);
+            return Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  currency.formatCompact(product.price),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: _ink,
                   ),
                 ),
+                if (product.isOnSale) ...[
+                  const SizedBox(width: 6),
+                  Flexible(
+                    child: Text(
+                      currency.formatCompact(product.oldPrice!),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 8.5,
+                        color: Color(0xFFE11D2A),
+                        decoration: TextDecoration.lineThrough,
+                      ),
+                    ),
+                  ),
+                ],
               ],
-            ],
-          ),
+            );
+          }),
         ],
       ),
     );

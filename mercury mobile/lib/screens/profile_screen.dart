@@ -77,6 +77,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
               ),
               _ProfileRow(
+                icon: IconsaxPlusLinear.dollar_circle,
+                label: 'Currency',
+                trailing: Text(
+                  CurrencyScope.of(context).info.label.split(' — ').first,
+                  style: const TextStyle(fontSize: 13, color: AppColors.inactive),
+                ),
+                onTap: () => _showCurrencyPicker(context),
+              ),
+              _ProfileRow(
                 icon: IconsaxPlusLinear.clock,
                 label: 'Recently Viewed',
                 onTap: () {},
@@ -121,22 +130,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 icon: IconsaxPlusLinear.setting_4,
                 label: 'Preferences',
                 onTap: () {},
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-
-          // Currency
-          _SectionCard(
-            rows: [
-              _ProfileRow(
-                icon: IconsaxPlusLinear.dollar_circle,
-                label: 'Currency',
-                trailing: Text(
-                  CurrencyScope.of(context).info.label.split(' — ').first,
-                  style: const TextStyle(fontSize: 13, color: AppColors.inactive),
-                ),
-                onTap: () => _showCurrencyPicker(context),
               ),
             ],
           ),
