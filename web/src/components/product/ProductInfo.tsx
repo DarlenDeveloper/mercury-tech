@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { Star, Minus, Plus, Truck, ShieldCheck, Headphones, Check } from "lucide-react";
 import { type Product } from "@/lib/products";
 import { useCurrency } from "@/components/CurrencyProvider";
@@ -182,17 +181,6 @@ export default function ProductInfo({
           productPrice={product.price}
         />
       </div>
-
-      {/* Chat with Mercury AI Assistant */}
-      <Link
-        href="/ai"
-        className="mt-3 flex w-full items-center justify-center gap-2 rounded-full border border-mercury py-2.5 text-sm font-semibold text-mercury transition hover:bg-mercury/5"
-      >
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
-          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-        </svg>
-        Chat with Mercury AI Assistant
-      </Link>
 
       {/* Trust rows */}
       <div className="mt-6 flex flex-col gap-3.5 border-t border-line pt-5">
