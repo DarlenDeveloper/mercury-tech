@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Poppins } from "next/font/google";
 import { AuthProvider } from "@/components/AuthProvider";
 import { CurrencyProvider } from "@/components/CurrencyProvider";
+import AiFloatingButton from "@/components/AiFloatingButton";
 import "./globals.css";
 
 const poppins = Poppins({
@@ -79,7 +80,10 @@ export default function RootLayout({
       </head>
       <body className="min-h-full flex flex-col font-sans text-ink">
         <AuthProvider>
-          <CurrencyProvider>{children}</CurrencyProvider>
+          <CurrencyProvider>
+            {children}
+            <AiFloatingButton />
+          </CurrencyProvider>
         </AuthProvider>
       </body>
     </html>
