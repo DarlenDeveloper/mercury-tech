@@ -1,7 +1,9 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:iconsax_plus/iconsax_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../data/ai_agent_service.dart';
 import '../data/auth_scope.dart';
@@ -529,6 +531,29 @@ class _MessageBubble extends StatelessWidget {
 
 // ─── Markdown text rendering ─────────────────────────────────────────────────
 
+/// WhatsApp brand green (matches help & support screens).
+const Color _whatsappGreen = Color(0xFF25D366);
+
+/// Matches likely phone numbers (optional +, then digits with spaces/dashes).
+final _phoneRe = RegExp(r'(\+?\d[\d\s-]{7,}\d)');
+
+/// Normalises a raw phone string to a WhatsApp (E.164, no +) number.
+/// Ugandan local numbers (leading 0) are converted to the +256 country code.
+String? _toWhatsAppNumber(String raw) {
+  final digits = raw.replaceAll(RegExp(r'\D'), '');
+  if (digits.length < 9 || digits.length > 13) return null;
+  if (digits.startsWith('0')) return '256${digits.substring(1)}';
+  if (digits.length == 9) return '256$digits';
+  return digits;
+}
+
+void _launchWhatsApp(String number) async {
+  final uri = Uri.parse('https://wa.me/$number?text=Hi!%20I%20need%20help.');
+  if (await canLaunchUrl(uri)) {
+    await launchUrl(uri, mode: LaunchMode.externalApplication);
+  }
+}
+
 class _MarkdownText extends StatelessWidget {
   const _MarkdownText({required this.text});
   final String text;
@@ -539,18 +564,37 @@ class _MarkdownText extends StatelessWidget {
     final regex = RegExp(r'\*\*([^*]+)\*\*');
     int lastEnd = 0;
 
+    // Appends a text piece, turning detected phone numbers into WhatsApp chips.
+    void addPiece(String piece, bool bold) {
+      final boldStyle = bold ? const TextStyle(fontWeight: FontWeight.w700) : null;
+      int last = 0;
+      for (final m in _phoneRe.allMatches(piece)) {
+        final raw = m.group(0)!;
+        final wa = _toWhatsAppNumber(raw);
+        if (wa == null) continue;
+        if (m.start > last) {
+          spans.add(TextSpan(text: piece.substring(last, m.start), style: boldStyle));
+        }
+        spans.add(WidgetSpan(
+          alignment: PlaceholderAlignment.middle,
+          child: _WhatsAppChip(display: raw.trim(), number: wa),
+        ));
+        last = m.end;
+      }
+      if (last < piece.length) {
+        spans.add(TextSpan(text: piece.substring(last), style: boldStyle));
+      }
+    }
+
     for (final match in regex.allMatches(text)) {
       if (match.start > lastEnd) {
-        spans.add(TextSpan(text: text.substring(lastEnd, match.start)));
+        addPiece(text.substring(lastEnd, match.start), false);
       }
-      spans.add(TextSpan(
-        text: match.group(1),
-        style: const TextStyle(fontWeight: FontWeight.w700),
-      ));
+      addPiece(match.group(1)!, true);
       lastEnd = match.end;
     }
     if (lastEnd < text.length) {
-      spans.add(TextSpan(text: text.substring(lastEnd)));
+      addPiece(text.substring(lastEnd), false);
     }
 
     return RichText(
@@ -562,6 +606,45 @@ class _MarkdownText extends StatelessWidget {
           fontFamily: 'Poppins',
         ),
         children: spans,
+      ),
+    );
+  }
+}
+
+/// Tappable inline pill that opens a WhatsApp chat with the given number.
+class _WhatsAppChip extends StatelessWidget {
+  const _WhatsAppChip({required this.display, required this.number});
+  final String display;
+  final String number;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 2),
+      child: GestureDetector(
+        onTap: () => _launchWhatsApp(number),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+          decoration: BoxDecoration(
+            color: _whatsappGreen,
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const FaIcon(FontAwesomeIcons.whatsapp, size: 13, color: Colors.white),
+              const SizedBox(width: 4),
+              Text(
+                display,
+                style: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
