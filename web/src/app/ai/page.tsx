@@ -334,7 +334,7 @@ function ChatSidebar({
                     c.id === activeId ? "bg-surface-soft" : "hover:bg-surface-soft"
                   }`}
                 >
-                  <Image src="/ai-icon.png" alt="" width={16} height={16} className="h-4 w-4 shrink-0 object-contain" />
+                  <Image src="/ai-icon-v2.png" alt="" width={16} height={16} className="h-4 w-4 shrink-0 object-contain" />
                   <span className="truncate text-[13px] text-ink">{c.title}</span>
                 </button>
               </li>

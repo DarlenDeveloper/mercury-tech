@@ -150,7 +150,7 @@ export default function Header() {
               className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition hover:bg-mercury/10"
             >
               <Image
-                src="/ai-icon.png"
+                src="/ai-icon-v2.png"
                 alt="AI Assistant"
                 width={24}
                 height={24}
@@ -164,7 +164,7 @@ export default function Header() {
             <InfoBlock
               icon={<Headphones size={24} className="text-mercury" />}
               title="Customer Care"
-              highlight="0414 256 136"
+              highlight="+256 704 823800"
             />
             <InfoBlock
               icon={<Truck size={24} className="text-mercury" />}
@@ -191,7 +191,7 @@ export default function Header() {
               className="flex h-9 w-9 items-center justify-center rounded-full transition hover:bg-surface-soft md:hidden"
             >
               <Image
-                src="/ai-icon.png"
+                src="/ai-icon-v2.png"
                 alt="AI"
                 width={20}
                 height={20}

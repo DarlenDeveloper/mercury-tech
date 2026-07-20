@@ -39,7 +39,7 @@ export default function AiFloatingButton() {
         className="flex h-11 w-11 shrink-0 items-center justify-center transition hover:scale-105 sm:h-12 sm:w-12"
       >
         <Image
-          src="/ai-icon.png"
+          src="/ai-icon-v2.png"
           alt="AI Assistant"
           width={48}
           height={48}
