@@ -1,17 +1,14 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { X } from "lucide-react";
 
 // Routes where the floating assistant would be redundant or intrusive.
 const HIDDEN_PREFIXES = ["/ai", "/u"];
 
 export default function AiFloatingButton() {
   const pathname = usePathname();
-  const [showBubble, setShowBubble] = useState(true);
 
   const hidden = HIDDEN_PREFIXES.some(
     (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`)
@@ -21,27 +18,19 @@ export default function AiFloatingButton() {
   return (
     <div className="fixed bottom-4 right-4 z-50 flex items-end gap-2 sm:bottom-5 sm:right-5">
       {/* Greeting bubble */}
-      {showBubble && (
-        <div className="animate-annc-in relative mb-0.5 max-w-[180px] rounded-2xl bg-white px-3 py-2 shadow-[0_8px_28px_-6px_rgba(16,24,40,0.25)] sm:max-w-[200px] sm:px-3.5 sm:py-2.5">
-          <button
-            onClick={() => setShowBubble(false)}
-            aria-label="Dismiss"
-            className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-ink text-white shadow-md transition hover:bg-black"
-          >
-            <X size={12} />
-          </button>
-          <Link href="/ai" className="block">
-            <p className="text-[13px] font-bold leading-tight text-ink sm:text-[14px]">
-              We&apos;re Online!
-            </p>
-            <p className="mt-0.5 text-[11.5px] leading-snug text-muted sm:text-[12px]">
-              How may I help you today?
-            </p>
-          </Link>
-          {/* Tail pointing to the button */}
-          <span className="absolute -right-1 bottom-3 h-2.5 w-2.5 rotate-45 bg-white" />
-        </div>
-      )}
+      <Link
+        href="/ai"
+        className="animate-annc-in relative mb-0.5 block max-w-[180px] rounded-2xl bg-white px-3 py-2 shadow-[0_8px_28px_-6px_rgba(16,24,40,0.25)] sm:max-w-[200px] sm:px-3.5 sm:py-2.5"
+      >
+        <p className="text-[13px] font-bold leading-tight text-ink sm:text-[14px]">
+          We&apos;re Online!
+        </p>
+        <p className="mt-0.5 text-[11.5px] leading-snug text-muted sm:text-[12px]">
+          How may I help you today?
+        </p>
+        {/* Tail pointing to the button */}
+        <span className="absolute -right-1 bottom-3 h-2.5 w-2.5 rotate-45 bg-white" />
+      </Link>
 
       {/* AI logo button */}
       <Link
