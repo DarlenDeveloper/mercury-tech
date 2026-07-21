@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import { Poppins } from "next/font/google";
 import { AuthProvider } from "@/components/AuthProvider";
 import { CurrencyProvider } from "@/components/CurrencyProvider";
@@ -85,6 +86,12 @@ export default function RootLayout({
             <AiFloatingButton />
           </CurrencyProvider>
         </AuthProvider>
+        {/* Ellipse Desk web tag (external third-party system) */}
+        <Script
+          src="https://us-central1-ellipse-desk.cloudfunctions.net/webTag"
+          data-site="ell_exgslr3083hk4zbm"
+          strategy="afterInteractive"
+        />
       </body>
     </html>
   );
