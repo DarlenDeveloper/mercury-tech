@@ -44,6 +44,14 @@ type Product = {
   sourceUrl?: string;
 };
 
+type ImageItem = {
+  id: string;
+  url?: string; // final download URL (set once upload completes)
+  preview: string; // object URL (while uploading) or remote URL
+  progress: number; // 0–100
+  status: "uploading" | "done" | "error";
+};
+
 type SubCategory = { name: string; slug: string };
 
 type Category = {
@@ -383,10 +391,29 @@ function ProductForm({
   const [isNew, setIsNew] = useState(product?.isNew ?? false);
   const [status, setStatus] = useState((product as any)?.status ?? "published");
 
-  // Step 3: Media & details
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState(product?.image ?? "");
+  // Step 3: Media & details — supports multiple images with live upload progress
+  const [images, setImages] = useState<ImageItem[]>(() => {
+    const existing =
+      product?.images && product.images.length > 0
+        ? product.images
+        : product?.image
+        ? [product.image]
+        : [];
+    return existing.map((url, i) => ({
+      id: `existing-${i}`,
+      url,
+      preview: url,
+      progress: 100,
+      status: "done" as const,
+    }));
+  });
+  // Stable folder id for this upload session (download URLs work regardless of path).
+  const [uploadId] = useState(
+    () => product?.id ?? `tmp-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+  );
   const [description, setDescription] = useState(product?.description ?? "");
+
+  const anyUploading = images.some((i) => i.status === "uploading");
 
   // Step 4: Specifications
   const [specs, setSpecs] = useState(
@@ -405,12 +432,47 @@ function ProductForm({
     setSpecs(copy);
   };
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setImageFile(file);
-    setImagePreview(URL.createObjectURL(file));
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files ?? []);
+    e.target.value = ""; // reset so the same file can be re-selected later
+    if (files.length === 0) return;
+
+    const { uploadProductImageWithProgress } = await import("@/lib/storage");
+
+    for (const file of files) {
+      if (file.size > 5 * 1024 * 1024) {
+        alert(`"${file.name}" is larger than 5MB and was skipped.`);
+        continue;
+      }
+      const id = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+      const preview = URL.createObjectURL(file);
+      setImages((prev) => [
+        ...prev,
+        { id, preview, progress: 0, status: "uploading" },
+      ]);
+
+      try {
+        const url = await uploadProductImageWithProgress(file, uploadId, (pct) => {
+          setImages((prev) =>
+            prev.map((it) => (it.id === id ? { ...it, progress: pct } : it))
+          );
+        });
+        setImages((prev) =>
+          prev.map((it) =>
+            it.id === id ? { ...it, url, progress: 100, status: "done" } : it
+          )
+        );
+      } catch (err) {
+        console.error("Image upload failed:", err);
+        setImages((prev) =>
+          prev.map((it) => (it.id === id ? { ...it, status: "error" } : it))
+        );
+      }
+    }
   };
+
+  const removeImage = (id: string) =>
+    setImages((prev) => prev.filter((it) => it.id !== id));
 
   const canNext = () => {
     if (step === 1) return name.trim() && parentCatId;
@@ -420,20 +482,15 @@ function ProductForm({
 
   const handleSubmit = async () => {
     setBusy(true);
-    const { uploadProductImage } = await import("@/lib/storage");
 
     const productId = isEdit
       ? product!.id
       : name.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-");
 
-    let imageUrl = (product as any)?.image ?? "";
-    if (imageFile) {
-      try {
-        imageUrl = await uploadProductImage(imageFile, productId);
-      } catch (e) {
-        console.error("Image upload failed:", e);
-      }
-    }
+    // All images are uploaded on selection; collect the finished URLs here.
+    const galleryUrls = images
+      .filter((i) => i.status === "done" && i.url)
+      .map((i) => i.url!);
 
     const specifications: Record<string, string> = {};
     specs.forEach((s) => {
@@ -466,7 +523,8 @@ function ProductForm({
       specifications,
     };
     if (oldPriceUsd) data.oldPriceUsd = parseFloat(oldPriceUsd);
-    if (imageUrl) data.image = imageUrl;
+    data.images = galleryUrls;
+    if (galleryUrls.length > 0) data.image = galleryUrls[0];
 
     try {
       if (isEdit) {
@@ -636,36 +694,89 @@ function ProductForm({
 
             {step === 3 && (
               <div className="flex flex-col gap-4">
-                {/* Image upload */}
+                {/* Image upload — multiple images with live progress */}
                 <div>
-                  <label className="mb-1.5 block text-xs font-semibold text-ink">Product Image</label>
-                  <div className="flex items-start gap-4">
-                    <div className="flex h-32 w-32 shrink-0 items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed border-line bg-[#f8fafb]">
-                      {imagePreview ? (
-                        <img src={imagePreview} alt="Preview" className="h-full w-full object-cover rounded-2xl" />
-                      ) : (
-                        <div className="text-center text-muted">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="mx-auto"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
-                          <p className="mt-1 text-[10px]">No image</p>
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex flex-col gap-2">
-                      <label className="cursor-pointer rounded-full bg-ink px-4 py-2.5 text-center text-sm font-semibold text-white transition hover:bg-black">
-                        Choose File
-                        <input
-                          type="file"
-                          accept="image/*"
-                          onChange={handleImageChange}
-                          className="hidden"
-                        />
-                      </label>
-                      <p className="text-[11px] text-muted">PNG, JPG up to 5MB</p>
-                      {imageFile && (
-                        <p className="text-[11px] text-[#16a34a] font-medium">{imageFile.name}</p>
-                      )}
-                    </div>
+                  <div className="mb-1.5 flex items-center justify-between">
+                    <label className="block text-xs font-semibold text-ink">
+                      Product Images
+                    </label>
+                    <span className="text-[11px] text-muted">
+                      {images.filter((i) => i.status === "done").length} added · PNG, JPG up to 5MB
+                    </span>
                   </div>
+
+                  <div className="grid grid-cols-3 gap-3 sm:grid-cols-4">
+                    {images.map((img, idx) => (
+                      <div
+                        key={img.id}
+                        className="group relative aspect-square overflow-hidden rounded-2xl border border-line bg-[#f8fafb]"
+                      >
+                        <img
+                          src={img.preview}
+                          alt="Product"
+                          className="h-full w-full object-cover"
+                        />
+
+                        {/* Uploading overlay with progress */}
+                        {img.status === "uploading" && (
+                          <div className="absolute inset-0 flex flex-col items-center justify-center gap-1.5 bg-black/55 text-white">
+                            <div className="h-6 w-6 animate-spin rounded-full border-2 border-white/40 border-t-white" />
+                            <span className="text-[11px] font-semibold">
+                              Uploading… {img.progress}%
+                            </span>
+                            <div className="mt-0.5 h-1 w-4/5 overflow-hidden rounded-full bg-white/30">
+                              <div
+                                className="h-full rounded-full bg-white transition-all"
+                                style={{ width: `${img.progress}%` }}
+                              />
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Error overlay */}
+                        {img.status === "error" && (
+                          <div className="absolute inset-0 flex items-center justify-center bg-red-500/70 px-1 text-center text-[10px] font-semibold text-white">
+                            Upload failed
+                          </div>
+                        )}
+
+                        {/* Primary badge */}
+                        {img.status === "done" && idx === 0 && (
+                          <span className="absolute left-1.5 top-1.5 rounded-full bg-ink/85 px-2 py-0.5 text-[9px] font-semibold text-white">
+                            Primary
+                          </span>
+                        )}
+
+                        {/* Remove button */}
+                        <button
+                          type="button"
+                          onClick={() => removeImage(img.id)}
+                          className="absolute right-1.5 top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-white/90 text-ink opacity-0 shadow transition hover:bg-white group-hover:opacity-100"
+                          aria-label="Remove image"
+                        >
+                          <X size={13} />
+                        </button>
+                      </div>
+                    ))}
+
+                    {/* Add tile */}
+                    <label className="flex aspect-square cursor-pointer flex-col items-center justify-center gap-1 rounded-2xl border-2 border-dashed border-line bg-[#f8fafb] text-muted transition hover:border-mercury hover:text-mercury">
+                      <Plus size={22} />
+                      <span className="text-[11px] font-medium">Add image</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        onChange={handleImageChange}
+                        className="hidden"
+                      />
+                    </label>
+                  </div>
+
+                  <p className="mt-2 text-[11px] text-muted">
+                    The first image is used as the primary thumbnail. Drag isn&apos;t needed —
+                    remove and re-add to reorder.
+                  </p>
                 </div>
 
                 {/* Overview */}
@@ -743,10 +854,16 @@ function ProductForm({
             ) : (
               <button
                 onClick={handleSubmit}
-                disabled={busy || !name.trim() || !priceUsd}
+                disabled={busy || anyUploading || !name.trim() || !priceUsd}
                 className="rounded-full bg-ink px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-black disabled:opacity-40"
               >
-                {busy ? "Saving..." : isEdit ? "Update Product" : "Add Product"}
+                {anyUploading
+                  ? "Uploading images…"
+                  : busy
+                  ? "Saving..."
+                  : isEdit
+                  ? "Update Product"
+                  : "Add Product"}
               </button>
             )}
           </div>
