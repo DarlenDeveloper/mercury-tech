@@ -47,6 +47,7 @@ export const ALL_PAGES = [
   "notifications",
   "audit-logs",
   "settings",
+  "api-keys",
   "help",
 ];
 

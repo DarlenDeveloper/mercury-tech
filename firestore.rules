@@ -80,12 +80,19 @@ service cloud.firestore {
       allow delete: if false;
     }
 
-    // Quotations: customers can create; admins can read/update.
+    // Quotations: customers can create; admins can read/update/delete.
     match /quotations/{quoteId} {
       allow read: if request.auth != null;
       allow create: if request.auth != null;
       allow update: if request.auth != null;
-      allow delete: if false;
+      allow delete: if request.auth != null;
+    }
+
+    // API keys: managed exclusively via admin-gated Cloud Functions
+    // (the Admin SDK bypasses these rules). No direct client access —
+    // this keeps key hashes and metadata unreadable from the client.
+    match /apiKeys/{keyId} {
+      allow read, write: if false;
     }
 
     // Repair tickets: customers can create their own; admins can read/update all.

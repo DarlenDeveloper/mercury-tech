@@ -31,6 +31,7 @@ const SEARCH_ITEMS: SearchItem[] = [
   { label: "Notifications", href: "/u/notifications", icon: <Bell size={16} />, category: "Pages" },
   { label: "Settings", href: "/u/settings", icon: <Settings size={16} />, category: "Pages" },
   { label: "Audit Logs", href: "/u/audit-logs", icon: <ClipboardList size={16} />, category: "Pages" },
+  { label: "API Keys", href: "/u/api-keys", icon: <Sparkles size={16} />, category: "Pages" },
   { label: "Repairs & Services", href: "/u/repairs", icon: <Sparkles size={16} />, category: "Pages" },
   { label: "Website", href: "/u/website", icon: <Sparkles size={16} />, category: "Pages" },
   { label: "Customer Care", href: "/u/customer-care", icon: <Sparkles size={16} />, category: "Pages" },

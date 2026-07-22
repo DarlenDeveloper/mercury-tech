@@ -10,6 +10,17 @@ const db = getFirestore();
 // AI shopping & customer-service assistant (Gemini-backed callable function).
 export { aiAgent } from "./ai-agent.js";
 
+// Public key-authenticated REST API (products, orders, quotations, repairs).
+export { api } from "./api.js";
+
+// Admin-only callables to manage API keys.
+export {
+  createApiKey,
+  listApiKeys,
+  revokeApiKey,
+  deleteApiKey,
+} from "./apikeys-admin.js";
+
 /**
  * Triggered when a new notification document is created.
  * If status is "sent", sends push notification to all users via FCM topic.

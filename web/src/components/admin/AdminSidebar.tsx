@@ -28,6 +28,7 @@ import {
   LogOut,
   HeadphonesIcon,
   Sparkles,
+  KeyRound,
   type LucideIcon,
 } from "lucide-react";
 
@@ -67,6 +68,7 @@ const GROUPS: Group[] = [
       { label: "Users & Roles", icon: ShieldCheck, href: "/u/users", slug: "users" },
       { label: "Notifications", icon: Bell, href: "/u/notifications", slug: "notifications" },
       { label: "Audit Logs", icon: ScrollText, href: "/u/audit-logs", slug: "audit-logs" },
+      { label: "API Keys", icon: KeyRound, href: "/u/api-keys", slug: "api-keys" },
       { label: "Settings", icon: Settings, href: "/u/settings", slug: "settings" },
       { label: "Help", icon: CircleHelp, href: "/u/help", slug: "help" },
     ],
