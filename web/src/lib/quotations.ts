@@ -4,6 +4,7 @@ import {
   addDoc,
   getDocs,
   updateDoc,
+  deleteDoc,
   serverTimestamp,
   Timestamp,
   orderBy,
@@ -104,4 +105,9 @@ export async function updateQuotation(
     ...fields,
     updatedAt: serverTimestamp(),
   });
+}
+
+/** Admin permanently deletes a quotation. */
+export async function deleteQuotation(id: string): Promise<void> {
+  await deleteDoc(doc(db, COL, id));
 }

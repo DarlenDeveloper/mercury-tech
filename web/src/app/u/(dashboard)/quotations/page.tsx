@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Search, Check, X as XIcon, MessageSquare } from "lucide-react";
-import { fetchQuotations, updateQuotation, type Quotation, type QuotationStatus } from "@/lib/quotations";
+import { useState, useEffect, useRef } from "react";
+import { Search, Check, X as XIcon, MessageSquare, MoreHorizontal, Trash2, Eye } from "lucide-react";
+import { fetchQuotations, updateQuotation, deleteQuotation, type Quotation, type QuotationStatus } from "@/lib/quotations";
 import { logAudit } from "@/lib/auditLog";
 import { useAuth } from "@/components/AuthProvider";
 import { useCurrency } from "@/components/CurrencyProvider";
@@ -25,10 +25,24 @@ export default function QuotationsPage() {
   const [adminNote, setAdminNote] = useState("");
   const [quotedPrice, setQuotedPrice] = useState("");
   const [busy, setBusy] = useState(false);
+  const [activeMenu, setActiveMenu] = useState<string | null>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     load();
   }, []);
+
+  // Close the row options menu on outside click
+  useEffect(() => {
+    if (!activeMenu) return;
+    const handler = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setActiveMenu(null);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [activeMenu]);
 
   const load = async () => {
     setLoading(true);
@@ -68,6 +82,25 @@ export default function QuotationsPage() {
     setSelected(q);
     setAdminNote(q.adminNote);
     setQuotedPrice(q.quotedPrice?.toString() || "");
+  };
+
+  const handleDelete = async (q: Quotation) => {
+    if (!confirm(`Delete the quotation for "${q.productName}"? This cannot be undone.`)) return;
+    setActiveMenu(null);
+    try {
+      await deleteQuotation(q.id);
+      setQuotations((prev) => prev.filter((item) => item.id !== q.id));
+      if (selected?.id === q.id) setSelected(null);
+      logAudit({
+        actor: user?.displayName || user?.email || "Unknown",
+        actorId: user?.uid || "",
+        action: "settings_updated",
+        target: `Quotation deleted — ${q.productName} (${q.userName || q.userEmail})`,
+      });
+    } catch (e) {
+      console.error("Failed to delete quotation:", e);
+      alert("Could not delete the quotation. Please try again.");
+    }
   };
 
   const filtered = quotations.filter((q) => {
@@ -174,13 +207,33 @@ export default function QuotationsPage() {
                     <td className="py-3 text-muted text-[12px]">
                       {q.createdAt.toLocaleDateString("en-UG", { month: "short", day: "numeric" })}
                     </td>
-                    <td className="py-3">
+                    <td className="relative py-3 text-right">
                       <button
-                        onClick={() => openDetail(q)}
+                        onClick={() => setActiveMenu(activeMenu === q.id ? null : q.id)}
                         className="rounded-lg p-1.5 text-muted transition hover:bg-surface-soft hover:text-ink"
+                        aria-label="Options"
                       >
-                        <MessageSquare size={16} />
+                        <MoreHorizontal size={18} />
                       </button>
+                      {activeMenu === q.id && (
+                        <div
+                          ref={menuRef}
+                          className="absolute right-0 top-10 z-20 w-40 rounded-xl border border-line bg-white p-1.5 shadow-lg"
+                        >
+                          <button
+                            onClick={() => { setActiveMenu(null); openDetail(q); }}
+                            className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-ink hover:bg-surface-soft"
+                          >
+                            <Eye size={14} /> View / Manage
+                          </button>
+                          <button
+                            onClick={() => handleDelete(q)}
+                            className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-red-500 hover:bg-red-50"
+                          >
+                            <Trash2 size={14} /> Delete
+                          </button>
+                        </div>
+                      )}
                     </td>
                   </tr>
                 ))}
