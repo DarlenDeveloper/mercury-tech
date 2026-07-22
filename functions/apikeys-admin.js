@@ -101,6 +101,75 @@ export const revokeApiKey = onCall(async (request) => {
   return { id, revoked: true };
 });
 
+/**
+ * Returns API usage data for the dashboard: recent request logs, per-day call
+ * counts for the last N days, and success/error totals.
+ */
+export const getApiActivity = onCall(async (request) => {
+  const db = getFirestore();
+  const admin = await requireAdmin(db, request);
+  if (!admin.ok) throw new HttpsError("permission-denied", admin.error);
+
+  const days = Math.min(Math.max(parseInt(request.data?.days, 10) || 14, 1), 90);
+  const logLimit = Math.min(Math.max(parseInt(request.data?.limit, 10) || 50, 1), 200);
+
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - (days - 1));
+  cutoff.setHours(0, 0, 0, 0);
+
+  const snap = await db
+    .collection("apiLogs")
+    .where("timestamp", ">=", cutoff)
+    .orderBy("timestamp", "desc")
+    .limit(3000)
+    .get();
+
+  // Seed a bucket per day so the graph shows empty days too.
+  const buckets = {};
+  for (let i = 0; i < days; i++) {
+    const d = new Date(cutoff);
+    d.setDate(cutoff.getDate() + i);
+    buckets[d.toISOString().slice(0, 10)] = 0;
+  }
+
+  let total = 0;
+  let success = 0;
+  let errors = 0;
+  const logs = [];
+
+  snap.docs.forEach((doc) => {
+    const data = doc.data();
+    const ts = data.timestamp?.toDate?.() || null;
+    total += 1;
+    const status = data.status || 0;
+    if (status >= 200 && status < 400) success += 1;
+    else if (status >= 400) errors += 1;
+
+    if (ts) {
+      const day = ts.toISOString().slice(0, 10);
+      if (day in buckets) buckets[day] += 1;
+    }
+
+    if (logs.length < logLimit) {
+      logs.push({
+        id: doc.id,
+        keyLabel: data.keyLabel || "—",
+        method: data.method || "",
+        resource: data.resource || "",
+        path: data.path || "",
+        status,
+        durationMs: data.durationMs ?? null,
+        ip: data.ip || null,
+        timestamp: ts ? ts.toISOString() : null,
+      });
+    }
+  });
+
+  const daily = Object.entries(buckets).map(([date, count]) => ({ date, count }));
+
+  return { daily, logs, totals: { total, success, errors }, days };
+});
+
 export const deleteApiKey = onCall(async (request) => {
   const db = getFirestore();
   const admin = await requireAdmin(db, request);

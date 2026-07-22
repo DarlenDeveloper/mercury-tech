@@ -60,6 +60,28 @@ export const api = onRequest({ cors: true }, async (req, res) => {
   let path = req.path.replace(/^\/+/, "");
   path = path.replace(/^v1\//, "").replace(/^v1$/, "");
   const segments = path.split("/").filter(Boolean);
+  const method = req.method.toUpperCase();
+
+  // Best-effort request logging (powers the admin usage graphs + logs).
+  // Fires once the response is sent, so it captures the final status code.
+  const startedAt = Date.now();
+  const logCtx = { keyId: null, keyLabel: null, resource: segments[0] || null, scope: null };
+  res.on("finish", () => {
+    db.collection("apiLogs")
+      .add({
+        keyId: logCtx.keyId,
+        keyLabel: logCtx.keyLabel,
+        method,
+        resource: logCtx.resource,
+        path: req.path,
+        status: res.statusCode,
+        scope: logCtx.scope,
+        ip: (req.headers["x-forwarded-for"] || req.ip || "").toString().split(",")[0] || null,
+        durationMs: Date.now() - startedAt,
+        timestamp: FieldValue.serverTimestamp(),
+      })
+      .catch(() => {});
+  });
 
   if (segments.length === 0) {
     return sendJson(res, 200, {
@@ -76,15 +98,17 @@ export const api = onRequest({ cors: true }, async (req, res) => {
     return sendJson(res, 404, { error: "Unknown endpoint." });
   }
 
-  const method = req.method.toUpperCase();
   const isWrite = method !== "GET";
   const requiredScope = `${resource}:${isWrite ? "write" : "read"}`;
+  logCtx.scope = requiredScope;
 
   // Authenticate + authorize.
   const auth = await authenticateRequest(req, db, requiredScope);
   if (!auth.ok) {
     return sendJson(res, auth.status, { error: auth.error });
   }
+  logCtx.keyId = auth.keyId;
+  logCtx.keyLabel = auth.data?.label || null;
 
   try {
     switch (method) {

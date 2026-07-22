@@ -59,3 +59,31 @@ export async function deleteApiKey(id: string): Promise<void> {
   );
   await callable({ id });
 }
+
+export type ApiLogEntry = {
+  id: string;
+  keyLabel: string;
+  method: string;
+  resource: string;
+  path: string;
+  status: number;
+  durationMs: number | null;
+  ip: string | null;
+  timestamp: string | null;
+};
+
+export type ApiActivity = {
+  daily: { date: string; count: number }[];
+  logs: ApiLogEntry[];
+  totals: { total: number; success: number; errors: number };
+  days: number;
+};
+
+export async function getApiActivity(days = 14, limit = 50): Promise<ApiActivity> {
+  const callable = httpsCallable<{ days: number; limit: number }, ApiActivity>(
+    functions,
+    "getApiActivity"
+  );
+  const res = await callable({ days, limit });
+  return res.data;
+}

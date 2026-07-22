@@ -19,7 +19,40 @@ export {
   listApiKeys,
   revokeApiKey,
   deleteApiKey,
+  getApiActivity,
 } from "./apikeys-admin.js";
+
+/**
+ * Daily cleanup of API request logs older than 30 days, so the apiLogs
+ * collection doesn't grow unbounded. Runs once a day; deletes in batches.
+ */
+export const cleanupApiLogs = onSchedule("every 24 hours", async () => {
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - 30);
+
+  let totalDeleted = 0;
+  // Delete in batches of 400 to stay under Firestore's 500-write batch limit.
+  while (true) {
+    const snap = await db
+      .collection("apiLogs")
+      .where("timestamp", "<", cutoff)
+      .limit(400)
+      .get();
+
+    if (snap.empty) break;
+
+    const batch = db.batch();
+    snap.docs.forEach((doc) => batch.delete(doc.ref));
+    await batch.commit();
+    totalDeleted += snap.size;
+
+    if (snap.size < 400) break;
+  }
+
+  if (totalDeleted > 0) {
+    console.log(`cleanupApiLogs: deleted ${totalDeleted} log(s) older than 30 days`);
+  }
+});
 
 /**
  * Triggered when a new notification document is created.

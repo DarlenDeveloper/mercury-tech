@@ -3,13 +3,16 @@
 import { useState, useEffect } from "react";
 import { Plus, X, Copy, Check, Trash2, Ban, KeyRound, ShieldAlert } from "lucide-react";
 import AdminHeader from "@/components/admin/AdminHeader";
+import BarChart from "@/components/admin/charts/BarChart";
 import {
   listApiKeys,
   createApiKey,
   revokeApiKey,
   deleteApiKey,
+  getApiActivity,
   type ApiKey,
   type ApiScope,
+  type ApiActivity,
 } from "@/lib/apiKeys";
 import { logAudit } from "@/lib/auditLog";
 import { useAuth } from "@/components/AuthProvider";
@@ -22,6 +25,8 @@ export default function ApiKeysPage() {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [error, setError] = useState("");
+  const [activity, setActivity] = useState<ApiActivity | null>(null);
+  const [activityLoading, setActivityLoading] = useState(true);
 
   const load = async () => {
     setLoading(true);
@@ -35,8 +40,20 @@ export default function ApiKeysPage() {
     }
   };
 
+  const loadActivity = async () => {
+    setActivityLoading(true);
+    try {
+      setActivity(await getApiActivity(14, 50));
+    } catch {
+      // usage is non-critical; keep the page usable if it fails
+    } finally {
+      setActivityLoading(false);
+    }
+  };
+
   useEffect(() => {
     load();
+    loadActivity();
   }, []);
 
   const handleRevoke = async (k: ApiKey) => {
@@ -95,6 +112,42 @@ export default function ApiKeysPage() {
           <ShieldAlert size={16} /> {error}
         </div>
       )}
+
+      {/* Usage summary */}
+      <div className="mt-5 grid grid-cols-2 gap-4 lg:grid-cols-3">
+        <div className="admin-card p-4" style={{ backgroundColor: "#eaf1fc" }}>
+          <p className="text-[12px] text-muted">Total Calls (14d)</p>
+          <p className="text-xl font-extrabold text-ink">{activity?.totals.total ?? "—"}</p>
+        </div>
+        <div className="admin-card p-4" style={{ backgroundColor: "#eef7ee" }}>
+          <p className="text-[12px] text-muted">Successful (2xx–3xx)</p>
+          <p className="text-xl font-extrabold text-ink">{activity?.totals.success ?? "—"}</p>
+        </div>
+        <div className="admin-card p-4" style={{ backgroundColor: "#fde8ea" }}>
+          <p className="text-[12px] text-muted">Errors (4xx–5xx)</p>
+          <p className="text-xl font-extrabold text-ink">{activity?.totals.errors ?? "—"}</p>
+        </div>
+      </div>
+
+      {/* Usage graph */}
+      <section className="admin-card mt-5 p-5">
+        <h3 className="mb-4 text-lg font-bold text-ink">API Calls · Last 14 Days</h3>
+        {activityLoading ? (
+          <div className="flex justify-center py-12">
+            <div className="h-8 w-8 animate-spin rounded-full border-2 border-line border-t-mercury" />
+          </div>
+        ) : activity && activity.totals.total > 0 ? (
+          <BarChart
+            labels={activity.daily.map((d) => d.date.slice(5).replace("-", "/"))}
+            values={activity.daily.map((d) => d.count)}
+            color="#1f3e97"
+          />
+        ) : (
+          <p className="py-14 text-center text-sm text-muted">
+            No API calls yet — the graph populates as your keys are used.
+          </p>
+        )}
+      </section>
 
       <section className="admin-card mt-5 p-5">
         {loading ? (
@@ -189,10 +242,67 @@ export default function ApiKeysPage() {
         )}
       </section>
 
+      {/* Recent request logs */}
+      <section className="admin-card mt-5 p-5">
+        <h3 className="mb-4 text-lg font-bold text-ink">Recent Requests</h3>
+        {activityLoading ? (
+          <div className="flex justify-center py-10">
+            <div className="h-8 w-8 animate-spin rounded-full border-2 border-line border-t-mercury" />
+          </div>
+        ) : !activity || activity.logs.length === 0 ? (
+          <p className="py-10 text-center text-sm text-muted">No requests logged yet.</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[720px] border-collapse text-left">
+              <thead>
+                <tr className="border-b border-line text-[12px] font-medium text-muted">
+                  <th className="pb-3 pl-1 font-medium">Time</th>
+                  <th className="pb-3 font-medium">Key</th>
+                  <th className="pb-3 font-medium">Method</th>
+                  <th className="pb-3 font-medium">Path</th>
+                  <th className="pb-3 font-medium">Status</th>
+                  <th className="pb-3 font-medium">Duration</th>
+                </tr>
+              </thead>
+              <tbody>
+                {activity.logs.map((l) => (
+                  <tr key={l.id} className="border-b border-line/70 text-sm last:border-0">
+                    <td className="py-2.5 pl-1 text-[12px] text-muted">
+                      {l.timestamp ? new Date(l.timestamp).toLocaleString() : "—"}
+                    </td>
+                    <td className="py-2.5 text-ink">{l.keyLabel}</td>
+                    <td className="py-2.5">
+                      <span className="rounded bg-surface-soft px-1.5 py-0.5 text-[11px] font-semibold text-ink">
+                        {l.method}
+                      </span>
+                    </td>
+                    <td className="py-2.5 font-mono text-[12px] text-muted">{l.path}</td>
+                    <td className="py-2.5">
+                      <span
+                        className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${
+                          l.status >= 200 && l.status < 400
+                            ? "bg-[#e7f6ee] text-[#16a34a]"
+                            : "bg-red-50 text-red-600"
+                        }`}
+                      >
+                        {l.status}
+                      </span>
+                    </td>
+                    <td className="py-2.5 text-[12px] text-muted">
+                      {l.durationMs != null ? `${l.durationMs} ms` : "—"}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
+
       {showForm && (
         <CreateKeyModal
           onClose={() => setShowForm(false)}
-          onCreated={() => { setShowForm(false); load(); }}
+          onCreated={() => { setShowForm(false); load(); loadActivity(); }}
         />
       )}
     </div>

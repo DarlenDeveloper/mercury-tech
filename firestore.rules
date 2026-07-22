@@ -95,6 +95,12 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
+    // API request logs: written by the API function (Admin SDK) and read via
+    // the admin-gated getApiActivity callable. No direct client access.
+    match /apiLogs/{logId} {
+      allow read, write: if false;
+    }
+
     // Repair tickets: customers can create their own; admins can read/update all.
     match /repair_tickets/{ticketId} {
       allow read: if request.auth != null;
