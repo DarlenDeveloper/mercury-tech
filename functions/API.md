@@ -225,6 +225,13 @@ Keys are stored hashed and never displayed again after creation.
 
 ---
 
+## Logging & retention
+
+Every request is logged (key, method, path, status, duration, IP) to power the
+usage graphs and request logs on the **API Keys** dashboard page. Logs are
+retained for **30 days** — a daily scheduled function (`cleanupApiLogs`)
+automatically deletes older entries.
+
 ## Not yet implemented
 
 - Per-key rate limiting
