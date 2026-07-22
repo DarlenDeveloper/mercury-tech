@@ -89,7 +89,7 @@ export default function RootLayout({
         {/* Ellipse Desk web tag (external third-party system) */}
         <Script
           src="https://us-central1-ellipse-desk.cloudfunctions.net/webTag"
-          data-site="ell_exgslr3083hk4zbm"
+          data-site="ell_4xhjkoucz577uyod"
           strategy="afterInteractive"
         />
       </body>
