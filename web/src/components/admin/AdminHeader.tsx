@@ -2,10 +2,12 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { Search, Bell, ChevronDown, X, Package, LayoutGrid, ClipboardList, Users, Settings, Sparkles } from "lucide-react";
+import Link from "next/link";
+import { Search, Bell, ChevronDown, X, Package, LayoutGrid, ClipboardList, Users, Settings, Sparkles, Store, LogOut } from "lucide-react";
 import { collection, getDocs, query, orderBy, limit, Timestamp } from "firebase/firestore";
 import { useAuth } from "@/components/AuthProvider";
 import { db } from "@/lib/firestore";
+import { signOut } from "@/lib/auth";
 
 // ─── Search items (pages & quick links) ─────────────────────────────────────
 
@@ -70,13 +72,18 @@ export default function AdminHeader({
   const [showNotifs, setShowNotifs] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [showProfile, setShowProfile] = useState(false);
   const notifRef = useRef<HTMLDivElement>(null);
+  const profileRef = useRef<HTMLDivElement>(null);
 
-  // Close notif dropdown on outside click
+  // Close dropdowns on outside click
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (notifRef.current && !notifRef.current.contains(e.target as Node)) {
         setShowNotifs(false);
+      }
+      if (profileRef.current && !profileRef.current.contains(e.target as Node)) {
+        setShowProfile(false);
       }
     };
     document.addEventListener("mousedown", handler);
@@ -218,18 +225,57 @@ export default function AdminHeader({
 
           <span className="mx-1 hidden h-6 w-px bg-line sm:block" />
 
-          <button
-            type="button"
-            className="flex items-center gap-2.5 rounded-full py-1 pl-1 pr-2 transition hover:bg-surface-soft"
-          >
-            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-mercury text-sm font-bold text-white">
-              {initials}
-            </span>
-            <span className="hidden text-sm font-semibold text-ink sm:block">
-              {displayName}
-            </span>
-            <ChevronDown size={16} className="text-muted" />
-          </button>
+          {/* Profile menu */}
+          <div className="relative" ref={profileRef}>
+            <button
+              type="button"
+              onClick={() => setShowProfile((s) => !s)}
+              className="flex items-center gap-2.5 rounded-full py-1 pl-1 pr-2 transition hover:bg-surface-soft"
+            >
+              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-mercury text-sm font-bold text-white">
+                {initials}
+              </span>
+              <span className="hidden text-sm font-semibold text-ink sm:block">
+                {displayName}
+              </span>
+              <ChevronDown
+                size={16}
+                className={`text-muted transition-transform ${showProfile ? "rotate-180" : ""}`}
+              />
+            </button>
+
+            {showProfile && (
+              <div className="absolute right-0 top-14 z-50 w-56 rounded-2xl border border-line bg-white p-2 shadow-xl">
+                <div className="px-3 py-2">
+                  <p className="truncate text-sm font-semibold text-ink">{displayName}</p>
+                  {user?.email && (
+                    <p className="truncate text-[12px] text-muted">{user.email}</p>
+                  )}
+                </div>
+                <hr className="my-1 border-line" />
+                <Link
+                  href="/"
+                  onClick={() => setShowProfile(false)}
+                  className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-ink transition hover:bg-surface-soft"
+                >
+                  <Store size={16} className="text-muted" />
+                  Back to Main Website
+                </Link>
+                <hr className="my-1 border-line" />
+                <button
+                  onClick={() => {
+                    setShowProfile(false);
+                    signOut();
+                    router.push("/u/login");
+                  }}
+                  className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-red-500 transition hover:bg-red-50"
+                >
+                  <LogOut size={16} />
+                  Sign Out
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </header>
 

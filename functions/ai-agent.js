@@ -11,8 +11,14 @@ const MODEL = "gemini-3-flash-preview";
 const DEFAULT_STORE_INFO = `
 Mercury Computers Limited — Uganda's trusted ICT & electronics retailer.
 - Location: Plot 91, Kamwokya, Kira Road, Kampala, Uganda (near Rubis Petrol Station).
-- Phone: 0707749501 / 0704823800
+- Primary phone (always share this first): 0704823800
+- Other phone: 0707749501
 - Email: customercare@mercurycomputerslimited.com, sales@mercurycomputerslimited.com
+- Social media (share these when a customer asks how to reach or follow us):
+  - X (Twitter): https://x.com/mercuryuganda
+  - LinkedIn: https://ug.linkedin.com/company/mercury-computers-limited
+  - Instagram: https://www.instagram.com/explore/locations/985315454928219/mercury-computers-limited/
+  - Facebook: https://www.facebook.com/mercuryuganda/
 - Delivery: Free delivery within Kampala Central on eligible items.
 - Products: Official & brand new — laptops, desktops, printers, monitors, components,
   networking gear, phones, TVs, audio and accessories from HP, Lenovo, Dell, Apple,
@@ -105,7 +111,8 @@ ${catalogText}
 5. For customer-service questions (delivery, returns, warranty, location, payment, hours), answer from the store information and knowledge base.
 6. Stay strictly on topic: Mercury Computers products and services. Politely decline unrelated requests.
 7. Be concise, friendly and helpful. Use Ugandan Shillings (USh) for prices.
-8. If you don't have enough information, say so and suggest contacting customer care.`;
+8. If you don't have enough information, say so and suggest contacting customer care.
+9. For contact/phone requests, ALWAYS give 0704823800 first as the primary number (mention 0707749501 only as an alternative). When a customer asks how to reach, follow or find us on social media, share the X, LinkedIn, Instagram and Facebook links from the store information.`;
 }
 
 export const aiAgent = onCall(
