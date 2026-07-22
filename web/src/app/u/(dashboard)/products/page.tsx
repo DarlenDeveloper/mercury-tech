@@ -32,6 +32,7 @@ type Product = {
   shortDescription?: string;
   category: string;
   categoryId: string;
+  subcategory?: string;
   brand?: string;
   priceUsd: number;
   oldPriceUsd?: number;
@@ -43,6 +44,15 @@ type Product = {
   sourceUrl?: string;
 };
 
+type SubCategory = { name: string; slug: string };
+
+type Category = {
+  id: string;
+  name: string;
+  slug: string;
+  children: SubCategory[];
+};
+
 function approxUgx(usd: number, rate: number) {
   return `≈ USh ${Math.round(usd * rate).toLocaleString()}`;
 }
@@ -50,6 +60,7 @@ function approxUgx(usd: number, rate: number) {
 export default function ProductsPage() {
   const { user } = useAuth();
   const [products, setProducts] = useState<Product[]>([]);
+  const [categoryList, setCategoryList] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [rate, setRate] = useState(3780);
   const [prevRate, setPrevRate] = useState(3780);
@@ -65,13 +76,28 @@ export default function ProductsPage() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [prodSnap, rateSnap] = await Promise.all([
+      const [prodSnap, rateSnap, catSnap] = await Promise.all([
         getDocs(collection(db, "products")),
         getDoc(doc(db, "config", "rate")),
+        getDocs(collection(db, "categories")),
       ]);
 
       setProducts(
         prodSnap.docs.map((d) => ({ id: d.id, ...d.data() } as Product))
+      );
+
+      setCategoryList(
+        catSnap.docs
+          .map((d) => {
+            const data = d.data();
+            return {
+              id: d.id,
+              name: data.name ?? "",
+              slug: data.slug ?? d.id,
+              children: (data.children ?? []) as SubCategory[],
+            } as Category;
+          })
+          .sort((a, b) => a.name.localeCompare(b.name))
       );
 
       if (rateSnap.exists()) {
@@ -302,6 +328,7 @@ export default function ProductsPage() {
         <ProductForm
           product={editingProduct}
           user={user}
+          categoryList={categoryList}
           onClose={() => { setShowForm(false); setEditingProduct(null); }}
           onSaved={() => { setShowForm(false); setEditingProduct(null); fetchData(); }}
         />
@@ -313,11 +340,13 @@ export default function ProductsPage() {
 function ProductForm({
   product,
   user,
+  categoryList,
   onClose,
   onSaved,
 }: {
   product: Product | null;
   user: any;
+  categoryList: Category[];
   onClose: () => void;
   onSaved: () => void;
 }) {
@@ -328,8 +357,24 @@ function ProductForm({
   const [name, setName] = useState(product?.name ?? "");
   const [shortDescription, setShortDescription] = useState(product?.shortDescription ?? "");
   const [brand, setBrand] = useState(product?.brand ?? "");
-  const [category, setCategory] = useState(product?.category ?? "");
-  const [categoryId, setCategoryId] = useState(product?.categoryId ?? "");
+  const slugify = (val: string) =>
+    val.toLowerCase().replace(/[^a-z0-9\s-]/g, "").replace(/\s+/g, "-").replace(/(^-|-$)/g, "");
+
+  // Resolve the product's existing parent category (matched by stored categoryId slug)
+  // and subcategory (matched by the slugified category label) so edits pre-select correctly.
+  const initialParent =
+    categoryList.find((c) => c.slug === product?.categoryId) ??
+    categoryList.find((c) => c.name === product?.category);
+  const initialSub =
+    initialParent?.children.find(
+      (s) => s.name === (product?.subcategory ?? product?.category)
+    ) ?? null;
+
+  const [parentCatId, setParentCatId] = useState<string>(initialParent?.id ?? "");
+  const [subSlug, setSubSlug] = useState<string>(initialSub?.slug ?? "");
+
+  const selectedParent = categoryList.find((c) => c.id === parentCatId) ?? null;
+  const subOptions = selectedParent?.children ?? [];
 
   // Step 2: Pricing & stock
   const [priceUsd, setPriceUsd] = useState(product?.priceUsd?.toString() ?? "");
@@ -368,7 +413,7 @@ function ProductForm({
   };
 
   const canNext = () => {
-    if (step === 1) return name.trim() && category.trim();
+    if (step === 1) return name.trim() && parentCatId;
     if (step === 2) return priceUsd;
     return true;
   };
@@ -397,12 +442,22 @@ function ProductForm({
       }
     });
 
+    const parent = categoryList.find((c) => c.id === parentCatId) ?? null;
+    const sub = parent?.children.find((s) => s.slug === subSlug) ?? null;
+    // Storefront contract:
+    //  - categoryId  = parent category slug  (used by /category/[slug])
+    //  - category    = the display label; subcategory name when chosen,
+    //                  otherwise the parent name (its slug matches /category/[slug]/[sub])
+    const categoryLabel = sub?.name ?? parent?.name ?? "";
+    const parentSlug = parent?.slug ?? slugify(categoryLabel);
+
     const data: any = {
       name: name.trim(),
       shortDescription: shortDescription.trim(),
       description: description.trim(),
-      category: category.trim(),
-      categoryId: categoryId.trim() || category.toLowerCase().replace(/[^a-z]/g, "-"),
+      category: categoryLabel,
+      categoryId: parentSlug,
+      subcategory: sub?.name ?? "",
       brand: brand.trim(),
       priceUsd: parseFloat(priceUsd),
       stock: stock ? parseInt(stock) : 0,
@@ -506,8 +561,42 @@ function ProductForm({
                 <Field label="Short Description" value={shortDescription} onChange={setShortDescription} placeholder="Brief product summary" />
                 <Field label="Brand" value={brand} onChange={setBrand} placeholder="e.g. hp, lenovo, dell" />
                 <div className="grid grid-cols-2 gap-4">
-                  <Field label="Category" value={category} onChange={setCategory} placeholder="e.g. Laptops" />
-                  <Field label="Category ID" value={categoryId} onChange={setCategoryId} placeholder="e.g. computers" />
+                  <div>
+                    <label className="mb-1.5 block text-xs font-semibold text-ink">Category</label>
+                    <select
+                      value={parentCatId}
+                      onChange={(e) => { setParentCatId(e.target.value); setSubSlug(""); }}
+                      className="h-11 w-full rounded-full bg-[#F4F5F8] px-4 text-sm text-ink outline-none"
+                    >
+                      <option value="">Select a category…</option>
+                      {categoryList.map((c) => (
+                        <option key={c.id} value={c.id}>{c.name}</option>
+                      ))}
+                    </select>
+                    {categoryList.length === 0 && (
+                      <p className="mt-1.5 text-[11px] text-red-500">
+                        No categories found. Add categories under the Categories page first.
+                      </p>
+                    )}
+                  </div>
+                  <div>
+                    <label className="mb-1.5 block text-xs font-semibold text-ink">
+                      Subcategory <span className="font-normal text-muted">(optional)</span>
+                    </label>
+                    <select
+                      value={subSlug}
+                      onChange={(e) => setSubSlug(e.target.value)}
+                      disabled={!selectedParent || subOptions.length === 0}
+                      className="h-11 w-full rounded-full bg-[#F4F5F8] px-4 text-sm text-ink outline-none disabled:opacity-50"
+                    >
+                      <option value="">
+                        {subOptions.length === 0 ? "No subcategories" : "None"}
+                      </option>
+                      {subOptions.map((s) => (
+                        <option key={s.slug} value={s.slug}>{s.name}</option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
               </div>
             )}
