@@ -48,7 +48,7 @@ export default async function PopularCategories() {
         </a>
       </div>
 
-      <div className="grid grid-cols-3 gap-3 sm:grid-cols-6">
+      <div className="flex gap-3 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {categories.map((category, i) => {
           const badge = BADGES[i];
           const image = category.image || LOCAL_IMAGES[category.slug] || "/placeholder-product.svg";
@@ -56,7 +56,7 @@ export default async function PopularCategories() {
             <a
               key={category.name}
               href={`/category/${category.slug}`}
-              className="group relative flex flex-col"
+              className="group relative flex w-[130px] shrink-0 flex-col sm:w-[150px]"
             >
               <div
                 className={`relative flex h-32 items-center justify-center overflow-hidden rounded-2xl lg:h-40 ${TINTS[i % TINTS.length]}`}
@@ -72,7 +72,7 @@ export default async function PopularCategories() {
                   src={image}
                   alt={category.name}
                   fill
-                  sizes="(max-width: 640px) 33vw, 16vw"
+                  sizes="150px"
                   className="object-cover transition duration-300 group-hover:scale-105"
                 />
               </div>

@@ -37,9 +37,9 @@ export default function Sidebar() {
       </h2>
 
       <nav className="flex flex-col gap-0.5">
-        {categories.map((category) => {
+        {categories.map((category, ci) => {
           return (
-            <div key={category.slug}>
+            <div key={`${category.slug}-${ci}`}>
               {/* Top-level category (expand/collapse) */}
               <button
                 type="button"
@@ -68,8 +68,8 @@ export default function Sidebar() {
               >
                 <div className="overflow-hidden">
                   <ul className="ml-3 flex flex-col border-l border-line pl-3 pt-0.5">
-                    {category.children.map((child) => (
-                      <li key={child.slug}>
+                    {category.children.map((child, idx) => (
+                      <li key={`${category.slug}-${child.slug}-${idx}`}>
                         <a
                           href={`/category/${category.slug}/${child.slug}`}
                           className="block rounded-md py-1.5 text-[13px] font-medium text-muted transition hover:text-mercury"
