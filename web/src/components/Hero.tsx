@@ -44,6 +44,16 @@ const SLIDES: Slide[] = [
     href: "#",
   },
   {
+    badge: "COMPUTERS & LAPTOPS",
+    title: "Laptops & desktops for every need",
+    subtitle:
+      "Lenovo, HP, Dell and more — from everyday work machines to gaming rigs, all brand new with warranty.",
+    cta: "Shop Computers",
+    image: "/hero-computers.png",
+    bg: "from-[#e6efff] via-[#eef4ff] to-white",
+    href: "/category/computers",
+  },
+  {
     badge: "CERTIFIED DEVICES",
     title: "Phones you can trust",
     subtitle:
@@ -89,14 +99,16 @@ export default function Hero() {
     setIndex(i);
   }, []);
 
-  // Auto-advance
+  // Auto-advance. Keyed on `index` so any manual navigation (dot click) resets
+  // the countdown instead of the slide being yanked away moments later.
   useEffect(() => {
-    const id = setInterval(() => {
+    if (index === totalSlides) return; // handled by the snap-back effect
+    const id = setTimeout(() => {
       setIsTransitioning(true);
       setIndex((i) => i + 1);
     }, 5500);
-    return () => clearInterval(id);
-  }, []);
+    return () => clearTimeout(id);
+  }, [index, totalSlides]);
 
   // When we land on the cloned first slide, snap back to the real one.
   // Using a timer (rather than onTransitionEnd) guarantees this runs even if
