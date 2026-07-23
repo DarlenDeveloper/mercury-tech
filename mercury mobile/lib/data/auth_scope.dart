@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import 'auth_service.dart';
+import 'notification_service.dart';
 
 /// Exposes the current auth state and [AuthService] to the widget tree.
 class AuthScope extends InheritedWidget {
@@ -54,6 +55,8 @@ class _AuthGateState extends State<AuthGate> {
     return StreamBuilder<User?>(
       stream: _service.authStateChanges(),
       builder: (context, snapshot) {
+        // Keep per-user push topic in sync with the signed-in user.
+        NotificationService.instance.syncUser(snapshot.data?.uid);
         return AuthScope(
           user: snapshot.data,
           service: _service,

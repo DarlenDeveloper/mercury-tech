@@ -239,7 +239,7 @@ class _UserRow extends StatelessWidget {
           const SizedBox(width: 4),
           _CircleIconButton(
             icon: IconsaxPlusLinear.notification,
-            onTap: () {},
+            onTap: () => Navigator.of(context).pushNamed('/notifications'),
           ),
         ],
       ),

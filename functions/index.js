@@ -22,6 +22,17 @@ export {
   getApiActivity,
 } from "./apikeys-admin.js";
 
+// Transactional notifications: order / quotation / repair status changes
+// (per-user push + in-app feed) plus admin alerts on new activity.
+export {
+  onOrderStatusChanged,
+  onQuotationStatusChanged,
+  onRepairStatusChanged,
+  onOrderCreatedNotifyAdmins,
+  onRepairCreatedNotifyAdmins,
+  onQuotationCreatedNotifyAdmins,
+} from "./notifications.js";
+
 /**
  * Daily cleanup of API request logs older than 30 days, so the apiLogs
  * collection doesn't grow unbounded. Runs once a day; deletes in batches.

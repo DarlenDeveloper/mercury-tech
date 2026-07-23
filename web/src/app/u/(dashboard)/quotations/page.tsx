@@ -6,6 +6,8 @@ import { fetchQuotations, updateQuotation, deleteQuotation, type Quotation, type
 import { logAudit } from "@/lib/auditLog";
 import { useAuth } from "@/components/AuthProvider";
 import { useCurrency } from "@/components/CurrencyProvider";
+import { useAdminAccess } from "@/components/admin/AdminGuard";
+import { isSuperAdmin } from "@/lib/adminAccess";
 
 const STATUS_STYLES: Record<QuotationStatus, string> = {
   pending: "bg-amber-50 text-amber-700",
@@ -17,6 +19,8 @@ const STATUS_STYLES: Record<QuotationStatus, string> = {
 export default function QuotationsPage() {
   const { user } = useAuth();
   const { format } = useCurrency();
+  const { adminEntry } = useAdminAccess();
+  const canDelete = isSuperAdmin(adminEntry);
   const [quotations, setQuotations] = useState<Quotation[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -85,6 +89,7 @@ export default function QuotationsPage() {
   };
 
   const handleDelete = async (q: Quotation) => {
+    if (!canDelete) return; // super admins only
     if (!confirm(`Delete the quotation for "${q.productName}"? This cannot be undone.`)) return;
     setActiveMenu(null);
     try {
@@ -226,12 +231,14 @@ export default function QuotationsPage() {
                           >
                             <Eye size={14} /> View / Manage
                           </button>
-                          <button
-                            onClick={() => handleDelete(q)}
-                            className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-red-500 hover:bg-red-50"
-                          >
-                            <Trash2 size={14} /> Delete
-                          </button>
+                          {canDelete && (
+                            <button
+                              onClick={() => handleDelete(q)}
+                              className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-red-500 hover:bg-red-50"
+                            >
+                              <Trash2 size={14} /> Delete
+                            </button>
+                          )}
                         </div>
                       )}
                     </td>

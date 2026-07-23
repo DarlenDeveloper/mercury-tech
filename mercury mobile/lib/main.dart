@@ -1,4 +1,5 @@
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lottie/lottie.dart';
@@ -7,15 +8,21 @@ import 'data/auth_scope.dart';
 import 'data/catalog_scope.dart';
 import 'data/category_scope.dart';
 import 'data/currency_service.dart';
+import 'data/notification_service.dart';
 import 'firebase_options.dart';
 import 'theme/app_colors.dart';
 import 'screens/main_navigation_screen.dart';
+import 'screens/notifications_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+  // Handle background/terminated push messages.
+  FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+  // Set up local notifications, permissions and topic subscriptions.
+  await NotificationService.instance.init();
   runApp(const MercuryApp());
 }
 
@@ -29,14 +36,15 @@ class MercuryApp extends StatelessWidget {
       useMaterial3: true,
     );
 
-    final navigatorKey = GlobalKey<NavigatorState>();
-
     return CurrencyProvider(
       child: AuthGate(
         child: MaterialApp(
         title: 'Mercury Shop',
         debugShowCheckedModeBanner: false,
-        navigatorKey: navigatorKey,
+        navigatorKey: NotificationService.navigatorKey,
+        routes: {
+          '/notifications': (_) => const NotificationsScreen(),
+        },
         theme: baseTheme.copyWith(
           textTheme: GoogleFonts.poppinsTextTheme(baseTheme.textTheme),
           primaryTextTheme:

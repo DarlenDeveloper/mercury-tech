@@ -1,9 +1,16 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <uses-permission android:name="android.permission.INTERNET"/>
+    <!-- Required on Android 13+ (API 33) to show notifications. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
     <application
         android:label="Mercury Shop"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
+        <!-- Default FCM channel used when a push arrives while the app is not
+             running (must match the channel created in NotificationService). -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="mercury_notifications" />
         <activity
             android:name=".MainActivity"
             android:exported="true"
