@@ -12,7 +12,10 @@ const LOCAL_IMAGES: Record<string, string> = {
 };
 
 export default async function TopCategories() {
-  const categories = await getCategoriesFromFirestore().catch(() => CATEGORIES);
+  const fetched = await getCategoriesFromFirestore().catch(() => CATEGORIES);
+  // Fall back to the built-in list if Firestore returns nothing, so the
+  // section never renders empty.
+  const categories = fetched.length > 0 ? fetched : CATEGORIES;
 
   return (
     <section className="w-full px-4 py-10 lg:px-6">

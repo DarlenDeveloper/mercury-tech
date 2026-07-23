@@ -98,21 +98,33 @@ export default function Hero() {
     return () => clearInterval(id);
   }, []);
 
-  // When we land on the clone (index === totalSlides), snap back to 0
-  const handleTransitionEnd = () => {
-    if (index === totalSlides) {
+  // When we land on the cloned first slide, snap back to the real one.
+  // Using a timer (rather than onTransitionEnd) guarantees this runs even if
+  // the browser drops the transitionend event — e.g. while the tab is
+  // backgrounded — which previously left the track scrolled past every slide,
+  // making the hero appear blank.
+  useEffect(() => {
+    if (index !== totalSlides) return;
+    const t = setTimeout(() => {
       setIsTransitioning(false);
       setIndex(0);
-    }
-  };
+    }, 720);
+    return () => clearTimeout(t);
+  }, [index, totalSlides]);
+
+  // Re-arm the slide animation on the frame after an instant snap-back.
+  useEffect(() => {
+    if (isTransitioning) return;
+    const r = requestAnimationFrame(() => setIsTransitioning(true));
+    return () => cancelAnimationFrame(r);
+  }, [isTransitioning]);
 
   return (
     <div className="relative overflow-hidden rounded-3xl">
       {/* Sliding track */}
       <div
         className={`flex ${isTransitioning ? "transition-transform duration-700 ease-out" : ""}`}
-        style={{ transform: `translateX(-${index * 100}%)` }}
-        onTransitionEnd={handleTransitionEnd}
+        style={{ transform: `translateX(-${Math.min(index, totalSlides) * 100}%)` }}
       >
         {extendedSlides.map((slide, i) => (
           <div
@@ -166,6 +178,7 @@ export default function Hero() {
                   src={slide.image}
                   alt={slide.title}
                   fill
+                  priority={i === 0}
                   sizes="50vw"
                   className="object-contain"
                 />
