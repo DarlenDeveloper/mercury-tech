@@ -50,7 +50,8 @@ const SLIDES: Slide[] = [
       "Lenovo, HP, Dell and more — from everyday work machines to gaming rigs, all brand new with warranty.",
     cta: "Shop Computers",
     image: "/hero-computers.png",
-    bg: "from-[#e6efff] via-[#eef4ff] to-white",
+    bg: "from-[#b91c1c] via-[#ef4444] to-white",
+    dark: true,
     href: "/category/computers",
   },
   {
@@ -170,11 +171,7 @@ export default function Hero() {
               </p>
               <a
                 href={slide.href}
-                className={`mt-4 inline-flex items-center gap-2 rounded-full px-6 py-2.5 text-sm font-semibold transition ${
-                  slide.dark
-                    ? "bg-white text-[#0b2a8f] hover:bg-white/90"
-                    : "bg-[#103a34] text-white hover:bg-[#0c2b27]"
-                }`}
+                className="mt-4 inline-flex items-center gap-2 rounded-full bg-white px-6 py-2.5 text-sm font-semibold text-ink shadow-sm transition hover:bg-white/90"
               >
                 {slide.cta}
                 <ArrowRight size={16} />
