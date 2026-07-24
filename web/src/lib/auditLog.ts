@@ -15,7 +15,8 @@ export type AuditAction =
   | "rate_updated"
   | "order_updated"
   | "user_role_changed"
-  | "settings_updated";
+  | "settings_updated"
+  | "homepage_updated";
 
 export type AuditLogEntry = {
   id: string;
@@ -102,6 +103,7 @@ export function actionLabel(action: AuditAction): string {
     order_updated: "Updated order",
     user_role_changed: "Changed user role",
     settings_updated: "Updated settings",
+    homepage_updated: "Updated homepage",
   };
   return labels[action] || action;
 }

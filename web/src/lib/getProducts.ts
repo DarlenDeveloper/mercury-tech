@@ -22,16 +22,19 @@ export const getFlashSaleProducts = cache(
     ]);
     const byId = new Map(firestoreProducts.map((p) => [p.id, p]));
     const products = cfg.flashSale
-      .map((entry) => {
+      .map((entry): Product | null => {
         const fp = byId.get(entry.id);
         if (!fp) return null;
         const base = mapProduct(fp, rate);
         const salePrice = Math.round(entry.salePriceUsd * rate);
         // Only treat it as a deal if the promo price is actually lower.
-        const oldPrice = salePrice < base.price ? base.price : undefined;
-        return { ...base, price: salePrice, oldPrice };
+        return {
+          ...base,
+          price: salePrice,
+          oldPrice: salePrice < base.price ? base.price : undefined,
+        };
       })
-      .filter((p): p is Product => Boolean(p));
+      .filter((p): p is Product => p !== null);
     return { title: cfg.flashSaleTitle, products };
   }
 );

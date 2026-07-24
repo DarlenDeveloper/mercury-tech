@@ -14,6 +14,7 @@ import {
   LogOut,
   Package,
   Shield,
+  Headphones,
 } from "lucide-react";
 import { DEPARTMENTS } from "@/lib/departments";
 import { useAuth } from "@/components/AuthProvider";
@@ -24,7 +25,6 @@ import { getFavorites } from "@/lib/wishlist";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firestore";
 import SearchBar from "@/components/SearchBar";
-import LocationPicker from "@/components/LocationPicker";
 import CategoryNav from "@/components/CategoryNav";
 import CurrencySelector from "@/components/CurrencySelector";
 
@@ -295,11 +295,11 @@ export default function Header() {
             {/* Cart button */}
             <button
               onClick={openCart}
-              className="ml-1 flex items-center gap-1.5 rounded-full bg-mercury py-1.5 pl-1.5 pr-3 text-white transition hover:bg-mercury-dark sm:gap-2 sm:pr-4"
+              className="ml-1 flex items-center gap-1.5 rounded-full bg-orange-500 py-1.5 pl-1.5 pr-3 text-white transition hover:bg-orange-600 sm:gap-2 sm:pr-4"
             >
-              <span className="relative flex h-8 w-8 items-center justify-center rounded-full bg-white/15 sm:h-9 sm:w-9">
+              <span className="relative flex h-8 w-8 items-center justify-center rounded-full bg-white/20 sm:h-9 sm:w-9">
                 <ShoppingCart size={17} />
-                <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-mercury-accent px-1 text-[10px] font-bold leading-none text-white">
+                <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-white px-1 text-[10px] font-bold leading-none text-orange-600">
                   {cartCount}
                 </span>
               </span>
@@ -341,10 +341,19 @@ export default function Header() {
               <SearchBar variant="desktop" />
             </div>
 
-            {/* Right: currency + location */}
+            {/* Right: currency + customer care */}
             <div className="hidden shrink-0 items-center gap-5 xl:flex">
               <CurrencySelector light />
-              <LocationPicker light />
+              <a
+                href="tel:+256704823800"
+                className="flex items-center gap-2 text-white transition hover:opacity-90"
+              >
+                <Headphones size={20} className="shrink-0" />
+                <span className="leading-tight">
+                  <span className="block text-[11px] text-white/70">Customer Care</span>
+                  <span className="block text-[13px] font-bold">+256 704 823800</span>
+                </span>
+              </a>
             </div>
           </div>
         </div>
