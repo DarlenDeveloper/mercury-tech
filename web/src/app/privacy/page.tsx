@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import AnnouncementBar from "@/components/AnnouncementBar";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 
@@ -11,7 +10,6 @@ export const metadata: Metadata = {
 export default function PrivacyPolicyPage() {
   return (
     <>
-      <AnnouncementBar />
       <Header />
 
       <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-10 lg:px-6">

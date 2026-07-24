@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 
 type Slide = {
@@ -9,90 +10,42 @@ type Slide = {
   title: string;
   subtitle: string;
   cta: string;
-  image: string;
-  bg: string; // tailwind gradient classes
-  /** Dark background → white text + light CTA. */
-  dark?: boolean;
-  /** Render the app phone showcase (half phone) instead of a plain image. */
-  showcase?: boolean;
-  href?: string;
+  href: string;
+  /** Background image (full-bleed). Falls back to `gradient` when absent. */
+  image?: string;
+  /** Tailwind gradient classes used when there is no background image. */
+  gradient?: string;
 };
 
-const GREEN_GRADIENT = "from-[#eaf4ee] via-[#e8f3df] to-[#cfe8a3]";
-
 const SLIDES: Slide[] = [
-  // App promo slide — uncomment when mobile app is released
-  // {
-  //   badge: "NOW AVAILABLE",
-  //   title: "Shop smarter with the Mercury app",
-  //   subtitle:
-  //     "Browse products, track orders, and access exclusive deals — all from your pocket.",
-  //   cta: "Download Now",
-  //   image: "/hero-mercury-app.png",
-  //   bg: GREEN_GRADIENT,
-  //   showcase: true,
-  //   href: "#",
-  // },
   {
-    badge: "TRUSTED SINCE 2007",
-    title: "Premium tech. Honest prices.",
+    badge: "Computers & Laptops",
+    title: "Brand new laptops at the best prices in Kampala",
     subtitle:
-      "Official laptops, desktops, printers and components — brand new, warranty-backed, delivered across Uganda.",
-    cta: "Browse Catalog",
-    image: "/hero-tech.png",
-    bg: "from-[#FF7A00] via-[#FFB366] to-white",
-    href: "#",
-  },
-  {
-    badge: "COMPUTERS & LAPTOPS",
-    title: "Laptops & desktops for every need",
-    subtitle:
-      "Lenovo, HP, Dell and more — from everyday work machines to gaming rigs, all brand new with warranty.",
-    cta: "Shop Computers",
-    image: "/hero-computers.png",
-    bg: "from-[#b91c1c] via-[#ef4444] to-white",
-    dark: true,
+      "Shop genuine Lenovo, HP, Dell and Apple laptops at Mercury Computers. Warranty backed with free delivery.",
+    cta: "Shop Laptops",
     href: "/category/computers",
+    image: "/hero-laptops.png",
   },
   {
-    badge: "CERTIFIED DEVICES",
-    title: "Phones you can trust",
+    badge: "Printers, Office & Desktops",
+    title: "Reliable gear for a hardworking office",
     subtitle:
-      "Factory-sealed smartphones from top brands — delivered free within Kampala.",
-    cta: "View Phones",
-    image: "/hero-phones.png",
-    bg: GREEN_GRADIENT,
-    href: "#",
+      "Desktops, printers and office essentials from Mercury Computers. Genuine, business ready and trusted by offices across Uganda.",
+    cta: "Shop Office",
+    href: "/category/printers-office",
+    image: "/hero-office.png",
   },
 ];
 
-const HERO_HEIGHT = "h-[300px] sm:h-[340px] lg:h-[380px]";
-
-function AppShowcase({ image, alt }: { image: string; alt: string }) {
-  return (
-    <div className="relative hidden h-full w-full md:block">
-      {/* Soft glow behind the phone */}
-      <div className="absolute right-16 top-1/2 h-56 w-56 -translate-y-1/2 rounded-full bg-white/60 blur-3xl" />
-
-      {/* Phone — enlarged and pushed down so only the upper half shows */}
-      <Image
-        src={image}
-        alt={alt}
-        fill
-        priority
-        sizes="50vw"
-        className="z-10 translate-y-[32%] scale-[1.55] object-contain drop-shadow-[0_25px_45px_rgba(0,0,0,0.25)]"
-      />
-    </div>
-  );
-}
+const HERO_HEIGHT = "h-[340px] sm:h-[420px] lg:h-[500px]";
 
 export default function Hero() {
   const [index, setIndex] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(true);
   const totalSlides = SLIDES.length;
 
-  // The track has an extra clone of the first slide at the end
+  // Clone the first slide at the end for a seamless forward loop.
   const extendedSlides = [...SLIDES, SLIDES[0]];
 
   const go = useCallback((i: number) => {
@@ -100,22 +53,19 @@ export default function Hero() {
     setIndex(i);
   }, []);
 
-  // Auto-advance. Keyed on `index` so any manual navigation (dot click) resets
-  // the countdown instead of the slide being yanked away moments later.
-  useEffect(() => {
-    if (index === totalSlides) return; // handled by the snap-back effect
-    const id = setTimeout(() => {
-      setIsTransitioning(true);
-      setIndex((i) => i + 1);
-    }, 5500);
-    return () => clearTimeout(id);
-  }, [index, totalSlides]);
+  const next = useCallback(() => {
+    setIsTransitioning(true);
+    setIndex((i) => i + 1);
+  }, []);
 
-  // When we land on the cloned first slide, snap back to the real one.
-  // Using a timer (rather than onTransitionEnd) guarantees this runs even if
-  // the browser drops the transitionend event — e.g. while the tab is
-  // backgrounded — which previously left the track scrolled past every slide,
-  // making the hero appear blank.
+  // Auto-advance (resets when the slide changes).
+  useEffect(() => {
+    if (index === totalSlides) return;
+    const id = setTimeout(next, 6000);
+    return () => clearTimeout(id);
+  }, [index, totalSlides, next]);
+
+  // Snap back from the clone to the real first slide (timer, not transitionend).
   useEffect(() => {
     if (index !== totalSlides) return;
     const t = setTimeout(() => {
@@ -125,7 +75,7 @@ export default function Hero() {
     return () => clearTimeout(t);
   }, [index, totalSlides]);
 
-  // Re-arm the slide animation on the frame after an instant snap-back.
+  // Re-arm the animation on the frame after an instant snap-back.
   useEffect(() => {
     if (isTransitioning) return;
     const r = requestAnimationFrame(() => setIsTransitioning(true));
@@ -133,7 +83,7 @@ export default function Hero() {
   }, [isTransitioning]);
 
   return (
-    <div className="relative overflow-hidden rounded-3xl">
+    <div className="group relative overflow-hidden">
       {/* Sliding track */}
       <div
         className={`flex ${isTransitioning ? "transition-transform duration-700 ease-out" : ""}`}
@@ -142,75 +92,62 @@ export default function Hero() {
         {extendedSlides.map((slide, i) => (
           <div
             key={i}
-            className={`relative grid w-full shrink-0 grid-cols-1 items-center gap-4 overflow-hidden bg-gradient-to-r ${slide.bg} ${HERO_HEIGHT} px-6 py-6 sm:px-10 md:grid-cols-2`}
+            className={`relative w-full shrink-0 overflow-hidden ${HERO_HEIGHT}`}
           >
-            {/* Copy */}
-            <div className="relative z-10 max-w-lg">
-              <span
-                className={`inline-block rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wider ${
-                  slide.dark
-                    ? "bg-white/15 text-white ring-1 ring-white/25"
-                    : "bg-gradient-to-r from-[#6d28d9] to-[#a855f7] text-white"
-                }`}
-              >
-                {slide.badge}
-              </span>
-              <h2
-                className={`mt-3 text-2xl font-extrabold leading-[1.08] tracking-tight sm:text-3xl lg:text-4xl ${
-                  slide.dark ? "text-white" : "text-ink"
-                }`}
-              >
-                {slide.title}
-              </h2>
-              <p
-                className={`mt-2.5 max-w-md text-[13px] leading-relaxed ${
-                  slide.dark ? "text-white/75" : "text-ink/70"
-                }`}
-              >
-                {slide.subtitle}
-              </p>
-              <a
-                href={slide.href}
-                className="mt-4 inline-flex items-center gap-2 rounded-full bg-white px-6 py-2.5 text-sm font-semibold text-ink shadow-sm transition hover:bg-white/90"
-              >
-                {slide.cta}
-                <ArrowRight size={16} />
-              </a>
-            </div>
-
-            {/* Visual */}
-            {slide.showcase ? (
-              <AppShowcase image={slide.image} alt={slide.title} />
+            {/* Background: image or gradient */}
+            {slide.image ? (
+              <Image
+                src={slide.image}
+                alt={slide.title}
+                fill
+                priority={i === 0}
+                sizes="100vw"
+                className="object-cover"
+              />
             ) : (
-              <div className="relative hidden h-full w-full md:block">
-                <Image
-                  src={slide.image}
-                  alt={slide.title}
-                  fill
-                  priority={i === 0}
-                  sizes="50vw"
-                  className="object-contain"
-                />
-              </div>
+              <div className={`absolute inset-0 bg-gradient-to-br ${slide.gradient}`} />
             )}
+
+            {/* Readability overlay (darkens the bottom where the copy sits) */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+            {/* Left emphasis so text pops over busy imagery */}
+            <div className="absolute inset-0 bg-gradient-to-r from-black/45 to-transparent" />
+
+            {/* Copy — anchored to the bottom */}
+            <div className="relative z-10 flex h-full flex-col justify-end px-5 pb-14 pt-6 sm:px-10 sm:pb-16 lg:px-14">
+              <div className="max-w-3xl">
+                <span className="inline-block rounded-full bg-white/15 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.15em] text-white ring-1 ring-white/25 backdrop-blur-sm">
+                  {slide.badge}
+                </span>
+                <h2 className="mt-4 text-2xl font-extrabold leading-[1.1] tracking-tight text-white drop-shadow-sm sm:text-3xl lg:text-4xl">
+                  {slide.title}
+                </h2>
+                <p className="mt-2.5 max-w-md text-[12.5px] leading-relaxed text-white/85 sm:mt-3 sm:text-sm">
+                  {slide.subtitle}
+                </p>
+                <Link
+                  href={slide.href}
+                  className="mt-5 inline-flex items-center gap-2 rounded-full bg-white px-5 py-2.5 text-[13px] font-semibold text-ink shadow-lg transition hover:bg-white/90 active:scale-[0.98] sm:mt-6 sm:px-6 sm:py-3 sm:text-sm"
+                >
+                  {slide.cta}
+                  <ArrowRight size={16} />
+                </Link>
+              </div>
+            </div>
           </div>
         ))}
       </div>
 
       {/* Indicators */}
-      <div className="absolute inset-x-0 bottom-4 z-20 flex items-center justify-center gap-2">
-        {SLIDES.map((slide, i) => (
+      <div className="absolute inset-x-0 bottom-5 z-20 flex items-center justify-center gap-2">
+        {SLIDES.map((_, i) => (
           <button
             key={i}
             type="button"
             aria-label={`Go to slide ${i + 1}`}
             onClick={() => go(i)}
             className={`h-1.5 rounded-full transition-all ${
-              i === index % totalSlides
-                ? "w-8 bg-mercury-accent"
-                : slide.dark
-                  ? "w-5 bg-white/40 hover:bg-white/60"
-                  : "w-5 bg-ink/25 hover:bg-ink/45"
+              i === index % totalSlides ? "w-8 bg-white" : "w-4 bg-white/45 hover:bg-white/70"
             }`}
           />
         ))}

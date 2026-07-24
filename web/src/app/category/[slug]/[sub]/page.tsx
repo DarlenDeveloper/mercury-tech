@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ChevronRight } from "lucide-react";
-import AnnouncementBar from "@/components/AnnouncementBar";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import FilteredProductGrid from "@/components/FilteredProductGrid";
@@ -59,7 +58,6 @@ export default async function SubCategoryPage({
 
   return (
     <>
-      <AnnouncementBar />
       <Header />
 
       <main className="flex-1">

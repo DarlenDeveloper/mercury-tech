@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Minus, Plus, Trash2, ShoppingBag } from "lucide-react";
-import AnnouncementBar from "@/components/AnnouncementBar";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { useAuth } from "@/components/AuthProvider";
@@ -93,7 +92,6 @@ export default function CartPage() {
 
   return (
     <>
-      <AnnouncementBar />
       <Header />
 
       <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-8 lg:px-6">

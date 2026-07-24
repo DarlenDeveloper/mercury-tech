@@ -1,8 +1,8 @@
 import Header from "@/components/Header";
-import AnnouncementBar from "@/components/AnnouncementBar";
 import Hero from "@/components/Hero";
+import CategoryShowcase from "@/components/CategoryShowcase";
+import BrandStrip from "@/components/BrandStrip";
 import Sidebar from "@/components/Sidebar";
-import PopularCategories from "@/components/PopularCategories";
 import Recommendations from "@/components/Recommendations";
 import Newsletter from "@/components/Newsletter";
 import Footer from "@/components/Footer";
@@ -16,18 +16,26 @@ export default async function Home() {
 
   return (
     <>
-      <AnnouncementBar />
       <Header />
 
       <main className="flex-1">
-        {/* Homepage: promos, popular categories and recommendations. */}
-        <section className="px-4 py-6 lg:px-6 lg:py-8">
+        {/* Full-bleed hero sits directly under the nav. */}
+        <section className="relative">
+          <Hero />
+        </section>
+
+        {/* Category sidebar on the left; showcase + products on the right. */}
+        <section className="px-4 py-8 lg:px-6">
           <div className="flex gap-8">
             <Sidebar />
             <div className="min-w-0 flex-1">
-              <Hero />
-              <PopularCategories />
-              <Recommendations products={products} />
+              <CategoryShowcase />
+              <div className="mt-10">
+                <BrandStrip />
+              </div>
+              <div className="mt-10">
+                <Recommendations products={products} />
+              </div>
             </div>
           </div>
         </section>

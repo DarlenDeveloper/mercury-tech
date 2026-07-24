@@ -5,8 +5,6 @@ import Image from "next/image";
 import Link from "next/link";
 import {
   Search,
-  Headphones,
-  Truck,
   ChevronDown,
   User,
   Heart,
@@ -17,6 +15,7 @@ import {
   Package,
   Shield,
 } from "lucide-react";
+import { DEPARTMENTS } from "@/lib/departments";
 import { useAuth } from "@/components/AuthProvider";
 import { useCurrency } from "@/components/CurrencyProvider";
 import { signOut } from "@/lib/auth";
@@ -25,6 +24,9 @@ import { getFavorites } from "@/lib/wishlist";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firestore";
 import SearchBar from "@/components/SearchBar";
+import LocationPicker from "@/components/LocationPicker";
+import CategoryNav from "@/components/CategoryNav";
+import CurrencySelector from "@/components/CurrencySelector";
 
 export default function Header() {
   const { user } = useAuth();
@@ -138,39 +140,9 @@ export default function Header() {
             />
           </Link>
 
-          {/* Desktop search */}
-          <div className="hidden flex-1 items-center gap-2 md:flex">
-            <div className="flex-1">
-              <SearchBar variant="desktop" />
-            </div>
-            {/* AI Assistant button */}
-            <Link
-              href="/ai"
-              aria-label="AI Shopping Assistant"
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition hover:bg-mercury/10"
-            >
-              <Image
-                src="/ai-icon-v2.png"
-                alt="AI Assistant"
-                width={24}
-                height={24}
-                className="h-6 w-6 object-contain"
-              />
-            </Link>
-          </div>
-
-          {/* Support + delivery (desktop only) */}
-          <div className="hidden items-center gap-6 xl:flex">
-            <InfoBlock
-              icon={<Headphones size={24} className="text-mercury" />}
-              title="Customer Care"
-              highlight="+256 704 823800"
-            />
-            <InfoBlock
-              icon={<Truck size={24} className="text-mercury" />}
-              title="Kampala Central"
-              highlight="Free Delivery"
-            />
+          {/* Center: category department dropdowns */}
+          <div className="hidden flex-1 items-center justify-center lg:flex">
+            <CategoryNav />
           </div>
 
           {/* Right cluster */}
@@ -199,10 +171,20 @@ export default function Header() {
               />
             </Link>
 
-            {/* Currency selector */}
-            <CurrencySelector />
-
-            <span className="mx-1 hidden h-5 w-px bg-line sm:block" />
+            {/* AI Assistant (desktop) */}
+            <Link
+              href="/ai"
+              aria-label="AI Shopping Assistant"
+              className="hidden h-10 w-10 shrink-0 items-center justify-center rounded-full transition hover:bg-mercury/10 md:flex"
+            >
+              <Image
+                src="/ai-icon-v2.png"
+                alt="AI Assistant"
+                width={24}
+                height={24}
+                className="h-6 w-6 object-contain"
+              />
+            </Link>
 
             {/* Account */}
             <div className="relative" ref={profileRef}>
@@ -325,6 +307,45 @@ export default function Header() {
                 {formatUgx(cartTotal)}
               </span>
             </button>
+          </div>
+        </div>
+
+        {/* Tier 3: department bar with search (desktop) */}
+        <div className="hidden bg-mercury lg:block">
+          <div className="flex w-full items-center gap-4 px-4 py-2.5 lg:px-6">
+            {/* Shop by Department */}
+            <div className="group relative shrink-0">
+              <button className="flex items-center gap-2 rounded-full bg-white/10 px-4 py-2.5 text-[13px] font-semibold text-white transition hover:bg-white/15">
+                <Menu size={16} />
+                Shop by Department
+                <ChevronDown size={14} className="opacity-80 transition group-hover:rotate-180" />
+              </button>
+              {/* Departments dropdown */}
+              <div className="invisible absolute left-0 top-full z-50 w-64 pt-2 opacity-0 transition group-hover:visible group-hover:opacity-100">
+                <div className="rounded-2xl border border-line bg-white p-2 shadow-xl">
+                  {DEPARTMENTS.map((d) => (
+                    <Link
+                      key={d.label}
+                      href={d.href}
+                      className="block rounded-lg px-3 py-2 text-[13px] text-ink transition hover:bg-surface-soft hover:text-mercury"
+                    >
+                      {d.label}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Search (center) */}
+            <div className="flex-1">
+              <SearchBar variant="desktop" />
+            </div>
+
+            {/* Right: currency + location */}
+            <div className="hidden shrink-0 items-center gap-5 xl:flex">
+              <CurrencySelector light />
+              <LocationPicker light />
+            </div>
           </div>
         </div>
 
@@ -530,105 +551,6 @@ function MobileNavLink({ href, children }: { href: string; children: React.React
   );
 }
 
-function CurrencySelector() {
-  const [open, setOpen] = useState(false);
-  const { currency, setCurrency } = useCurrency();
-  const ref = useRef<HTMLDivElement>(null);
 
-  const currencies = [
-    { code: "USh" as const, label: "UGX", flag: <FlagUG /> },
-    { code: "USD" as const, label: "USD", flag: <FlagUS /> },
-    { code: "EUR" as const, label: "EUR", flag: <FlagEU /> },
-    { code: "GBP" as const, label: "GBP", flag: <FlagGB /> },
-    { code: "KES" as const, label: "KES", flag: <FlagKE /> },
-    { code: "RWF" as const, label: "RWF", flag: <FlagRW /> },
-  ];
 
-  useEffect(() => {
-    if (!open) return;
-    const handler = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, [open]);
 
-  return (
-    <div className="relative hidden sm:block" ref={ref}>
-      <button
-        onClick={() => setOpen(!open)}
-        className="flex items-center gap-1.5 px-2 py-2 text-sm font-medium text-ink transition hover:text-mercury"
-      >
-        {currencies.find((c) => c.code === currency)?.flag}
-        {currency === "USh" ? "UGX" : currency}
-        <ChevronDown size={14} className="text-muted" />
-      </button>
-      {open && (
-        <div className="absolute right-0 top-10 z-50 w-44 rounded-xl border border-line bg-white p-1.5 shadow-lg">
-          {currencies.map((c) => (
-            <button
-              key={c.code}
-              onClick={() => { setCurrency(c.code); setOpen(false); }}
-              className={`flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition hover:bg-surface-soft ${
-                currency === c.code ? "font-semibold text-mercury" : "text-ink"
-              }`}
-            >
-              {c.flag}
-              {c.label}
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
-// ─── SVG Flag Icons (16x12 rounded) ─────────────────────────────────────────
-
-function FlagWrap({ children }: { children: React.ReactNode }) {
-  return <svg width="20" height="14" viewBox="0 0 20 14" className="shrink-0 rounded-[2px] overflow-hidden">{children}</svg>;
-}
-
-function FlagUG() {
-  return <FlagWrap><rect width="20" height="2.33" fill="#000"/><rect y="2.33" width="20" height="2.33" fill="#FCDC04"/><rect y="4.67" width="20" height="2.33" fill="#D90000"/><rect y="7" width="20" height="2.33" fill="#000"/><rect y="9.33" width="20" height="2.33" fill="#FCDC04"/><rect y="11.67" width="20" height="2.33" fill="#D90000"/><circle cx="10" cy="7" r="3" fill="#fff"/></FlagWrap>;
-}
-
-function FlagUS() {
-  return <FlagWrap><rect width="20" height="14" fill="#B22234"/><rect y="1.08" width="20" height="1.08" fill="#fff"/><rect y="3.23" width="20" height="1.08" fill="#fff"/><rect y="5.38" width="20" height="1.08" fill="#fff"/><rect y="7.54" width="20" height="1.08" fill="#fff"/><rect y="9.69" width="20" height="1.08" fill="#fff"/><rect y="11.85" width="20" height="1.08" fill="#fff"/><rect width="8" height="7.54" fill="#3C3B6E"/></FlagWrap>;
-}
-
-function FlagEU() {
-  return <FlagWrap><rect width="20" height="14" fill="#003399"/><circle cx="10" cy="7" r="3.5" fill="none" stroke="#FFCC00" strokeWidth="0.8"/></FlagWrap>;
-}
-
-function FlagGB() {
-  return <FlagWrap><rect width="20" height="14" fill="#012169"/><path d="M0 0L20 14M20 0L0 14" stroke="#fff" strokeWidth="2.5"/><path d="M0 0L20 14M20 0L0 14" stroke="#C8102E" strokeWidth="1.5"/><path d="M10 0V14M0 7H20" stroke="#fff" strokeWidth="4"/><path d="M10 0V14M0 7H20" stroke="#C8102E" strokeWidth="2.5"/></FlagWrap>;
-}
-
-function FlagKE() {
-  return <FlagWrap><rect width="20" height="4.67" fill="#000"/><rect y="4.67" width="20" height="1" fill="#fff"/><rect y="5.67" width="20" height="3.67" fill="#BB0000"/><rect y="9.33" width="20" height="1" fill="#fff"/><rect y="10.33" width="20" height="3.67" fill="#006600"/></FlagWrap>;
-}
-
-function FlagRW() {
-  return <FlagWrap><rect width="20" height="7" fill="#00A1DE"/><rect y="7" width="20" height="3.5" fill="#FAD201"/><rect y="10.5" width="20" height="3.5" fill="#20603D"/></FlagWrap>;
-}
-
-function InfoBlock({
-  icon,
-  title,
-  highlight,
-}: {
-  icon: React.ReactNode;
-  title: string;
-  highlight: string;
-}) {
-  return (
-    <div className="flex items-center gap-2.5">
-      {icon}
-      <div className="leading-tight">
-        <p className="text-xs text-muted">{title}</p>
-        <p className="text-sm font-semibold text-mercury-accent">{highlight}</p>
-      </div>
-    </div>
-  );
-}

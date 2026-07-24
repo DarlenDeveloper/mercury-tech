@@ -1,58 +1,41 @@
-"use client";
+import Link from "next/link";
+import { MapPin, Package, Store } from "lucide-react";
+import CurrencySelector from "@/components/CurrencySelector";
 
-import { useEffect, useState } from "react";
-import {
-  Truck,
-  Tag,
-  ShieldCheck,
-  Wrench,
-  Sparkles,
-  Flame,
-  X,
-  type LucideIcon,
-} from "lucide-react";
-
-const MESSAGES: { icon: LucideIcon; text: string }[] = [
-  { icon: Truck, text: "Free delivery within Kampala" },
-  { icon: Tag, text: "Affordable, honest pricing — always" },
-  { icon: ShieldCheck, text: "Official & brand new, guaranteed" },
-  { icon: Wrench, text: "Expert repairs & IT services" },
-  { icon: Sparkles, text: "17+ years of trusted service" },
-];
-
+/**
+ * Top utility strip (thin bar above the main header): quick links on the left,
+ * shipping note + currency + language on the right.
+ */
 export default function AnnouncementBar() {
-  const [visible, setVisible] = useState(true);
-  const [index, setIndex] = useState(0);
-
-  // Rotate the messages.
-  useEffect(() => {
-    const id = setInterval(
-      () => setIndex((i) => (i + 1) % MESSAGES.length),
-      3500
-    );
-    return () => clearInterval(id);
-  }, []);
-
-  if (!visible) return null;
-
-  const { icon: Icon, text } = MESSAGES[index];
-
   return (
-    <div className="animate-shine relative w-full bg-[linear-gradient(110deg,#0b1437_0%,#1f3e97_38%,#4c2fb5_70%,#0b1437_100%)] text-white">
-      <div className="flex h-10 w-full items-center gap-3 px-4 lg:px-6">
-        {/* Rotating message (re-keyed so it animates in on each change). */}
-        <div className="flex flex-1 items-center justify-center overflow-hidden">
-          <span
-            key={index}
-            className="animate-annc-in flex items-center gap-2 whitespace-nowrap text-xs font-semibold tracking-wide sm:text-sm"
+    <div className="w-full border-b border-line bg-white">
+      <div className="flex h-9 w-full items-center justify-between px-4 text-[12px] text-muted lg:px-6">
+        {/* Left: utility links */}
+        <div className="flex items-center gap-5">
+          <a
+            href="https://www.google.com/maps/search/Mercury+Computers+Limited+Kampala"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hidden items-center gap-1.5 transition hover:text-mercury sm:flex"
           >
-            {text}
-          </span>
+            <MapPin size={13} /> Find a Store
+          </a>
+          <Link href="/cart" className="flex items-center gap-1.5 transition hover:text-mercury">
+            <Package size={13} /> Order Tracking
+          </Link>
+          <Link href="/" className="hidden items-center gap-1.5 transition hover:text-mercury sm:flex">
+            <Store size={13} /> Shop
+          </Link>
         </div>
 
-        {/* CTA — removed */}
-
-        {/* Dismiss — removed */}
+        {/* Right: shipping note, currency, language */}
+        <div className="flex items-center gap-4">
+          <span className="hidden md:inline">Free delivery within Kampala Central</span>
+          <span className="hidden h-3 w-px bg-line md:inline-block" />
+          <CurrencySelector />
+          <span className="hidden h-3 w-px bg-line sm:inline-block" />
+          <span className="hidden sm:inline">English</span>
+        </div>
       </div>
     </div>
   );

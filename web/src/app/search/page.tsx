@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { Search as SearchIcon, ChevronRight } from "lucide-react";
-import AnnouncementBar from "@/components/AnnouncementBar";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import Sidebar from "@/components/Sidebar";
@@ -23,7 +22,6 @@ export default async function SearchPage({
 
   return (
     <>
-      <AnnouncementBar />
       <Header />
 
       <main className="flex-1">

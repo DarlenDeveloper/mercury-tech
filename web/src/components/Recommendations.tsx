@@ -9,7 +9,8 @@ import { ProductGridSkeleton } from "@/components/ProductCardSkeleton";
 const PAGE_SIZE = 20;
 
 export default function Recommendations({ products }: { products?: Product[] }) {
-  const catalog = products ?? [];
+  // Order by price high → low (rather than the default A–Z / doc order).
+  const catalog = (products ?? []).slice().sort((a, b) => b.price - a.price);
   const [page, setPage] = useState(1);
   const [refreshing, setRefreshing] = useState(false);
 

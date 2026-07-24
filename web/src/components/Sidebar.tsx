@@ -1,31 +1,25 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import Link from "next/link";
 import { ChevronDown } from "lucide-react";
-import { type Category, getCategoriesFromFirestore, CATEGORIES } from "@/lib/categories";
+import { DEPARTMENTS } from "@/lib/departments";
+
+// Top categories outside the focused six (shown under "Other products").
+const OTHER = [
+  { name: "Phones, TV & Audio", href: "/category/phones-tv-audio" },
+  { name: "Accessories", href: "/category/accessories" },
+];
 
 export default function Sidebar() {
-  const [categories, setCategories] = useState<Category[]>(CATEGORIES);
-  const [open, setOpen] = useState<Set<string>>(new Set());
+  // Laptops and Desktops expanded by default; the rest collapse until clicked.
+  const [open, setOpen] = useState<Set<string>>(new Set(["Laptops", "Desktops"]));
 
-  useEffect(() => {
-    getCategoriesFromFirestore()
-      .then((cats) => {
-        if (cats.length > 0) setCategories(cats);
-        // Open all by default
-        setOpen(new Set(cats.map((c) => c.slug)));
-      })
-      .catch(() => {
-        // Fallback to hardcoded
-        setOpen(new Set(CATEGORIES.map((c) => c.slug)));
-      });
-  }, []);
-
-  const toggle = (slug: string) => {
+  const toggle = (label: string) => {
     setOpen((prev) => {
       const next = new Set(prev);
-      if (next.has(slug)) next.delete(slug);
-      else next.add(slug);
+      if (next.has(label)) next.delete(label);
+      else next.add(label);
       return next;
     });
   };
@@ -37,23 +31,24 @@ export default function Sidebar() {
       </h2>
 
       <nav className="flex flex-col gap-0.5">
-        {categories.map((category, ci) => {
+        {DEPARTMENTS.map((dept) => {
+          const isOpen = open.has(dept.label);
           return (
-            <div key={`${category.slug}-${ci}`}>
-              {/* Top-level category (expand/collapse) */}
+            <div key={dept.label}>
+              {/* Top-level department (expand/collapse) */}
               <button
                 type="button"
-                aria-expanded={open.has(category.slug)}
-                onClick={() => toggle(category.slug)}
+                aria-expanded={isOpen}
+                onClick={() => toggle(dept.label)}
                 className={`flex w-full items-center justify-between rounded-lg px-2 py-2 text-left text-sm font-semibold transition hover:bg-surface-soft ${
-                  open.has(category.slug) ? "text-mercury" : "text-ink"
+                  isOpen ? "text-mercury" : "text-ink"
                 }`}
               >
-                {category.name}
+                {dept.label}
                 <ChevronDown
                   size={16}
                   className={`shrink-0 text-muted transition-transform duration-200 ${
-                    open.has(category.slug) ? "rotate-180" : ""
+                    isOpen ? "rotate-180" : ""
                   }`}
                 />
               </button>
@@ -61,21 +56,28 @@ export default function Sidebar() {
               {/* Subcategories */}
               <div
                 className={`grid transition-all duration-200 ease-out ${
-                  open.has(category.slug)
-                    ? "grid-rows-[1fr] opacity-100"
-                    : "grid-rows-[0fr] opacity-0"
+                  isOpen ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
                 }`}
               >
                 <div className="overflow-hidden">
                   <ul className="ml-3 flex flex-col border-l border-line pl-3 pt-0.5">
-                    {category.children.map((child, idx) => (
-                      <li key={`${category.slug}-${child.slug}-${idx}`}>
-                        <a
-                          href={`/category/${category.slug}/${child.slug}`}
+                    {/* Shop-all link for the whole department */}
+                    <li>
+                      <Link
+                        href={dept.href}
+                        className="block rounded-md py-1.5 text-[13px] font-semibold text-ink transition hover:text-mercury"
+                      >
+                        All {dept.label}
+                      </Link>
+                    </li>
+                    {dept.children.map((child) => (
+                      <li key={child.href + child.name}>
+                        <Link
+                          href={child.href}
                           className="block rounded-md py-1.5 text-[13px] font-medium text-muted transition hover:text-mercury"
                         >
                           {child.name}
-                        </a>
+                        </Link>
                       </li>
                     ))}
                   </ul>
@@ -84,6 +86,22 @@ export default function Sidebar() {
             </div>
           );
         })}
+
+        {/* Other products */}
+        <div className="mt-4 border-t border-line pt-3">
+          <p className="mb-1 px-2 text-[11px] font-semibold uppercase tracking-wide text-muted">
+            Other products
+          </p>
+          {OTHER.map((o) => (
+            <Link
+              key={o.href}
+              href={o.href}
+              className="block rounded-lg px-2 py-2 text-sm font-medium text-ink transition hover:bg-surface-soft hover:text-mercury"
+            >
+              {o.name}
+            </Link>
+          ))}
+        </div>
       </nav>
     </aside>
   );
