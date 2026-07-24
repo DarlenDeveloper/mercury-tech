@@ -24,7 +24,7 @@ const SLIDES: Slide[] = [
     subtitle:
       "Shop genuine Lenovo, HP, Dell and Apple laptops at Mercury Computers. Warranty backed with free delivery.",
     cta: "Shop Laptops",
-    href: "/category/computers",
+    href: "/category/laptops",
     image: "/hero-laptops.png",
   },
   {

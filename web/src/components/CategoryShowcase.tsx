@@ -11,12 +11,12 @@ type Tile = {
 
 // The client's focused 6 departments, arranged as a bento grid (2 large + 4 small).
 const TILES: Tile[] = [
-  { label: "Laptops", sub: "Lenovo, HP, Dell & more", href: "/category/computers", image: "/cat-laptops.png", big: true },
-  { label: "UPS & Power", sub: "Backup & protection", href: "/category/components-power", image: "/cat-ups.png" },
+  { label: "Laptops", sub: "Lenovo, HP, Dell & more", href: "/category/laptops", image: "/cat-laptops.png", big: true },
+  { label: "UPS & Power", sub: "Backup & protection", href: "/category/ups-power", image: "/cat-ups.png" },
   { label: "Printers & Office", sub: "Print, scan & supplies", href: "/category/printers-office", image: "/cat-printers.png" },
-  { label: "Desktops", sub: "Towers & all-in-ones", href: "/category/computers", image: "/cat-desktops.png", big: true },
+  { label: "Desktops", sub: "Towers & all-in-ones", href: "/category/desktops", image: "/cat-desktops.png", big: true },
   { label: "Networking & Security", sub: "Routers & cameras", href: "/category/networking-security", image: "/cat-networking.png" },
-  { label: "Software", sub: "Genuine licenses", href: "/category/accessories", image: "/cat-software.png" },
+  { label: "Software", sub: "Genuine licenses", href: "/category/software", image: "/cat-software.png" },
 ];
 
 export default function CategoryShowcase() {

@@ -5,29 +5,31 @@ export type Department = {
 };
 
 /**
- * The client's focused 6 departments. Links point at existing category routes
- * so nothing is dead while the taxonomy remap is pending.
+ * The client's focused 6 departments. Hrefs point at the re-tagged taxonomy:
+ * each product now carries categoryId ∈ {laptops, desktops, printers-office,
+ * networking-security, ups-power, software, other}. Subcategory hrefs use the
+ * slugified product `category` value so /category/<dept>/<sub> resolves.
  */
 export const DEPARTMENTS: Department[] = [
   {
     label: "Laptops",
-    href: "/category/computers",
+    href: "/category/laptops",
     children: [
-      { name: "Lenovo Laptops", href: "/category/computers/lenovo-laptops" },
-      { name: "HP Laptops", href: "/category/computers/hp-laptops" },
-      { name: "Dell Laptops", href: "/category/computers/dell-laptops" },
-      { name: "Business Laptops", href: "/category/computers/business-laptops" },
-      { name: "Gaming Laptops", href: "/category/computers/gaming-laptops" },
+      { name: "Lenovo Laptops", href: "/category/laptops/lenovo-laptops" },
+      { name: "HP Laptops", href: "/category/laptops/hp-laptops" },
+      { name: "Dell Laptops", href: "/category/laptops/dell-laptops" },
+      { name: "Business Laptops", href: "/category/laptops/business-laptops" },
+      { name: "Gaming Laptops", href: "/category/laptops/gaming-laptops" },
     ],
   },
   {
     label: "Desktops",
-    href: "/category/computers",
+    href: "/category/desktops",
     children: [
-      { name: "Desktops", href: "/category/computers/desktops" },
-      { name: "Dell Desktops", href: "/category/computers/dell-desktops" },
-      { name: "HP Desktops", href: "/category/computers/hp-desktops" },
-      { name: "Monitors", href: "/category/computers/monitors" },
+      { name: "Desktops", href: "/category/desktops/desktops" },
+      { name: "Dell Desktops", href: "/category/desktops/dell-desktops" },
+      { name: "HP Desktops", href: "/category/desktops/hp-desktops" },
+      { name: "Monitors", href: "/category/desktops/monitors" },
     ],
   },
   {
@@ -52,21 +54,21 @@ export const DEPARTMENTS: Department[] = [
   },
   {
     label: "UPS & Power",
-    href: "/category/components-power",
+    href: "/category/ups-power",
     children: [
-      { name: "APC UPS", href: "/category/components-power/apc-ups" },
-      { name: "APC Smart UPS", href: "/category/components-power/apc-smart-ups" },
-      { name: "Giganet UPS", href: "/category/components-power/giganet-ups" },
-      { name: "UPS Battery", href: "/category/components-power/ups-battery" },
+      { name: "APC UPS", href: "/category/ups-power/apc-ups" },
+      { name: "APC Smart UPS", href: "/category/ups-power/apc-smart-ups" },
+      { name: "Giganet UPS", href: "/category/ups-power/giganet-ups" },
+      { name: "UPS Battery", href: "/category/ups-power/ups-battery" },
     ],
   },
   {
     label: "Software",
-    href: "/category/accessories",
+    href: "/category/software",
     children: [
-      { name: "Microsoft 365 Family", href: "/category/accessories/microsoft-365-family" },
-      { name: "Computer Software", href: "/category/accessories/computer-software" },
-      { name: "Software", href: "/category/accessories/software" },
+      { name: "Microsoft 365 Family", href: "/category/software/microsoft-365-family" },
+      { name: "Computer Software", href: "/category/software/computer-software" },
+      { name: "Software", href: "/category/software/software" },
     ],
   },
 ];

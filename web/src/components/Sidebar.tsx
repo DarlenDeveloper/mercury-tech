@@ -5,10 +5,10 @@ import Link from "next/link";
 import { ChevronDown } from "lucide-react";
 import { DEPARTMENTS } from "@/lib/departments";
 
-// Top categories outside the focused six (shown under "Other products").
+// Everything outside the focused six now lives under the "other" department
+// (phones, tablets, audio, storage, accessories, etc.).
 const OTHER = [
-  { name: "Phones, TV & Audio", href: "/category/phones-tv-audio" },
-  { name: "Accessories", href: "/category/accessories" },
+  { name: "Other Products", href: "/category/other" },
 ];
 
 export default function Sidebar() {
