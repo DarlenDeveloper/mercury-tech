@@ -66,8 +66,20 @@ const SUB = {
   // software
   "software": "software", "computer software": "software", "subscription services": "software",
   "productivity software suites": "software", "microsoft 365 family": "software",
-  // accessory subcategories that must stay in "other"
+  // accessory / phone / tablet / audio subcategories that must stay in "other"
+  // (these are pure "other" buckets — safe to pin so they never hit byName,
+  //  which would otherwise mis-read "Camera"/"Wi-Fi" in phone & tablet names)
   "laptop ram": "other", "laptop chargers": "other", "laptop rams": "other",
+  "apple iphone": "other", "mobile phones": "other", "nokia phones": "other",
+  "samsung tablets": "other", "lenovo tablets": "other", "cost effective tablets": "other",
+  "apple airpods": "other", "galaxy buds": "other", "headphones": "other", "headsets": "other",
+  "computer headsets": "other", "jabra headsets": "other", "jabra wired headset": "other",
+  "jabra speakerphone": "other", "jabra usb adapter": "other", "jabra table stand": "other",
+  "jabra wall mount": "other", "jabra remote control": "other", "conference camera": "other",
+  "webcams": "other", "speakers": "other", "portable bluetooth speakers": "other",
+  "smart tv": "other", "google chromecast": "other", "gaming consoles": "other",
+  "storage": "other", "portable ssd": "other", "wired mouse": "other", "wireless mouse": "other",
+  "acer projector": "other", "epson projector": "other",
 };
 
 // Fallback for junk buckets ("Computers", "Computer & Office Electronics",
@@ -81,7 +93,10 @@ function byName(name) {
     && !/laptop|macbook|desktop|all.?in.?one|thinkpad|ideapad|elitebook|probook|thinkbook|latitude|inspiron/.test(t)) return "other";
   if (/printer|toner|cartridge|\bink\b|scanner|shredder|laserjet/.test(t)) return "printers-office";
   if (/\bups\b|uninterruptible|\bapc\b|giganet|inverter|\bavr\b/.test(t)) return "ups-power";
-  if (/rack cabinet|patch panel|router|\bswitch\b|network|wi-?fi|camera|\bcctv\b|\bdvr\b|\bnvr\b|hikvision|ubiquiti|access point/.test(t)) return "networking-security";
+  // Networking: avoid bare "camera"/"wi-fi" (they match phone cameras & Wi-Fi
+  // tablets). Real security cameras / Wi-Fi adapters have proper subcategories
+  // in SUB and never reach byName.
+  if (/rack cabinet|patch panel|\brouter\b|\bswitch\b|\bnetwork\b|\bcctv\b|\bdvr\b|\bnvr\b|hikvision|ubiquiti|access point|security camera|ip camera|surveillance/.test(t)) return "networking-security";
   if (/software|kaspersky|microsoft 365|\b365\b|licen[sc]e|antivirus/.test(t)) return "software";
   if (/monitor|desktop|optiplex|all.?in.?one|\baio\b|ideacentre|thinkcentre|proone|thin client|\btower\b|\bserver\b/.test(t)) return "desktops";
   if (/laptop|macbook|notebook|thinkpad|ideapad|elitebook|probook|thinkbook|latitude|inspiron|\bnitro\b|predator|\bomen\b|victus|\brog\b|zenbook|vivobook|\benvy\b|pavilion|spectre|aspire|\bswift\b|galaxy book|\bv14\b|\bv15\b|clamshell/.test(t)) return "laptops";

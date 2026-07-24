@@ -8,6 +8,7 @@ import {
   X,
   Trash2,
   Pencil,
+  Star,
 } from "lucide-react";
 import {
   collection,
@@ -474,6 +475,18 @@ function ProductForm({
   const removeImage = (id: string) =>
     setImages((prev) => prev.filter((it) => it.id !== id));
 
+  // Choose the primary image: move it to the front. The first gallery URL is
+  // saved as `image` (the storefront thumbnail), so front == primary.
+  const makePrimary = (id: string) =>
+    setImages((prev) => {
+      const idx = prev.findIndex((it) => it.id === id);
+      if (idx <= 0) return prev;
+      const copy = [...prev];
+      const [chosen] = copy.splice(idx, 1);
+      copy.unshift(chosen);
+      return copy;
+    });
+
   const canNext = () => {
     if (step === 1) return name.trim() && parentCatId;
     if (step === 2) return priceUsd;
@@ -742,9 +755,22 @@ function ProductForm({
 
                         {/* Primary badge */}
                         {img.status === "done" && idx === 0 && (
-                          <span className="absolute left-1.5 top-1.5 rounded-full bg-ink/85 px-2 py-0.5 text-[9px] font-semibold text-white">
+                          <span className="absolute left-1.5 top-1.5 flex items-center gap-1 rounded-full bg-mercury px-2 py-0.5 text-[9px] font-semibold text-white">
+                            <Star size={9} className="fill-white" />
                             Primary
                           </span>
+                        )}
+
+                        {/* Set as primary (non-primary done images) */}
+                        {img.status === "done" && idx !== 0 && (
+                          <button
+                            type="button"
+                            onClick={() => makePrimary(img.id)}
+                            className="absolute inset-x-1.5 bottom-1.5 flex items-center justify-center gap-1 rounded-full bg-white/90 px-2 py-1 text-[9px] font-semibold text-ink opacity-0 shadow transition hover:bg-white group-hover:opacity-100"
+                          >
+                            <Star size={9} />
+                            Set as primary
+                          </button>
                         )}
 
                         {/* Remove button */}
@@ -774,8 +800,8 @@ function ProductForm({
                   </div>
 
                   <p className="mt-2 text-[11px] text-muted">
-                    The first image is used as the primary thumbnail. Drag isn&apos;t needed —
-                    remove and re-add to reorder.
+                    The primary image is the storefront thumbnail. Hover any other
+                    image and click &quot;Set as primary&quot; to make it the main one.
                   </p>
                 </div>
 
