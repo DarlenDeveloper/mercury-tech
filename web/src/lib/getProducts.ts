@@ -1,6 +1,40 @@
 import { cache } from "react";
-import { fetchProducts, fetchProductById, fetchRate, type FirestoreProduct } from "./firestore";
+import { fetchProducts, fetchProductById, fetchRate, fetchHomepageConfig, type FirestoreProduct, type HomepageConfig } from "./firestore";
 import { type Product } from "./products";
+
+/** Cached homepage config (flash sale selection). */
+export const getHomepageConfig = cache(async (): Promise<HomepageConfig> => {
+  return fetchHomepageConfig();
+});
+
+/**
+ * Builds the flash-sale row: each selected product with its admin-set promo
+ * price applied as the current price and the original price struck through.
+ * Sale prices come from config (USD) and are converted with the live rate;
+ * the product records themselves are never modified.
+ */
+export const getFlashSaleProducts = cache(
+  async (): Promise<{ title: string; products: Product[] }> => {
+    const [cfg, firestoreProducts, rate] = await Promise.all([
+      fetchHomepageConfig(),
+      fetchProducts(),
+      fetchRate(),
+    ]);
+    const byId = new Map(firestoreProducts.map((p) => [p.id, p]));
+    const products = cfg.flashSale
+      .map((entry) => {
+        const fp = byId.get(entry.id);
+        if (!fp) return null;
+        const base = mapProduct(fp, rate);
+        const salePrice = Math.round(entry.salePriceUsd * rate);
+        // Only treat it as a deal if the promo price is actually lower.
+        const oldPrice = salePrice < base.price ? base.price : undefined;
+        return { ...base, price: salePrice, oldPrice };
+      })
+      .filter((p): p is Product => Boolean(p));
+    return { title: cfg.flashSaleTitle, products };
+  }
+);
 
 /** Maps a raw Firestore product to the frontend Product type. */
 function mapProduct(p: FirestoreProduct, rate: number): Product {

@@ -3,16 +3,19 @@ import Hero from "@/components/Hero";
 import CategoryShowcase from "@/components/CategoryShowcase";
 import BrandStrip from "@/components/BrandStrip";
 import Sidebar from "@/components/Sidebar";
-import Recommendations from "@/components/Recommendations";
+import HomeProductRows from "@/components/HomeProductRows";
 import Newsletter from "@/components/Newsletter";
 import Footer from "@/components/Footer";
-import { getProductsFromFirestore } from "@/lib/getProducts";
+import { getProductsFromFirestore, getFlashSaleProducts } from "@/lib/getProducts";
 
 // Cache the rendered page and revalidate every 5 minutes (ISR).
 export const revalidate = 300;
 
 export default async function Home() {
-  const products = await getProductsFromFirestore();
+  const [products, flashSale] = await Promise.all([
+    getProductsFromFirestore(),
+    getFlashSaleProducts(),
+  ]);
 
   return (
     <>
@@ -33,9 +36,11 @@ export default async function Home() {
               <div className="mt-10">
                 <BrandStrip />
               </div>
-              <div className="mt-10">
-                <Recommendations products={products} />
-              </div>
+              <HomeProductRows
+                products={products}
+                flashSaleProducts={flashSale.products}
+                flashSaleTitle={flashSale.title}
+              />
             </div>
           </div>
         </section>

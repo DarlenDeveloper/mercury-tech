@@ -90,3 +90,28 @@ export async function fetchRate(): Promise<number> {
   if (!snap.exists()) return 3780;
   return (snap.data()?.usdToUgx as number) ?? 3780;
 }
+
+/** A flash-sale entry: a product plus the promo price (USD) set by the admin.
+ *  The sale price lives here in config, never mutating the product record. */
+export type FlashSaleEntry = { id: string; salePriceUsd: number };
+
+export type HomepageConfig = {
+  flashSale: FlashSaleEntry[];
+  flashSaleTitle: string;
+};
+
+/** Fetch homepage/storefront config (flash sale selection) from config/homepage. */
+export async function fetchHomepageConfig(): Promise<HomepageConfig> {
+  const ref = doc(db, "config", "homepage");
+  const snap = await getDoc(ref);
+  const data = snap.exists() ? snap.data() : {};
+  const flashSale: FlashSaleEntry[] = Array.isArray(data?.flashSale)
+    ? (data.flashSale as any[])
+        .map((e) => ({ id: String(e?.id ?? ""), salePriceUsd: Number(e?.salePriceUsd) }))
+        .filter((e) => e.id && Number.isFinite(e.salePriceUsd) && e.salePriceUsd > 0)
+    : [];
+  return {
+    flashSale,
+    flashSaleTitle: (data?.flashSaleTitle as string) || "Flash Sale",
+  };
+}

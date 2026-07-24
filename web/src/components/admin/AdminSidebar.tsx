@@ -29,6 +29,7 @@ import {
   HeadphonesIcon,
   Sparkles,
   KeyRound,
+  Megaphone,
   type LucideIcon,
 } from "lucide-react";
 
@@ -48,6 +49,7 @@ const GROUPS: Group[] = [
       { label: "Orders", icon: ClipboardList, href: "/u/orders", slug: "orders" },
       { label: "Products", icon: Package, href: "/u/products", slug: "products" },
       { label: "Categories", icon: LayoutGrid, href: "/u/categories", slug: "categories" },
+      { label: "Website", icon: Megaphone, href: "/u/website", slug: "website" },
       { label: "Customers", icon: Users, href: "/u/customers", slug: "customers" },
       { label: "Repairs & Services", icon: Wrench, href: "/u/repairs", slug: "repairs" },
     ],
