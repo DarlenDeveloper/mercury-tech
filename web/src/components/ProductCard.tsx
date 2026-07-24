@@ -34,7 +34,7 @@ export default function ProductCard({ product }: { product: Product }) {
           />
 
           {onSale && (
-            <span className="absolute left-2.5 top-2.5 rounded-md bg-mercury px-1.5 py-0.5 text-[9px] font-semibold tracking-wide text-white">
+            <span className="absolute left-2.5 top-2.5 rounded-full bg-orange-500 px-2.5 py-0.5 text-[9px] font-semibold tracking-wide text-white">
               SALE
             </span>
           )}

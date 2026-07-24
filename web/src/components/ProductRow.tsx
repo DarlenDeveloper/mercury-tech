@@ -37,7 +37,7 @@ export default function ProductRow({
       <div className="mb-4 flex items-end justify-between gap-4">
         <h2
           className={`text-lg font-semibold tracking-tight sm:text-xl ${
-            accent ? "text-mercury" : "text-ink"
+            accent ? "text-orange-500" : "text-ink"
           }`}
         >
           {title}
