@@ -116,7 +116,7 @@ export default function Header() {
 
   return (
     <>
-      <header className="sticky top-0 z-40 w-full shadow-[0_2px_12px_rgba(31,62,151,0.06)]">
+      <header className="sticky top-0 z-40 w-full">
         {/* Main bar (solid white) */}
         <div className="flex w-full items-center gap-3 bg-white px-4 py-3 lg:gap-6 lg:px-6 lg:py-4">
           {/* Mobile menu toggle */}
