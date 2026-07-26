@@ -166,11 +166,22 @@ export default function ProductsPage() {
 
   const categories = ["All", ...new Set(products.map((p) => p.category))];
   const [activeCategory, setActiveCategory] = useState("All");
+  const [imageFilter, setImageFilter] = useState<"all" | "with" | "missing">("all");
 
-  const displayed =
-    activeCategory === "All"
-      ? filtered
-      : filtered.filter((p) => p.category === activeCategory);
+  const hasImage = (p: Product) =>
+    (Array.isArray(p.images) && p.images.length > 0) || !!p.image;
+
+  const displayed = filtered
+    .filter((p) => activeCategory === "All" || p.category === activeCategory)
+    .filter((p) =>
+      imageFilter === "all"
+        ? true
+        : imageFilter === "with"
+        ? hasImage(p)
+        : !hasImage(p)
+    );
+
+  const missingImageCount = products.filter((p) => !hasImage(p)).length;
 
   return (
     <div className="px-5 py-6 lg:px-8 lg:py-7">
@@ -245,6 +256,29 @@ export default function ProductsPage() {
             </button>
           ))}
         </div>
+      </div>
+
+      {/* Image status filter */}
+      <div className="mt-3 flex flex-wrap items-center gap-2">
+        {([
+          ["all", "All images"],
+          ["with", "With images"],
+          ["missing", `Missing images${missingImageCount ? ` (${missingImageCount})` : ""}`],
+        ] as const).map(([key, label]) => (
+          <button
+            key={key}
+            onClick={() => setImageFilter(key)}
+            className={`whitespace-nowrap rounded-full px-3.5 py-2 text-xs font-semibold transition ${
+              imageFilter === key
+                ? key === "missing"
+                  ? "bg-red-500 text-white"
+                  : "bg-mercury text-white"
+                : "bg-white text-muted hover:text-ink"
+            }`}
+          >
+            {label}
+          </button>
+        ))}
       </div>
 
       {/* Table */}

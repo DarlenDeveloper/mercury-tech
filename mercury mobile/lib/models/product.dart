@@ -17,6 +17,7 @@ class Product {
     this.categoryId,
     this.image,
     this.oldPrice,
+    this.priceUsd = 0,
     this.isNew = false,
     this.specifications = const {},
     this.brand,
@@ -29,6 +30,10 @@ class Product {
 
   /// Current (sale) price in Ugandan Shillings.
   final int price;
+
+  /// Base price in USD (before rate conversion). Used to recompute promo
+  /// prices for the flash sale without a second rate lookup.
+  final double priceUsd;
 
   /// Optional original price, shown struck through when present.
   final int? oldPrice;
@@ -61,4 +66,27 @@ class Product {
 
   bool get isOnSale => oldPrice != null && oldPrice! > price;
   bool get inStock => (stock ?? 0) > 0;
+
+  /// Whether the product has a real image (not a placeholder).
+  bool get hasImage => image != null && image!.trim().isNotEmpty;
+
+  Product copyWith({int? price, int? oldPrice}) {
+    return Product(
+      id: id,
+      name: name,
+      description: description,
+      price: price ?? this.price,
+      category: category,
+      icon: icon,
+      accent: accent,
+      categoryId: categoryId,
+      image: image,
+      oldPrice: oldPrice ?? this.oldPrice,
+      priceUsd: priceUsd,
+      isNew: isNew,
+      specifications: specifications,
+      brand: brand,
+      stock: stock,
+    );
+  }
 }

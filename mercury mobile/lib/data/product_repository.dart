@@ -79,6 +79,7 @@ class ProductRepository {
       icon: _iconFor(category),
       accent: _pastelAccents[index % _pastelAccents.length],
       image: productImage,
+      priceUsd: priceUsd,
       isNew: (data['isNew'] as bool?) ?? false,
       specifications: specs,
       brand: (data['brand'] as String?)?.trim(),
@@ -92,6 +93,31 @@ class ProductRepository {
     final snap = await _db.collection('products').orderBy('name').get();
     var i = 0;
     return snap.docs.map((d) => _mapDoc(d, rate, i++)).toList();
+  }
+
+  /// Fetches the homepage flash-sale config (config/homepage). Returns the row
+  /// title and the selected entries with their promo price in USD.
+  Future<({String title, List<({String id, double salePriceUsd})> entries})>
+      fetchHomepage() async {
+    try {
+      final doc = await _db.collection('config').doc('homepage').get();
+      final data = doc.data() ?? {};
+      final title = (data['flashSaleTitle'] as String?) ?? 'Flash Sale';
+      final raw = (data['flashSale'] as List?) ?? const [];
+      final entries = <({String id, double salePriceUsd})>[];
+      for (final e in raw) {
+        if (e is Map) {
+          final id = (e['id'] as String?) ?? '';
+          final sp = (e['salePriceUsd'] as num?)?.toDouble();
+          if (id.isNotEmpty && sp != null && sp > 0) {
+            entries.add((id: id, salePriceUsd: sp));
+          }
+        }
+      }
+      return (title: title, entries: entries);
+    } catch (_) {
+      return (title: 'Flash Sale', entries: <({String id, double salePriceUsd})>[]);
+    }
   }
 
   /// Live stream of products (rate is read once up front).

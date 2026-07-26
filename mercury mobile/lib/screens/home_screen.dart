@@ -6,6 +6,7 @@ import 'package:iconsax_plus/iconsax_plus.dart';
 import '../data/catalog_scope.dart';
 import '../data/categories.dart';
 import '../data/sample_products.dart';
+import 'category_screen.dart';
 import '../models/product.dart';
 import '../theme/app_colors.dart';
 import '../widgets/mercury_filter_chip.dart';
@@ -146,38 +147,30 @@ class _HomeScreenState extends State<HomeScreen> {
                   children: [
                     const SizedBox(height: 16),
                     const _TopTechSection(),
-                    const _SectionHeader(title: 'New Arrivals'),
-                    loading
-                        ? const ProductRailSkeleton()
-                        : _ProductRail(products: products),
+                    if (loading)
+                      const Padding(
+                        padding: EdgeInsets.only(top: 8),
+                        child: ProductRailSkeleton(),
+                      )
+                    else if (_selectedCategory == kCategories.first) ...[
+                      // "All Products": flash sale + one rail per department.
+                      if (catalogScope.flashSale.isNotEmpty) ...[
+                        _SectionHeader(
+                          title: catalogScope.flashSaleTitle,
+                          accent: true,
+                        ),
+                        _ProductRail(products: catalogScope.flashSale),
+                        const SizedBox(height: 4),
+                      ],
+                      ..._departmentSections(context, all),
+                    ] else ...[
+                      // A specific department chip is selected.
+                      _SectionHeader(title: _selectedCategory),
+                      _ProductRail(products: products),
+                    ],
+                    const SizedBox(height: 120),
                   ],
                 ),
-              ),
-            ),
-            SliverToBoxAdapter(
-              child: Container(
-                color: Colors.white,
-                child: const SizedBox(height: 10),
-              ),
-            ),
-            SliverToBoxAdapter(
-              child: Container(
-                color: Colors.white,
-                child: const _SectionHeader(title: "What's new"),
-              ),
-            ),
-            SliverToBoxAdapter(
-              child: Container(
-                color: Colors.white,
-                child: loading
-                    ? const ProductRailSkeleton()
-                    : _ProductRail(products: products.reversed.toList()),
-              ),
-            ),
-            SliverToBoxAdapter(
-              child: Container(
-                color: Colors.white,
-                child: const SizedBox(height: 120),
               ),
             ),
           ],
@@ -630,38 +623,79 @@ class _CategoryChips extends StatelessWidget {
 }
 
 class _SectionHeader extends StatelessWidget {
-  const _SectionHeader({required this.title});
+  const _SectionHeader({required this.title, this.onTap, this.accent = false});
 
   final String title;
+  final VoidCallback? onTap;
+  final bool accent;
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 22, 20, 12),
-      child: Row(
-        children: [
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
-              color: Color(0xFF1F2937),
+    final color = accent ? const Color(0xFFF97316) : const Color(0xFF1F2937);
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 22, 20, 12),
+        child: Row(
+          children: [
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: color,
+              ),
             ),
-          ),
-          const SizedBox(width: 8),
-          Container(
-            width: 26,
-            height: 26,
-            decoration: const BoxDecoration(
-              color: Color(0xFFEDF1F7),
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(Icons.chevron_right, size: 18, color: Color(0xFF1F2937)),
-          ),
-        ],
+            const SizedBox(width: 8),
+            if (onTap != null)
+              Container(
+                width: 26,
+                height: 26,
+                decoration: const BoxDecoration(
+                  color: Color(0xFFEDF1F7),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.chevron_right,
+                    size: 18, color: Color(0xFF1F2937)),
+              ),
+            const Spacer(),
+            if (onTap != null)
+              Text(
+                'View all',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: accent ? const Color(0xFFF97316) : AppColors.primary,
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }
+}
+
+/// Builds one horizontal rail per main department (skips "Other"), each with a
+/// tappable "View all" header that opens the department's CategoryScreen.
+/// Products are sorted high → low price and capped, mirroring the website.
+List<Widget> _departmentSections(BuildContext context, List<Product> all) {
+  const rowSize = 10;
+  final widgets = <Widget>[];
+  for (final dept in kShopCategories) {
+    if (dept.slug.isEmpty || dept.slug == 'other') continue;
+    final items = all.where((p) => p.categoryId == dept.slug).toList()
+      ..sort((a, b) => b.price.compareTo(a.price));
+    if (items.isEmpty) continue;
+    widgets.add(_SectionHeader(
+      title: dept.name,
+      onTap: () => Navigator.of(context).push(
+        MaterialPageRoute(builder: (_) => CategoryScreen(category: dept)),
+      ),
+    ));
+    widgets.add(_ProductRail(products: items.take(rowSize).toList()));
+  }
+  return widgets;
 }
 
 class _ProductRail extends StatelessWidget {

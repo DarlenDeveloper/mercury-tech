@@ -11,6 +11,8 @@ class CatalogScope extends InheritedWidget {
     required this.loading,
     required this.error,
     required this.reload,
+    required this.flashSale,
+    required this.flashSaleTitle,
     required super.child,
   });
 
@@ -18,6 +20,10 @@ class CatalogScope extends InheritedWidget {
   final bool loading;
   final Object? error;
   final Future<void> Function() reload;
+
+  /// Admin-curated flash-sale products (promo price applied), in order.
+  final List<Product> flashSale;
+  final String flashSaleTitle;
 
   static CatalogScope of(BuildContext context) {
     final scope = context.dependOnInheritedWidgetOfExactType<CatalogScope>();
@@ -35,7 +41,8 @@ class CatalogScope extends InheritedWidget {
   bool updateShouldNotify(CatalogScope old) =>
       products != old.products ||
       loading != old.loading ||
-      error != old.error;
+      error != old.error ||
+      flashSale != old.flashSale;
 }
 
 /// Loads the catalog from Firestore once and provides it via [CatalogScope].
@@ -53,6 +60,8 @@ class _CatalogLoaderState extends State<CatalogLoader> {
   late final ProductRepository _repo = widget.repository ?? ProductRepository();
 
   List<Product> _products = const [];
+  List<Product> _flashSale = const [];
+  String _flashSaleTitle = 'Flash Sale';
   bool _loading = true;
   Object? _error;
 
@@ -69,9 +78,26 @@ class _CatalogLoaderState extends State<CatalogLoader> {
     });
     try {
       final products = await _repo.fetchProducts();
+      final homepage = await _repo.fetchHomepage();
+      // Build the flash-sale list: match each config entry to a product and
+      // apply the promo price (converted with the same rate baked into price).
+      final byId = {for (final p in products) p.id: p};
+      final flash = <Product>[];
+      for (final e in homepage.entries) {
+        final p = byId[e.id];
+        if (p == null || p.priceUsd <= 0) continue;
+        final rate = p.price / p.priceUsd;
+        final sale = (e.salePriceUsd * rate).round();
+        flash.add(p.copyWith(
+          price: sale,
+          oldPrice: sale < p.price ? p.price : null,
+        ));
+      }
       if (!mounted) return;
       setState(() {
         _products = products;
+        _flashSale = flash;
+        _flashSaleTitle = homepage.title;
         _loading = false;
       });
     } catch (e) {
@@ -90,6 +116,8 @@ class _CatalogLoaderState extends State<CatalogLoader> {
       loading: _loading,
       error: _error,
       reload: _load,
+      flashSale: _flashSale,
+      flashSaleTitle: _flashSaleTitle,
       child: widget.child,
     );
   }
