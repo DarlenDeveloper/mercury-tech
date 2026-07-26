@@ -22,8 +22,9 @@ export default async function Home() {
       <Header />
 
       <main className="flex-1">
-        {/* Full-bleed hero sits directly under the nav. */}
-        <section className="relative">
+        {/* Full-bleed hero. On desktop it slides up behind the translucent
+            department bar so the image shows through the blue. */}
+        <section className="relative lg:-mt-[58px]">
           <Hero />
         </section>
 

@@ -116,9 +116,9 @@ export default function Header() {
 
   return (
     <>
-      <header className="sticky top-0 z-40 w-full bg-white shadow-[0_2px_12px_rgba(31,62,151,0.06)]">
-        {/* Main bar */}
-        <div className="flex w-full items-center gap-3 px-4 py-3 lg:gap-6 lg:px-6 lg:py-4">
+      <header className="sticky top-0 z-40 w-full shadow-[0_2px_12px_rgba(31,62,151,0.06)]">
+        {/* Main bar (solid white) */}
+        <div className="flex w-full items-center gap-3 bg-white px-4 py-3 lg:gap-6 lg:px-6 lg:py-4">
           {/* Mobile menu toggle */}
           <button
             aria-label="Toggle menu"
@@ -310,8 +310,9 @@ export default function Header() {
           </div>
         </div>
 
-        {/* Tier 3: department bar with search (desktop) */}
-        <div className="hidden bg-mercury lg:block">
+        {/* Tier 3: department bar with search (desktop).
+            Fully transparent so the hero shows through completely. */}
+        <div className="hidden bg-transparent lg:block">
           <div className="flex w-full items-center gap-4 px-4 py-2.5 lg:px-6">
             {/* Shop by Department */}
             <div className="group relative shrink-0">
@@ -360,14 +361,14 @@ export default function Header() {
 
         {/* Mobile search bar */}
         {mobileSearchOpen && (
-          <div className="border-t border-line px-4 py-3 md:hidden">
+          <div className="border-t border-line bg-white px-4 py-3 md:hidden">
             <SearchBar variant="mobile" onNavigate={() => setMobileSearchOpen(false)} />
           </div>
         )}
 
         {/* Mobile menu dropdown */}
         {mobileMenuOpen && (
-          <nav className="border-t border-line px-4 py-4 md:hidden">
+          <nav className="border-t border-line bg-white px-4 py-4 md:hidden">
             <ul className="flex flex-col gap-1">
               <MobileNavLink href="/">Home</MobileNavLink>
               <MobileNavLink href="/cart">Cart</MobileNavLink>
