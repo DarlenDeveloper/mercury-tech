@@ -24,35 +24,41 @@ export default function CategoryShowcase() {
     <section>
       <h2 className="mb-5 text-xl font-bold tracking-tight text-ink">Shop by category</h2>
 
-      <div className="grid grid-cols-2 gap-3 md:h-[300px] md:grid-cols-none md:grid-flow-col md:grid-rows-2 md:auto-cols-fr md:gap-3">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 md:h-[160px] md:grid-cols-none md:grid-flow-col md:grid-rows-2 md:auto-cols-fr">
         {TILES.map((t) => (
           <Link
             key={t.label}
             href={t.href}
             className={`group relative overflow-hidden rounded-2xl bg-[#F1F2F4] p-4 shadow-[0_2px_10px_rgba(16,24,40,0.06)] ring-1 ring-black/[0.04] transition duration-300 hover:-translate-y-1 hover:bg-[#EDEFF2] hover:shadow-[0_18px_36px_-12px_rgba(16,24,40,0.22)] ${
               t.big
-                ? "col-span-2 min-h-[150px] md:col-span-1 md:row-span-2 md:min-h-0"
-                : "min-h-[110px] md:min-h-0"
+                ? "col-span-2 min-h-[168px] md:col-span-1 md:row-span-2 md:min-h-0"
+                : "min-h-[132px] md:min-h-0"
             }`}
           >
-            {/* Text */}
-            <div className="relative z-10 max-w-[62%]">
-              <h3 className={`font-bold tracking-tight text-ink ${t.big ? "text-lg" : "text-[15px]"}`}>
+            {/* Text — kept in its own left column so the image can't reach it */}
+            <div className="relative z-10 max-w-[55%] sm:max-w-[52%]">
+              <h3 className={`font-bold leading-tight tracking-tight text-ink ${t.big ? "text-base sm:text-lg" : "text-sm sm:text-[15px]"}`}>
                 {t.label}
               </h3>
-              <p className="mt-0.5 text-[11.5px] text-muted">{t.sub}</p>
+              <p className="mt-0.5 text-[11px] leading-snug text-muted sm:text-[11.5px]">{t.sub}</p>
             </div>
 
-            {/* Image bottom-right */}
-            <Image
-              src={t.image}
-              alt={t.label}
-              width={320}
-              height={320}
-              className={`absolute bottom-1 right-1 object-contain transition duration-300 group-hover:scale-[1.05] ${
-                t.big ? "h-44 w-44 lg:h-60 lg:w-60" : "h-32 w-32 lg:h-40 lg:w-40"
+            {/* Image — confined to the bottom-right corner with a gap */}
+            <div
+              className={`pointer-events-none absolute bottom-2 right-2 ${
+                t.big
+                  ? "h-[58%] w-[52%] sm:w-[48%]"
+                  : "h-[56%] w-[50%]"
               }`}
-            />
+            >
+              <Image
+                src={t.image}
+                alt={t.label}
+                fill
+                sizes="(max-width: 768px) 40vw, 240px"
+                className="object-contain object-right-bottom transition duration-300 group-hover:scale-[1.05]"
+              />
+            </div>
           </Link>
         ))}
       </div>
