@@ -55,13 +55,8 @@ class ShopScreen extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 8),
-        // Category cards — Phones & Accessories first
-        for (final category in [
-          ...CategoryScope.of(context).where((c) =>
-              c.name == 'Phones, TV & Audio' || c.name == 'Accessories'),
-          ...CategoryScope.of(context).where((c) =>
-              c.name != 'Phones, TV & Audio' && c.name != 'Accessories'),
-        ])
+        // Category cards — departments in their configured order
+        for (final category in CategoryScope.of(context))
           _ShopCategoryCard(
             category: category,
             onTap: () => Navigator.of(context).push(
@@ -96,8 +91,15 @@ class _ShopCategoryCard extends StatelessWidget {
               children: [
                 if (category.photo != null)
                   Image.asset(category.photo!, fit: BoxFit.cover)
-                else
+                else ...[
+                  // Colored tile with the transparent product artwork centered
+                  // (matches the web categories section).
                   Container(color: category.color),
+                  Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: Image.asset(category.image, fit: BoxFit.contain),
+                  ),
+                ],
                 // Subtle scrim for text legibility
                 Container(
                   color: Colors.black.withValues(alpha: 0.15),

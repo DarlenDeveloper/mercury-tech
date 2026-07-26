@@ -26,24 +26,23 @@ class _CategoryScreenState extends State<CategoryScreen> {
   bool _inStockOnly = false;
   RangeValues? _priceRange;
   String _sortBy = 'relevance';
+  String _selectedSub = 'All'; // active subcategory chip
 
   Category get category => widget.category;
 
-  /// Maps category name to Firestore categoryId.
-  static const _categoryIdMap = {
-    'Computers': 'computers',
-    'Printers & Office': 'printers-office',
-    'Components & Power': 'components-power',
-    'Networking & Security': 'networking-security',
-    'Phones, TV & Audio': 'phones-tv-audio',
-    'Accessories': 'accessories',
-  };
-
   List<Product> _productsFrom(List<Product> all) {
-    final parentId = _categoryIdMap[category.name];
+    final parentId = category.slug.isNotEmpty ? category.slug : null;
     var result = parentId != null
         ? all.where((p) => p.categoryId == parentId).toList()
         : List<Product>.from(all);
+
+    // Subcategory filter (product.category holds the subcategory label, e.g.
+    // "HP Laptops"). "All" (or empty) means no subcategory filter.
+    if (_selectedSub.isNotEmpty && _selectedSub.toLowerCase() != 'all') {
+      result = result
+          .where((p) => p.category.toLowerCase() == _selectedSub.toLowerCase())
+          .toList();
+    }
 
     // Brand filter
     if (_brandFilter.isNotEmpty) {
@@ -149,7 +148,7 @@ class _CategoryScreenState extends State<CategoryScreen> {
   Widget build(BuildContext context) {
     final allProducts = CatalogScope.of(context).products;
     // Get base category products for filter options (before applying filters)
-    final parentId = _categoryIdMap[category.name];
+    final parentId = category.slug.isNotEmpty ? category.slug : null;
     final baseProducts = parentId != null
         ? allProducts.where((p) => p.categoryId == parentId).toList()
         : allProducts;
@@ -228,6 +227,45 @@ class _CategoryScreenState extends State<CategoryScreen> {
                 ),
               ),
             ),
+            // Subcategory chips (horizontal). Tapping filters by subcategory.
+            if (category.subcategories.length > 1)
+              SliverToBoxAdapter(
+                child: SizedBox(
+                  height: 40,
+                  child: ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    padding: const EdgeInsets.fromLTRB(20, 6, 20, 2),
+                    itemCount: category.subcategories.length,
+                    separatorBuilder: (_, __) => const SizedBox(width: 8),
+                    itemBuilder: (context, i) {
+                      final sub = category.subcategories[i].label;
+                      final selected = sub.toLowerCase() == _selectedSub.toLowerCase();
+                      return GestureDetector(
+                        onTap: () => setState(() => _selectedSub = sub),
+                        child: Container(
+                          alignment: Alignment.center,
+                          padding: const EdgeInsets.symmetric(horizontal: 14),
+                          decoration: BoxDecoration(
+                            color: selected ? AppColors.primary : const Color(0xFFF3F4F6),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: selected ? AppColors.primary : const Color(0xFFE5E7EB),
+                            ),
+                          ),
+                          child: Text(
+                            sub,
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: selected ? Colors.white : _ink,
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ),
             // Active filter pills
             if (_hasActiveFilters)
               SliverToBoxAdapter(

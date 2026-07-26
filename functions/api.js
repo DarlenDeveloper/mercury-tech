@@ -1,5 +1,5 @@
 import { onRequest } from "firebase-functions/v2/https";
-import { getFirestore, FieldValue, Timestamp } from "firebase-admin/firestore";
+import { getFirestore, FieldValue, Timestamp, FieldPath } from "firebase-admin/firestore";
 import { authenticateRequest } from "./lib-apikeys.js";
 
 /**
@@ -12,7 +12,16 @@ import { authenticateRequest } from "./lib-apikeys.js";
  * Scopes: each route requires `<resource>:read` or `<resource>:write`.
  *
  * Routes (prefix /v1 optional):
- *   GET    /v1/:resource          list       (?limit=, ?status=)
+ *   GET    /v1/:resource          list
+ *     ?q=            text search (name/brand/category/subcategory tokens)
+ *     ?limit=        1..200 (default 50)
+ *     ?cursor=       opaque; page until response.nextCursor is null
+ *     ?status=       exact-match filter
+ *     ?brand=        exact-match filter
+ *     ?category=     exact-match filter (display label)
+ *     ?categoryId=   exact-match filter (department slug)
+ *     ?subcategory=  exact-match filter
+ *     Response: { data, count, nextCursor, total? }  (total only on first page)
  *   GET    /v1/:resource/:id      get one
  *   POST   /v1/:resource          create
  *   PATCH  /v1/:resource/:id      update
@@ -51,6 +60,40 @@ function sanitizeBody(body) {
   const clean = { ...body };
   for (const f of PROTECTED_FIELDS) delete clean[f];
   return clean;
+}
+
+// A trimmed string query param, or "" when absent/blank.
+function qstr(v) {
+  return typeof v === "string" && v.trim() ? v.trim() : "";
+}
+
+// Opaque cursor = base64url of the last document id (pagination is by doc id,
+// the only field guaranteed present on every document).
+function encodeCursor(id) {
+  return Buffer.from(String(id), "utf8").toString("base64url");
+}
+function decodeCursor(cursor) {
+  try {
+    const id = Buffer.from(String(cursor), "base64url").toString("utf8");
+    return id || null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Build the lowercased, de-duplicated token list used for text search.
+ * Tokens come from name, brand, category, subcategory and categoryId, split
+ * on any non-alphanumeric boundary (so "networking-security" -> networking,
+ * security and "24-inch" -> 24, inch).
+ */
+export function buildSearchTokens(data) {
+  const text = [data.name, data.brand, data.category, data.subcategory, data.categoryId]
+    .filter((v) => typeof v === "string" && v)
+    .join(" ")
+    .toLowerCase();
+  const tokens = text.split(/[^a-z0-9]+/).filter(Boolean);
+  return Array.from(new Set(tokens)).slice(0, 50);
 }
 
 export const api = onRequest({ cors: true }, async (req, res) => {
@@ -118,22 +161,80 @@ export const api = onRequest({ cors: true }, async (req, res) => {
           if (!doc.exists) return sendJson(res, 404, { error: "Not found." });
           return sendJson(res, 200, { data: serialize({ id: doc.id, ...doc.data() }) });
         }
-        // List with optional filters.
-        let query = db.collection(collection);
-        const status = req.query.status;
-        if (typeof status === "string" && status) {
-          query = query.where("status", "==", status);
+        // ── List: text search (q), structured filters, cursor pagination ──
+        const q = qstr(req.query.q);
+        const structured = [];
+        for (const field of ["status", "brand", "category", "categoryId", "subcategory"]) {
+          const v = qstr(req.query[field]);
+          if (v) structured.push([field, v]);
         }
-        const limit = Math.min(parseInt(req.query.limit, 10) || 50, 200);
+
+        let query = db.collection(collection);
+        let inMemoryFilters = [];
+
+        if (q) {
+          // Substring search isn't native to Firestore; match against the
+          // pre-tokenized `searchTokens` array. Up to 10 tokens (Firestore cap
+          // for array-contains-any). Extra structured filters are applied in
+          // memory so we never need composite indexes.
+          const tokens = q.toLowerCase().split(/[^a-z0-9]+/).filter(Boolean).slice(0, 10);
+          if (tokens.length) query = query.where("searchTokens", "array-contains-any", tokens);
+          inMemoryFilters = structured;
+        } else if (structured.length > 0) {
+          // A single equality filter + doc-id ordering is index-safe; any
+          // additional filters are applied in memory.
+          query = query.where(structured[0][0], "==", structured[0][1]);
+          inMemoryFilters = structured.slice(1);
+        }
+
+        // Stable ordering by document id enables cursor pagination for every
+        // doc (products have no reliable createdAt field).
+        query = query.orderBy(FieldPath.documentId());
+
+        const cursor = qstr(req.query.cursor);
+        if (cursor) {
+          const after = decodeCursor(cursor);
+          if (!after) return sendJson(res, 400, { error: "Invalid cursor." });
+          query = query.startAfter(after);
+        }
+
+        const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 50, 1), 200);
         const snap = await query.limit(limit).get();
-        const data = snap.docs.map((d) => serialize({ id: d.id, ...d.data() }));
-        return sendJson(res, 200, { data, count: data.length });
+
+        // nextCursor reflects the raw page size (before in-memory filtering) so
+        // the caller keeps paging correctly until the catalog is exhausted.
+        const nextCursor =
+          snap.size === limit ? encodeCursor(snap.docs[snap.docs.length - 1].id) : null;
+
+        let rows = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+        for (const [field, value] of inMemoryFilters) {
+          rows = rows.filter((r) => String(r[field] ?? "") === value);
+        }
+        const data = rows.map(serialize);
+
+        const payload = { data, count: data.length, nextCursor };
+
+        // Exact total for the current filter set — computed once (first page)
+        // via Firestore aggregation so the agent can give precise counts.
+        // Skipped when in-memory filters apply, since aggregation can't see
+        // those (keeps `total` always exact for what it reports).
+        if (!cursor && inMemoryFilters.length === 0) {
+          try {
+            payload.total = (await query.count().get()).data().count;
+          } catch {
+            /* aggregation unavailable — omit total */
+          }
+        }
+
+        return sendJson(res, 200, payload);
       }
 
       case "POST": {
         if (id) return sendJson(res, 405, { error: "POST not allowed on an item." });
         const clean = sanitizeBody(req.body);
         if (!clean) return sendJson(res, 400, { error: "Request body must be a JSON object." });
+        // Keep products searchable: (re)generate the search token index.
+        if (resource === "products") clean.searchTokens = buildSearchTokens(clean);
         const ref = await db.collection(collection).add({
           ...clean,
           createdAt: FieldValue.serverTimestamp(),
@@ -151,6 +252,10 @@ export const api = onRequest({ cors: true }, async (req, res) => {
         const ref = db.collection(collection).doc(id);
         const existing = await ref.get();
         if (!existing.exists) return sendJson(res, 404, { error: "Not found." });
+        // Rebuild tokens from the merged doc so partial updates stay searchable.
+        if (resource === "products") {
+          clean.searchTokens = buildSearchTokens({ ...existing.data(), ...clean });
+        }
         await ref.update({ ...clean, updatedAt: FieldValue.serverTimestamp() });
         const updated = await ref.get();
         return sendJson(res, 200, { data: serialize({ id: ref.id, ...updated.data() }) });

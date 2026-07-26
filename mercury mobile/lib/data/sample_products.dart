@@ -7,10 +7,11 @@ import '../models/product.dart';
 const List<String> kCategories = [
   'All Products',
   'Laptops',
-  'Printers',
-  'Monitors',
   'Desktops',
-  'Accessories',
+  'Printers & Office',
+  'Networking & Security',
+  'UPS & Power',
+  'Software',
 ];
 
 /// Sample products modelled on Mercury Computers' real catalog.

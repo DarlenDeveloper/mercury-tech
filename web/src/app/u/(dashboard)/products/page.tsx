@@ -538,6 +538,18 @@ function ProductForm({
     if (oldPriceUsd) data.oldPriceUsd = parseFloat(oldPriceUsd);
     data.images = galleryUrls;
     if (galleryUrls.length > 0) data.image = galleryUrls[0];
+    // Search index for the public API (q=). Lowercased, de-duped tokens from
+    // name/brand/category/subcategory so the AI agent can find this product.
+    data.searchTokens = Array.from(
+      new Set(
+        [data.name, data.brand, data.category, data.subcategory, data.categoryId]
+          .filter(Boolean)
+          .join(" ")
+          .toLowerCase()
+          .split(/[^a-z0-9]+/)
+          .filter(Boolean)
+      )
+    ).slice(0, 50);
 
     try {
       if (isEdit) {

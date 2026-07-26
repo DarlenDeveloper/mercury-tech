@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:iconsax_plus/iconsax_plus.dart';
 
 import '../data/catalog_scope.dart';
+import '../data/categories.dart';
 import '../data/sample_products.dart';
 import '../models/product.dart';
 import '../theme/app_colors.dart';
@@ -22,25 +23,30 @@ import 'search_screen.dart';
         image: 'assets/images/computers-removebg-preview.png',
         color: const Color(0xFF1F3E97),
       );
-    case 'Printers':
+    case 'Desktops':
+      return (
+        image: 'assets/images/Dell OptiPlex 7020 MT (desktop + monitor).jpeg',
+        color: const Color(0xFF0F766E),
+      );
+    case 'Printers & Office':
       return (
         image: 'assets/images/printers___power-removebg-preview.png',
         color: const Color(0xFFD9620E),
       );
-    case 'Monitors':
+    case 'Networking & Security':
       return (
-        image: 'assets/images/Dell E2020H.jpeg',
+        image: 'assets/images/networking___security-removebg-preview.png',
         color: const Color(0xFF0E7490),
       );
-    case 'Desktops':
+    case 'UPS & Power':
       return (
-        image: 'assets/images/Dell OptiPlex 7020 MT (desktop + monitor).jpeg',
+        image: 'assets/images/components___power-removebg-preview.png',
         color: const Color(0xFF1E293B),
       );
-    case 'Accessories':
+    case 'Software':
       return (
         image: 'assets/images/accessories-removebg-preview.png',
-        color: const Color(0xFF9F1239),
+        color: const Color(0xFF5B21B6),
       );
     default:
       return (image: 'assets/images/logo.png', color: AppColors.primary);
@@ -62,9 +68,19 @@ class _HomeScreenState extends State<HomeScreen> {
     final catalogScope = CatalogScope.of(context);
     final loading = catalogScope.loading;
     final all = catalogScope.products;
-    final products = _selectedCategory == kCategories.first
-        ? all
-        : all.where((p) => p.category == _selectedCategory).toList();
+    // Map the selected department name to its Firestore slug, then filter by
+    // product categoryId (aligned with the web taxonomy).
+    String? selectedSlug;
+    for (final c in kShopCategories) {
+      if (c.name == _selectedCategory) {
+        selectedSlug = c.slug;
+        break;
+      }
+    }
+    final products =
+        _selectedCategory == kCategories.first || selectedSlug == null
+            ? all
+            : all.where((p) => p.categoryId == selectedSlug).toList();
     final topPadding = MediaQuery.of(context).padding.top;
 
     return Stack(

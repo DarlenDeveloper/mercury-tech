@@ -19,6 +19,7 @@ class Category {
     required this.color,
     required this.image,
     required this.subcategories,
+    this.slug = '',
     this.photo,
     this.imageScale = 1.0,
     this.imageScaleX,
@@ -26,6 +27,10 @@ class Category {
   });
 
   final String name;
+
+  /// Firestore department slug (matches product `categoryId`), e.g. "laptops".
+  final String slug;
+
   final Color color;
   final String image;
 

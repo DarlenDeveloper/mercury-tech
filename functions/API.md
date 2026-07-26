@@ -72,11 +72,22 @@ Access is granted per resource, split into `read` and `write`. A key only does w
 GET /v1/:resource
 ```
 Query parameters:
-- `limit` — max items to return (default `50`, max `200`)
-- `status` — filter by the `status` field (e.g. `pending`, `completed`)
+- `q` — text search. Case-insensitive, matches tokens from `name`, `brand`, `category`, `subcategory`, `categoryId`. Multi-word queries match any token (e.g. `q=lenovo laptop`). Products only.
+- `limit` — max items per page (default `50`, max `200`)
+- `cursor` — opaque pagination cursor. Pass the previous response's `nextCursor` to get the next page; keep going until `nextCursor` is `null`.
+- `status`, `brand`, `category`, `categoryId`, `subcategory` — exact-match filters. Can be combined with `q`.
 
 ```bash
-curl "https://us-central1-mercurycomputers-tech.cloudfunctions.net/api/v1/orders?status=pending&limit=20" \
+# Search: "do you have Lenovo laptops?"
+curl "https://us-central1-mercurycomputers-tech.cloudfunctions.net/api/v1/products?q=lenovo%20laptop&limit=100" \
+  -H "Authorization: Bearer mck_live_xxx"
+
+# Sweep the whole catalog with the cursor
+curl "https://us-central1-mercurycomputers-tech.cloudfunctions.net/api/v1/products?limit=100&cursor=ChZhcHBsZS..." \
+  -H "Authorization: Bearer mck_live_xxx"
+
+# Exact filter
+curl "https://us-central1-mercurycomputers-tech.cloudfunctions.net/api/v1/products?categoryId=laptops" \
   -H "Authorization: Bearer mck_live_xxx"
 ```
 
@@ -84,11 +95,18 @@ Response:
 ```json
 {
   "data": [
-    { "id": "abc123", "status": "pending", "totalUsd": 450, "createdAt": "2026-07-22T09:00:00.000Z" }
+    { "id": "lenovo-...", "name": "Lenovo ThinkPad ...", "brand": "lenovo", "priceUsd": 899 }
   ],
-  "count": 1
+  "count": 1,
+  "nextCursor": "ChZsZW5vdm8t...",
+  "total": 121
 }
 ```
+
+Notes:
+- `nextCursor` is `null` on the last page. Loop until it is `null` to read the entire catalog (300+ products span multiple pages).
+- `total` is the exact count for the current filter/search and is returned only on the **first page** (when no `cursor` is sent). It is omitted when a query combines more filters than can be counted server-side.
+- Search relies on a `searchTokens` array stored on each product. It is generated automatically whenever a product is created or updated (via the API or the admin dashboard).
 
 ### Get one
 ```
@@ -153,7 +171,7 @@ These are managed by the server and ignored if sent in a request body:
 
 ## Response & error format
 
-Success responses wrap the payload in `data` (lists also include `count`). Errors return:
+Success responses wrap the payload in `data` (lists also include `count`, `nextCursor`, and `total` on the first page). Errors return:
 ```json
 { "error": "Human-readable message." }
 ```
@@ -236,7 +254,6 @@ automatically deletes older entries.
 
 - Per-key rate limiting
 - Key expiry dates
-- Pagination cursors (currently `limit`-based)
 - Separate `mck_test_` sandbox keys
 
 Ask the maintainers if you need any of these.

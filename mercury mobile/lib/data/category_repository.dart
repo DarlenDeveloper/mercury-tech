@@ -12,16 +12,6 @@ class CategoryRepository {
 
   final FirebaseFirestore _db;
 
-  /// Maps Firestore slug → local kShopCategories name.
-  static const _slugToName = {
-    'computers': 'Computers',
-    'printers-office': 'Printers & Office',
-    'components-power': 'Components & Power',
-    'networking-security': 'Networking & Security',
-    'phones-tv-audio': 'Phones, TV & Audio',
-    'accessories': 'Accessories',
-  };
-
   /// Fetches Firestore categories and returns the [kShopCategories] list with
   /// subcategories merged from Firestore's `children` arrays.
   /// Falls back to [kShopCategories] as-is if Firestore fetch fails.
@@ -42,12 +32,10 @@ class CategoryRepository {
       }
 
       // Merge: for each local category, replace subcategories with Firestore
-      // children (keeping "All" at front and using generic icons).
+      // children (keeping "All" at front and using generic icons). Matched by
+      // the department slug (aligned with the web taxonomy).
       return kShopCategories.map((local) {
-        final slug = _slugToName.entries
-            .firstWhere((e) => e.value == local.name, orElse: () => const MapEntry('', ''))
-            .key;
-        final fsChildren = firestoreMap[slug];
+        final fsChildren = firestoreMap[local.slug];
         if (fsChildren == null || fsChildren.isEmpty) return local;
 
         final merged = <Subcategory>[
@@ -66,6 +54,7 @@ class CategoryRepository {
 
         return Category(
           name: local.name,
+          slug: local.slug,
           color: local.color,
           image: local.image,
           photo: local.photo,
