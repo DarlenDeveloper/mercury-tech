@@ -108,6 +108,9 @@ export default function Hero() {
               <div className={`absolute inset-0 bg-gradient-to-br ${slide.gradient}`} />
             )}
 
+            {/* Top scrim so the transparent header controls stay readable */}
+            <div className="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-black/55 via-black/20 to-transparent" />
+
             {/* Readability overlay (darkens the bottom where the copy sits) */}
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
             {/* Left emphasis so text pops over busy imagery */}
