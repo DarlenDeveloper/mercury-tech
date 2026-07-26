@@ -110,3 +110,16 @@ body {
 .animate-annc-glow {
   animation: annc-glow 1.8s ease-in-out infinite;
 }
+
+/* Brand strip marquee (continuous horizontal scroll). */
+@keyframes brand-scroll {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+.animate-brand-scroll {
+  animation: brand-scroll 32s linear infinite;
+  will-change: transform;
+}
+@media (prefers-reduced-motion: reduce) {
+  .animate-brand-scroll { animation: none; }
+}

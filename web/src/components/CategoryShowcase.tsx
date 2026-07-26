@@ -35,29 +35,30 @@ export default function CategoryShowcase() {
                 : "min-h-[132px] md:min-h-0"
             }`}
           >
-            {/* Text — kept in its own left column so the image can't reach it */}
-            <div className="relative z-10 max-w-[55%] sm:max-w-[52%]">
-              <h3 className={`font-bold leading-tight tracking-tight text-ink ${t.big ? "text-base sm:text-lg" : "text-sm sm:text-[15px]"}`}>
-                {t.label}
-              </h3>
-              <p className="mt-0.5 text-[11px] leading-snug text-muted sm:text-[11.5px]">{t.sub}</p>
-            </div>
-
-            {/* Image — confined to the bottom-right corner with a gap */}
+            {/* Image — anchored bottom-right, ~2x larger */}
             <div
-              className={`pointer-events-none absolute bottom-2 right-2 ${
-                t.big
-                  ? "h-[58%] w-[52%] sm:w-[48%]"
-                  : "h-[56%] w-[50%]"
+              className={`pointer-events-none absolute bottom-0 right-0 z-0 ${
+                t.big ? "h-[92%] w-[82%]" : "h-[94%] w-[88%]"
               }`}
             >
               <Image
                 src={t.image}
                 alt={t.label}
                 fill
-                sizes="(max-width: 768px) 40vw, 240px"
+                sizes="(max-width: 768px) 60vw, 320px"
                 className="object-contain object-right-bottom transition duration-300 group-hover:scale-[1.05]"
               />
+            </div>
+
+            {/* Left-fading scrim so the text stays legible over the image */}
+            <div className="pointer-events-none absolute inset-0 z-[1] bg-gradient-to-r from-[#F1F2F4] via-[#F1F2F4]/80 to-transparent" />
+
+            {/* Text */}
+            <div className="relative z-10 max-w-[55%] sm:max-w-[52%]">
+              <h3 className={`font-bold leading-tight tracking-tight text-mercury ${t.big ? "text-base sm:text-lg" : "text-sm sm:text-[15px]"}`}>
+                {t.label}
+              </h3>
+              <p className="mt-0.5 text-[11px] leading-snug text-muted sm:text-[11.5px]">{t.sub}</p>
             </div>
           </Link>
         ))}
