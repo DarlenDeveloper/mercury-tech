@@ -36,10 +36,10 @@ function IconInstagram() {
 }
 
 const SOCIALS = [
-  { label: "X", Icon: IconX },
-  { label: "Facebook", Icon: IconFacebook },
-  { label: "LinkedIn", Icon: IconLinkedin },
-  { label: "Instagram", Icon: IconInstagram },
+  { label: "X", Icon: IconX, href: "https://twitter.com/mercuryuganda" },
+  { label: "Facebook", Icon: IconFacebook, href: "https://facebook.com/mercuryuganda" },
+  { label: "LinkedIn", Icon: IconLinkedin, href: "https://ug.linkedin.com/company/mercury-computers-limited" },
+  { label: "Instagram", Icon: IconInstagram, href: "https://instagram.com/mercuryuganda" },
 ];
 
 export default function Footer() {
@@ -72,10 +72,12 @@ export default function Footer() {
           <div>
             <p className="text-sm text-muted">Social Media</p>
             <div className="mt-4 flex items-center gap-3">
-              {SOCIALS.map(({ label, Icon }) => (
+              {SOCIALS.map(({ label, Icon, href }) => (
                 <a
                   key={label}
-                  href="#"
+                  href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   aria-label={label}
                   className="flex h-9 w-9 items-center justify-center rounded-full bg-ink text-white transition hover:bg-mercury"
                 >
