@@ -35,11 +35,7 @@ export default function ProductRow({
   return (
     <section className="mt-10">
       <div className="mb-4 flex items-end justify-between gap-4">
-        <h2
-          className={`text-lg font-semibold tracking-tight sm:text-xl ${
-            accent ? "text-orange-500" : "text-ink"
-          }`}
-        >
+        <h2 className="text-lg font-semibold tracking-tight text-orange-500 sm:text-xl">
           {title}
         </h2>
         <div className="flex items-center gap-2">

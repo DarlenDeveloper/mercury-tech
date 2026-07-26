@@ -41,7 +41,7 @@ export default function Sidebar() {
                 aria-expanded={isOpen}
                 onClick={() => toggle(dept.label)}
                 className={`flex w-full items-center justify-between rounded-lg px-2 py-2 text-left text-sm font-semibold transition hover:bg-surface-soft ${
-                  isOpen ? "text-mercury" : "text-ink"
+                  isOpen ? "text-orange-500" : "text-ink"
                 }`}
               >
                 {dept.label}
