@@ -107,7 +107,7 @@ export default function HomeCatalog({
         <ChevronDown size={14} className={`transition ${openMobile ? "rotate-180" : ""}`} />
       </button>
 
-      <div className="flex items-start gap-8">
+      <div className="flex flex-col items-stretch gap-8 lg:flex-row lg:items-start">
         <aside className={`${openMobile ? "block" : "hidden"} w-full shrink-0 lg:sticky lg:top-24 lg:block lg:w-64 lg:pr-4`}>
           <div className="flex items-start justify-between">
             <div>
@@ -169,7 +169,7 @@ export default function HomeCatalog({
           ))}
         </aside>
 
-        <div className={`${openMobile ? "hidden" : "block"} min-w-0 flex-1 lg:block`}>
+        <div className="min-w-0 flex-1">
           <CategoryShowcase />
           <div className="mt-10"><BrandStrip /></div>
           {activeCount > 0 && (
