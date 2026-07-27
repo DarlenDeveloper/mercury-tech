@@ -1,6 +1,6 @@
 import Link from "next/link";
-import Image from "next/image";
 import {
+  Setting2,
   Buildings2,
   Hierarchy3,
   ShieldSecurity,
@@ -11,43 +11,46 @@ import {
 
 const SOLUTIONS = [
   {
-    title: "Celebrating 20 years of Mercury",
-    image: "/experienceimg.png",
+    title: "Maintenance",
+    description: "Keep your technology reliable with preventive maintenance, diagnostics and expert support.",
+    icon: Setting2,
+    href: "/repairs",
+    tone: "light",
   },
   {
     title: "IT Infrastructure",
     description: "Plan, deploy and maintain reliable systems that keep your organisation productive.",
     icon: Buildings2,
     href: "/repairs",
-    tone: "light",
+    tone: "orange",
   },
   {
     title: "Enterprise Networking",
     description: "Secure, high-performance wired and wireless networks built for modern teams.",
     icon: Hierarchy3,
     href: "/category/networking-security",
-    tone: "orange",
+    tone: "blue",
   },
   {
     title: "Cybersecurity",
     description: "Protect users, devices and business data with practical, layered security solutions.",
     icon: ShieldSecurity,
     href: "mailto:sales@mercurycomputerslimited.com?subject=Cybersecurity%20Solutions",
-    tone: "blue",
+    tone: "light",
   },
   {
     title: "CCTV & Security",
     description: "Professional surveillance, access control and monitoring for complete visibility.",
     icon: Camera,
     href: "/category/networking-security/hikvision-cameras",
-    tone: "light",
+    tone: "orange",
   },
   {
-    title: "Technology Leasing",
+    title: "Leasing",
     description: "Equip your workforce with current technology through flexible leasing arrangements.",
     icon: MoneyRecive,
     href: "mailto:sales@mercurycomputerslimited.com?subject=Technology%20Leasing",
-    tone: "orange",
+    tone: "blue",
   },
 ] as const;
 
@@ -90,32 +93,6 @@ export default function EnterpriseSolutions() {
 
       <div className="grid grid-flow-col auto-cols-[minmax(250px,1fr)] gap-3 overflow-x-auto pb-5 xl:grid-cols-6 xl:auto-cols-auto xl:overflow-visible">
         {SOLUTIONS.map((solution) => {
-          if ("image" in solution) {
-            return (
-              <article
-                key={solution.title}
-                className="relative aspect-square min-w-0 overflow-hidden rounded-[22px] bg-white"
-              >
-                <Image
-                  src={solution.image}
-                  alt={solution.title}
-                  fill
-                  sizes="(min-width: 1280px) 17vw, 250px"
-                  className="object-contain object-center"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-mercury/85 via-mercury/10 to-transparent" />
-                <div className="absolute inset-x-0 bottom-0 z-10 p-5 text-white">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-white/75">
-                    Proven experience
-                  </p>
-                  <h3 className="mt-1 text-lg font-bold leading-tight">
-                    20 years of trusted technology
-                  </h3>
-                </div>
-              </article>
-            );
-          }
-
           const Icon = solution.icon;
           const tone = TONES[solution.tone];
           return (

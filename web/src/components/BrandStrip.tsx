@@ -23,11 +23,29 @@ const BRANDS: Brand[] = [
 export default function BrandStrip({ variant = "default" }: { variant?: "default" | "hero" }) {
   const inHero = variant === "hero";
 
+  if (inHero) {
+    const message = "20 years of trusted technology • Genuine products • Enterprise IT expertise • Reliable support across Uganda";
+    return (
+      <section className="border-t border-white/15 bg-mercury/90 py-4 backdrop-blur-sm">
+        <div
+          className="overflow-hidden"
+          style={{
+            maskImage: "linear-gradient(to right, transparent, black 5%, black 95%, transparent)",
+            WebkitMaskImage: "linear-gradient(to right, transparent, black 5%, black 95%, transparent)",
+          }}
+        >
+          <div className="flex w-max animate-brand-scroll items-center text-[11px] font-semibold uppercase tracking-[0.18em] text-white sm:text-xs">
+            <span className="whitespace-nowrap px-10 sm:px-16">{message}</span>
+            <span aria-hidden="true" className="whitespace-nowrap px-10 sm:px-16">{message}</span>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
   return (
-    <section className={inHero ? "border-t border-white/15 bg-mercury/80 px-5 py-3 backdrop-blur-sm sm:px-10 lg:px-14" : ""}>
-      {!inHero && (
-        <h2 className="mb-5 text-xl font-bold tracking-tight text-ink">Shop by brand</h2>
-      )}
+    <section>
+      <h2 className="mb-5 text-xl font-bold tracking-tight text-ink">Shop by brand</h2>
 
       {/* Continuous marquee — logos only, no containers. Edges fade out. */}
       <div
@@ -39,7 +57,7 @@ export default function BrandStrip({ variant = "default" }: { variant?: "default
             "linear-gradient(to right, transparent, black 6%, black 94%, transparent)",
         }}
       >
-        <div className={`flex w-max animate-brand-scroll items-center ${inHero ? "gap-12 sm:gap-20" : "gap-14 sm:gap-24"}`}>
+        <div className="flex w-max animate-brand-scroll items-center gap-14 sm:gap-24">
           {[...BRANDS, ...BRANDS].map((b, i) => (
             <Link
               key={`${b.slug}-${i}`}
@@ -52,7 +70,7 @@ export default function BrandStrip({ variant = "default" }: { variant?: "default
                 alt={b.name}
                 width={160}
                 height={64}
-                className={`w-auto object-contain ${inHero && b.whiteOnDark ? "brightness-0 invert" : ""} ${inHero ? b.big ? "h-7 sm:h-9" : "h-5 sm:h-7" : b.big ? "h-12 sm:h-[72px]" : "h-8 sm:h-11"}`}
+                className={`w-auto object-contain ${b.big ? "h-12 sm:h-[72px]" : "h-8 sm:h-11"}`}
               />
             </Link>
           ))}
