@@ -3,6 +3,7 @@ import Hero from "@/components/Hero";
 import HomeProductRows from "@/components/HomeProductRows";
 import EnterpriseSolutions from "@/components/EnterpriseSolutions";
 import ProductDepartmentNav from "@/components/ProductDepartmentNav";
+import TechnologyPartners from "@/components/TechnologyPartners";
 import Newsletter from "@/components/Newsletter";
 import Footer from "@/components/Footer";
 import { getProductsFromFirestore, getFlashSaleProducts } from "@/lib/getProducts";
@@ -29,8 +30,9 @@ export default async function Home() {
 
         <ProductDepartmentNav />
 
-        <section className="px-4 py-8 lg:px-6">
+        <section className="px-4 pb-12 pt-14 lg:px-6 lg:pb-16 lg:pt-16">
           <EnterpriseSolutions />
+          <TechnologyPartners />
         </section>
 
         {/* Product rows. Primary navigation stays in the header. */}

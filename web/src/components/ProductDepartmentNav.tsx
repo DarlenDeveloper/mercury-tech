@@ -4,7 +4,7 @@ import { DEPARTMENTS } from "@/lib/departments";
 
 export default function ProductDepartmentNav() {
   return (
-    <nav aria-label="Product departments" className="bg-white px-4 pt-8 lg:px-6">
+    <nav aria-label="Product departments" className="border-b border-line bg-white px-4 pb-12 pt-10 lg:px-6 lg:pb-14 lg:pt-12">
       <div className="mb-5 text-center">
         <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted">
           Find what you need
