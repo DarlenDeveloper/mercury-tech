@@ -21,7 +21,7 @@ export default async function Home() {
       <main className="flex-1">
         {/* Full-bleed hero. On desktop it slides up behind the translucent
             department bar so the image shows through the blue. */}
-        <section data-header-contrast-end className="relative lg:-mt-[58px]">
+        <section className="relative">
           <Hero />
         </section>
 
