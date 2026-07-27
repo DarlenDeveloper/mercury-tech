@@ -1,6 +1,5 @@
 import Header from "@/components/Header";
 import Hero from "@/components/Hero";
-import PopularCategoryBar from "@/components/PopularCategoryBar";
 import HomeProductRows from "@/components/HomeProductRows";
 import EnterpriseSolutions from "@/components/EnterpriseSolutions";
 import ProductDepartmentNav from "@/components/ProductDepartmentNav";
@@ -33,8 +32,6 @@ export default async function Home() {
         <section className="px-4 py-8 lg:px-6">
           <EnterpriseSolutions />
         </section>
-
-        <PopularCategoryBar />
 
         {/* Product rows. Primary navigation stays in the header. */}
         <section className="px-4 py-8 lg:px-6">

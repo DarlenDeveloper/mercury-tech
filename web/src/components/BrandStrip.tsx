@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { Award, Users, BadgeCheck, Headphones } from "lucide-react";
 
 type Brand = { name: string; slug: string; big?: boolean; whiteOnDark?: boolean };
 
@@ -24,20 +25,24 @@ export default function BrandStrip({ variant = "default" }: { variant?: "default
   const inHero = variant === "hero";
 
   if (inHero) {
-    const message = "20 years of trusted technology • Genuine products • Enterprise IT expertise • Reliable support across Uganda";
+    const highlights = [
+      { value: "20+", label: "Years of Experience", icon: Award },
+      { value: "5,000+", label: "Happy Clients", icon: Users },
+      { value: "100+", label: "Leading Brands", icon: BadgeCheck },
+      { value: "24/7", label: "Expert Support", icon: Headphones },
+    ];
     return (
-      <section className="border-t border-white/15 bg-mercury/90 py-4 backdrop-blur-sm">
-        <div
-          className="overflow-hidden"
-          style={{
-            maskImage: "linear-gradient(to right, transparent, black 5%, black 95%, transparent)",
-            WebkitMaskImage: "linear-gradient(to right, transparent, black 5%, black 95%, transparent)",
-          }}
-        >
-          <div className="flex w-max animate-brand-scroll items-center text-[11px] font-semibold uppercase tracking-[0.18em] text-white sm:text-xs">
-            <span className="whitespace-nowrap px-10 sm:px-16">{message}</span>
-            <span aria-hidden="true" className="whitespace-nowrap px-10 sm:px-16">{message}</span>
-          </div>
+      <section className="border-t border-white/15 bg-mercury/95 px-4 py-3 backdrop-blur-sm sm:px-8">
+        <div className="mx-auto grid max-w-[1500px] grid-cols-2 gap-x-5 gap-y-3 sm:grid-cols-4">
+          {highlights.map(({ value, label, icon: Icon }) => (
+            <div key={label} className="flex items-center justify-center gap-3 text-white">
+              <Icon size={25} strokeWidth={1.7} className="shrink-0 text-white/80" />
+              <div className="leading-tight">
+                <p className="text-base font-extrabold sm:text-lg">{value}</p>
+                <p className="mt-0.5 text-[9px] font-medium text-white/65 sm:text-[10px]">{label}</p>
+              </div>
+            </div>
+          ))}
         </div>
       </section>
     );
