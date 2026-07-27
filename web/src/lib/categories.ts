@@ -22,15 +22,27 @@ export const getCategoriesFromFirestore = cache(async (): Promise<Category[]> =>
   const firestoreCategories = await fetchFirestoreCategories();
   return firestoreCategories
     .filter((c) => c.active)
-    .map((c) => ({
-      name: c.name,
-      slug: c.slug || c.id,
-      image: c.image || "",
-      children: (c.children || []).map((child) => ({
+    .map((c) => {
+      const slug = c.slug || c.id;
+      const children = (c.children || []).map((child) => ({
         name: child.name,
         slug: child.slug,
-      })),
-    }));
+      }));
+
+      // All-in-One PCs is a virtual storefront category. Products are selected
+      // from desktop-tagged names at render time, so no Firestore migration is
+      // required. Keep the live category list authoritative for everything else.
+      if (slug === "desktops" && !children.some((child) => child.slug === "all-in-one-pcs")) {
+        children.unshift({ name: "All-in-One PCs", slug: "all-in-one-pcs" });
+      }
+
+      return {
+        name: c.name,
+        slug,
+        image: c.image || "",
+        children,
+      };
+    });
 });
 
 /**

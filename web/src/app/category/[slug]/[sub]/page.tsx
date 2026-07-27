@@ -49,6 +49,18 @@ export default async function SubCategoryPage({
 
   const allProducts = await getProductsFromFirestore();
   const products = allProducts.filter((p) => {
+    if (slug === "desktops" && sub === "all-in-one-pcs") {
+      const name = p.name.toLowerCase();
+      const belongsToDesktopDepartment =
+        p.categoryId === "desktops" || p.categoryId === "computers";
+      const hasAllInOneSignal =
+        /\ball[\s-]?in[\s-]?one\b|\baio\b|\bproone\b|\bideacentre\b|\bneo\s*50a\b/.test(name);
+      const isPrinter =
+        /\bprinter\b|\bmfp\b|laserjet|officejet|deskjet|ecotank|smart\s*tank|pixma/.test(name);
+
+      return belongsToDesktopDepartment && hasAllInOneSignal && !isPrinter;
+    }
+
     const prodCatSlug = p.category
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, "-")
