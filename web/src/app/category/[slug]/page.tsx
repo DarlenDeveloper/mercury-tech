@@ -5,7 +5,6 @@ import { ChevronRight } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import FilteredProductGrid from "@/components/FilteredProductGrid";
-import Sidebar from "@/components/Sidebar";
 import { getCategoriesFromFirestore } from "@/lib/categories";
 import { getProductsFromFirestore } from "@/lib/getProducts";
 
@@ -52,9 +51,8 @@ export default async function CategoryPage({
 
       <main className="flex-1">
         <section className="px-4 py-6 lg:px-6 lg:py-8">
-          <div className="flex gap-8">
-            <Sidebar />
-            <div className="min-w-0 flex-1">
+          <div>
+            <div className="min-w-0">
               {/* Breadcrumb */}
               <nav className="mb-4 flex items-center gap-1.5 text-sm text-muted">
                 <Link href="/" className="transition hover:text-mercury">

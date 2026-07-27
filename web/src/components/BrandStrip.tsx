@@ -35,7 +35,7 @@ export default function BrandStrip() {
             "linear-gradient(to right, transparent, black 6%, black 94%, transparent)",
         }}
       >
-        <div className="flex w-max animate-brand-scroll items-center gap-14 sm:gap-20">
+        <div className="flex w-max animate-brand-scroll items-center gap-16 sm:gap-24">
           {[...BRANDS, ...BRANDS].map((b, i) => (
             <Link
               key={`${b.slug}-${i}`}
@@ -48,7 +48,7 @@ export default function BrandStrip() {
                 alt={b.name}
                 width={160}
                 height={64}
-                className={`w-auto object-contain ${b.big ? "h-12 sm:h-16" : "h-7 sm:h-9"}`}
+                className={`w-auto object-contain ${b.big ? "h-14 sm:h-[72px]" : "h-9 sm:h-11"}`}
               />
             </Link>
           ))}

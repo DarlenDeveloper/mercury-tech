@@ -1,9 +1,6 @@
 import Header from "@/components/Header";
 import Hero from "@/components/Hero";
-import CategoryShowcase from "@/components/CategoryShowcase";
-import BrandStrip from "@/components/BrandStrip";
-import Sidebar from "@/components/Sidebar";
-import HomeProductRows from "@/components/HomeProductRows";
+import HomeCatalog from "@/components/HomeCatalog";
 import Newsletter from "@/components/Newsletter";
 import Footer from "@/components/Footer";
 import { getProductsFromFirestore, getFlashSaleProducts } from "@/lib/getProducts";
@@ -28,22 +25,13 @@ export default async function Home() {
           <Hero />
         </section>
 
-        {/* Category sidebar on the left; showcase + products on the right. */}
+        {/* Category showcase and product rows. Primary navigation stays in the header. */}
         <section className="px-4 py-8 lg:px-6">
-          <div className="flex gap-8">
-            <Sidebar />
-            <div className="min-w-0 flex-1">
-              <CategoryShowcase />
-              <div className="mt-10">
-                <BrandStrip />
-              </div>
-              <HomeProductRows
-                products={products}
-                flashSaleProducts={flashSale.products}
-                flashSaleTitle={flashSale.title}
-              />
-            </div>
-          </div>
+          <HomeCatalog
+            products={products}
+            flashSaleProducts={flashSale.products}
+            flashSaleTitle={flashSale.title}
+          />
         </section>
 
         {/* Newsletter / sales CTA. */}

@@ -19,6 +19,8 @@ const SORT_OPTIONS: { value: SortOption; label: string }[] = [
 const SPEC_KEYS_OF_INTEREST = [
   "Processor",
   "Memory (RAM)",
+  "Memory",
+  "RAM",
   "Storage",
   "Display",
   "Graphics",
@@ -177,15 +179,15 @@ export default function FilteredProductGrid({ products }: { products: Product[] 
   };
 
   return (
-    <div>
+    <div className="lg:grid lg:grid-cols-[260px_minmax(0,1fr)] lg:gap-8">
       {/* Toolbar + Filter panel wrapper */}
-      <div ref={filterRef}>
+      <div ref={filterRef} className="contents">
       {/* Toolbar */}
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3 lg:col-start-2">
         <div className="flex items-center gap-2">
           <button
             onClick={() => setShowFilters(!showFilters)}
-            className={`flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition ${
+            className={`flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition lg:hidden ${
               showFilters || activeFilterCount > 0
                 ? "border-mercury bg-mercury/5 text-mercury"
                 : "border-line bg-white text-ink hover:border-mercury"
@@ -231,9 +233,21 @@ export default function FilteredProductGrid({ products }: { products: Product[] 
       </div>
 
       {/* Filter panel */}
-      {showFilters && (
-        <div className="mb-5 rounded-2xl border border-line bg-white p-5">
-          <div className="flex flex-wrap gap-6">
+      <aside
+        className={`${showFilters ? "block" : "hidden"} mb-5 lg:sticky lg:top-24 lg:col-start-1 lg:row-start-1 lg:row-span-2 lg:block lg:max-h-[calc(100vh-7rem)] lg:self-start lg:overflow-y-auto lg:pr-4`}
+      >
+          <div className="mb-5 flex items-center justify-between">
+            <div>
+              <h2 className="text-xl font-semibold tracking-tight text-ink">Filter products</h2>
+              <p className="mt-1 text-xs text-muted">Refine your selection</p>
+            </div>
+            {activeFilterCount > 0 && (
+              <button onClick={clearAll} className="text-xs font-semibold text-mercury hover:text-mercury-dark">
+                Reset
+              </button>
+            )}
+          </div>
+          <div className="flex flex-col gap-6">
             {/* Brand */}
             {brands.length > 0 && (
               <FilterGroup title="Brand">
@@ -257,29 +271,38 @@ export default function FilteredProductGrid({ products }: { products: Product[] 
 
             {/* Price */}
             <FilterGroup title="Price">
-              <div className="flex items-center gap-2 text-sm">
+              <div className="mb-3 flex items-center justify-between text-xs font-medium text-ink">
+                <span>{format(priceRange?.[0] ?? priceStats.min)}</span>
+                <span>{format(priceRange?.[1] ?? priceStats.max)}</span>
+              </div>
+              <div className="space-y-2">
                 <input
-                  type="number"
-                  placeholder={format(priceStats.min)}
-                  value={priceRange?.[0] || ""}
+                  aria-label="Minimum price"
+                  type="range"
+                  min={priceStats.min}
+                  max={priceStats.max}
+                  step={Math.max(1000, Math.round((priceStats.max - priceStats.min) / 100))}
+                  value={priceRange?.[0] ?? priceStats.min}
                   onChange={(e) => {
-                    const min = Number(e.target.value) || 0;
-                    setPriceRange([min, priceRange?.[1] || priceStats.max]);
+                    const min = Math.min(Number(e.target.value), priceRange?.[1] ?? priceStats.max);
+                    setPriceRange([min, priceRange?.[1] ?? priceStats.max]);
                     setPage(1);
                   }}
-                  className="h-9 w-28 rounded-lg border border-line bg-[#FAFBFC] px-3 text-sm outline-none focus:border-mercury"
+                  className="w-full accent-mercury"
                 />
-                <span className="text-muted">—</span>
                 <input
-                  type="number"
-                  placeholder={format(priceStats.max)}
-                  value={priceRange?.[1] || ""}
+                  aria-label="Maximum price"
+                  type="range"
+                  min={priceStats.min}
+                  max={priceStats.max}
+                  step={Math.max(1000, Math.round((priceStats.max - priceStats.min) / 100))}
+                  value={priceRange?.[1] ?? priceStats.max}
                   onChange={(e) => {
-                    const max = Number(e.target.value) || priceStats.max;
-                    setPriceRange([priceRange?.[0] || 0, max]);
+                    const max = Math.max(Number(e.target.value), priceRange?.[0] ?? priceStats.min);
+                    setPriceRange([priceRange?.[0] ?? priceStats.min, max]);
                     setPage(1);
                   }}
-                  className="h-9 w-28 rounded-lg border border-line bg-[#FAFBFC] px-3 text-sm outline-none focus:border-mercury"
+                  className="w-full accent-mercury"
                 />
               </div>
             </FilterGroup>
@@ -321,11 +344,11 @@ export default function FilteredProductGrid({ products }: { products: Product[] 
               </FilterGroup>
             ))}
           </div>
-        </div>
-      )}
+        </aside>
       </div>
 
       {/* Product grid */}
+      <div className="min-w-0 lg:col-start-2">
       {filtered.length === 0 ? (
         <div className="py-12 text-center">
           <p className="text-sm text-muted">No products match your filters.</p>
@@ -356,13 +379,14 @@ export default function FilteredProductGrid({ products }: { products: Product[] 
           )}
         </>
       )}
+      </div>
     </div>
   );
 }
 
 function FilterGroup({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="min-w-0">
+    <div className="min-w-0 border-t border-line pt-4 first:border-t-0 first:pt-0">
       <p className="mb-2 text-[12px] font-semibold text-ink">{title}</p>
       {children}
     </div>
