@@ -3,6 +3,7 @@ import Hero from "@/components/Hero";
 import PopularCategoryBar from "@/components/PopularCategoryBar";
 import HomeProductRows from "@/components/HomeProductRows";
 import EnterpriseSolutions from "@/components/EnterpriseSolutions";
+import ProductDepartmentNav from "@/components/ProductDepartmentNav";
 import Newsletter from "@/components/Newsletter";
 import Footer from "@/components/Footer";
 import { getProductsFromFirestore, getFlashSaleProducts } from "@/lib/getProducts";
@@ -26,6 +27,8 @@ export default async function Home() {
         <section className="relative z-10 overflow-hidden shadow-[0_18px_30px_-20px_rgba(15,35,85,0.42)]">
           <Hero />
         </section>
+
+        <ProductDepartmentNav />
 
         <section className="px-4 py-8 lg:px-6">
           <EnterpriseSolutions />

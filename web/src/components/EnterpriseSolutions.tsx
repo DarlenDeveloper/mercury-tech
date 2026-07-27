@@ -82,7 +82,7 @@ export default function EnterpriseSolutions() {
         <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted">
           Built for business
         </p>
-        <h2 className="mt-1.5 text-2xl font-extrabold tracking-tight text-mercury sm:text-3xl">
+        <h2 className="mt-1.5 text-2xl font-extrabold tracking-tight text-mercury-accent sm:text-3xl">
           Enterprise Solutions
         </h2>
         <p className="mx-auto mt-2 text-sm leading-6 text-muted lg:whitespace-nowrap">
