@@ -40,6 +40,7 @@ export async function submitRepairRequest({
   userPhone,
   device,
   issue,
+  service = "Repair",
 }: {
   userId: string;
   userName: string;
@@ -47,6 +48,7 @@ export async function submitRepairRequest({
   userPhone: string;
   device: string;
   issue: string;
+  service?: string;
 }): Promise<string> {
   const ref = await addDoc(collection(db, COL), {
     userId,
@@ -55,7 +57,7 @@ export async function submitRepairRequest({
     userPhone,
     device,
     issue,
-    service: "Repair",
+    service,
     status: "received",
     technician: "",
     notes: "",

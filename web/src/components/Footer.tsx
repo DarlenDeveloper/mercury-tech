@@ -1,6 +1,21 @@
 const COLUMNS = [
-  { title: "About", links: ["Blog", "Meet The Team", "Contact Us"] },
-  { title: "Support", links: ["Contact Us", "Shipping", "Returns", "FAQ"] },
+  {
+    title: "About",
+    links: [
+      { label: "Blog", href: "#" },
+      { label: "Meet The Team", href: "#" },
+      { label: "Contact Us", href: "#" },
+    ],
+  },
+  {
+    title: "Support",
+    links: [
+      { label: "Contact Us", href: "#" },
+      { label: "Repairs & Services", href: "/repairs" },
+      { label: "Returns", href: "#" },
+      { label: "FAQ", href: "#" },
+    ],
+  },
 ];
 
 function IconX() {
@@ -54,12 +69,12 @@ export default function Footer() {
                 <h3 className="text-base font-bold text-ink">{col.title}</h3>
                 <ul className="mt-4 space-y-3">
                   {col.links.map((link) => (
-                    <li key={link}>
+                    <li key={link.label}>
                       <a
-                        href="#"
+                        href={link.href}
                         className="text-sm text-muted transition hover:text-mercury"
                       >
-                        {link}
+                        {link.label}
                       </a>
                     </li>
                   ))}
