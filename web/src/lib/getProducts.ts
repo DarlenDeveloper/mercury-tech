@@ -54,6 +54,7 @@ function mapProduct(p: FirestoreProduct, rate: number): Product {
     image: p.image ?? "/placeholder-product.svg",
     gallery: p.images && p.images.length > 0 ? p.images : undefined,
     stock: p.stock,
+    status: p.status,
     brand: p.brand,
     overview: p.description,
     specs: p.specifications
@@ -105,6 +106,7 @@ export const getProductsFromFirestore = cache(async (): Promise<Product[]> => {
     image: p.image ?? "/placeholder-product.svg",
     gallery: p.images && p.images.length > 0 ? p.images : undefined,
     stock: p.stock,
+    status: p.status,
     brand: p.brand,
     overview: p.description,
     specs: p.specifications

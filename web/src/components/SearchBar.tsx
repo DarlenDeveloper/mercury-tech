@@ -6,7 +6,7 @@ import Image from "next/image";
 import { Search, X, TrendingUp } from "lucide-react";
 import { fetchProducts, type FirestoreProduct } from "@/lib/firestore";
 import { searchProducts } from "@/lib/search";
-import { type Product } from "@/lib/products";
+import { isProductOutOfStock, type Product } from "@/lib/products";
 import { useCurrency } from "@/components/CurrencyProvider";
 
 const POPULAR = ["Laptops", "Printers", "iPhone", "Monitors", "UPS", "Toner"];
@@ -50,6 +50,7 @@ export default function SearchBar({
           image: p.image ?? "/placeholder-product.svg",
           brand: p.brand,
           stock: p.stock,
+          status: p.status,
         }));
         productCache = mapped;
         setProducts(mapped);
@@ -214,8 +215,8 @@ export default function SearchBar({
                           {product.brand ? ` · ${product.brand}` : ""}
                         </span>
                       </span>
-                      <span className="shrink-0 text-[12px] font-semibold text-ink">
-                        {format(product.price)}
+                      <span className={`shrink-0 text-[12px] font-semibold ${isProductOutOfStock(product) ? "text-red-600" : "text-ink"}`}>
+                        {isProductOutOfStock(product) ? "Out of Stock" : format(product.price)}
                       </span>
                     </button>
                   </li>

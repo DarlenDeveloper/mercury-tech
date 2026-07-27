@@ -25,6 +25,7 @@ export type FirestoreProduct = {
   priceUsd: number;
   oldPriceUsd?: number;
   stock?: number;
+  status?: string;
   isNew?: boolean;
   image?: string;
   images?: string[];
