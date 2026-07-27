@@ -9,6 +9,7 @@ import {
   Trash2,
   Pencil,
   Star,
+  Sparkles,
 } from "lucide-react";
 import {
   collection,
@@ -457,8 +458,41 @@ function ProductForm({
     () => product?.id ?? `tmp-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
   );
   const [description, setDescription] = useState(product?.description ?? "");
+  const [descriptionNotes, setDescriptionNotes] = useState("");
+  const [enhancingDescription, setEnhancingDescription] = useState(false);
+  const [descriptionError, setDescriptionError] = useState("");
 
   const anyUploading = images.some((i) => i.status === "uploading");
+
+  const enhanceDescription = async () => {
+    if (!name.trim() || enhancingDescription) return;
+    setEnhancingDescription(true);
+    setDescriptionError("");
+    try {
+      const { enhanceProductDescription } = await import("@/lib/productDescription");
+      const currentSpecs = Object.fromEntries(
+        specs
+          .filter((item) => item.key.trim() && item.value.trim())
+          .map((item) => [item.key.trim(), item.value.trim()])
+      );
+      const parent = categoryList.find((item) => item.id === parentCatId);
+      const enhanced = await enhanceProductDescription({
+        name: name.trim(),
+        brand: brand.trim(),
+        category: parent?.name ?? "",
+        description: description.trim(),
+        notes: descriptionNotes.trim(),
+        specifications: currentSpecs,
+      });
+      setDescription(enhanced);
+    } catch (error: any) {
+      setDescriptionError(
+        error?.message || "Could not enhance the description. Please try again."
+      );
+    } finally {
+      setEnhancingDescription(false);
+    }
+  };
 
   // Step 4: Specifications
   const [specs, setSpecs] = useState(
@@ -915,7 +949,18 @@ function ProductForm({
 
                 {/* Overview */}
                 <div>
-                  <label className="mb-1.5 block text-xs font-semibold text-ink">Detailed Description</label>
+                  <div className="mb-1.5 flex items-center justify-between gap-3">
+                    <label className="block text-xs font-semibold text-ink">Detailed Description</label>
+                    <button
+                      type="button"
+                      onClick={enhanceDescription}
+                      disabled={!name.trim() || enhancingDescription}
+                      className="flex items-center gap-1.5 rounded-full bg-violet-50 px-3 py-1.5 text-xs font-semibold text-violet-700 transition hover:bg-violet-100 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      <Sparkles size={13} />
+                      {enhancingDescription ? "Enhancing…" : "Enhance with AI"}
+                    </button>
+                  </div>
                   <textarea
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
@@ -923,6 +968,22 @@ function ProductForm({
                     rows={5}
                     className="w-full rounded-2xl border border-line bg-white px-4 py-3 text-sm text-ink outline-none placeholder:text-muted resize-none focus:border-mercury"
                   />
+                  <label className="mt-3 block text-xs font-semibold text-ink">
+                    Notes for AI <span className="font-normal text-muted">(optional)</span>
+                  </label>
+                  <textarea
+                    value={descriptionNotes}
+                    onChange={(e) => setDescriptionNotes(e.target.value)}
+                    placeholder="e.g. Focus on business use, keep the tone simple, mention portability…"
+                    rows={2}
+                    className="mt-1.5 w-full resize-none rounded-2xl border border-line bg-[#F8F9FB] px-4 py-3 text-sm text-ink outline-none placeholder:text-muted focus:border-violet-400"
+                  />
+                  <p className="mt-1.5 text-[11px] text-muted">
+                    AI replaces the description above for your review. Nothing is saved until you save the product.
+                  </p>
+                  {descriptionError && (
+                    <p className="mt-1.5 text-xs text-red-600">{descriptionError}</p>
+                  )}
                 </div>
               </div>
             )}
