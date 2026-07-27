@@ -22,16 +22,12 @@
 }
 
 :root {
-  --background: #eef1f7;
+  --background: #ffffff;
   --foreground: #1f2937;
 }
 
 body {
-  background:
-    radial-gradient(900px 500px at 12% -5%, #f7ede9 0%, transparent 55%),
-    radial-gradient(900px 500px at 95% 0%, #e7eefc 0%, transparent 55%),
-    var(--background);
-  background-attachment: fixed;
+  background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans);
 }

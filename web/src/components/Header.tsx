@@ -287,11 +287,11 @@ export default function Header() {
             {/* Cart is always the final header control. */}
             <button
               onClick={openCart}
-              className="ml-1 flex items-center gap-1.5 rounded-full bg-orange-500 py-1.5 pl-1.5 pr-3 text-white transition hover:bg-orange-600 sm:gap-2 sm:pr-4"
+              className="ml-1 flex items-center gap-1.5 rounded-full bg-mercury-accent py-1.5 pl-1.5 pr-3 text-white transition hover:brightness-95 sm:gap-2 sm:pr-4"
             >
               <span className="relative flex h-8 w-8 items-center justify-center rounded-full bg-white/20 sm:h-9 sm:w-9">
                 <ShoppingCart size={17} />
-                <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-white px-1 text-[10px] font-bold leading-none text-orange-600">
+                <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-white px-1 text-[10px] font-bold leading-none text-mercury-accent">
                   {cartCount}
                 </span>
               </span>

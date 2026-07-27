@@ -64,7 +64,7 @@ export default function CategoryShowcase() {
           <Link
             key={card.tag}
             href={card.href}
-            className="relative h-[275px] w-[76vw] max-w-[220px] shrink-0 snap-start overflow-hidden rounded-[18px] bg-[#F5F5F5] text-center sm:h-[290px] sm:w-[235px] sm:max-w-none sm:rounded-[20px]"
+            className="relative h-[275px] w-[76vw] max-w-[220px] shrink-0 snap-start overflow-hidden rounded-[18px] bg-white text-center shadow-[0_12px_30px_-14px_rgba(16,24,40,0.24)] sm:h-[290px] sm:w-[235px] sm:max-w-none sm:rounded-[20px]"
           >
             <div className="relative z-10 flex flex-col items-center px-4 pt-5">
               <span className="rounded-full bg-mercury px-4 py-1.5 text-[11px] font-semibold tracking-wide text-white">

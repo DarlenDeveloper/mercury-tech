@@ -1,6 +1,8 @@
 import Header from "@/components/Header";
 import Hero from "@/components/Hero";
-import HomeCatalog from "@/components/HomeCatalog";
+import PopularCategoryBar from "@/components/PopularCategoryBar";
+import HomeProductRows from "@/components/HomeProductRows";
+import EnterpriseSolutions from "@/components/EnterpriseSolutions";
 import Newsletter from "@/components/Newsletter";
 import Footer from "@/components/Footer";
 import { getProductsFromFirestore, getFlashSaleProducts } from "@/lib/getProducts";
@@ -21,13 +23,19 @@ export default async function Home() {
       <main className="flex-1">
         {/* Full-bleed hero. On desktop it slides up behind the translucent
             department bar so the image shows through the blue. */}
-        <section className="relative">
+        <section className="relative z-10 overflow-hidden shadow-[0_18px_30px_-20px_rgba(15,35,85,0.42)]">
           <Hero />
         </section>
 
-        {/* Category showcase and product rows. Primary navigation stays in the header. */}
         <section className="px-4 py-8 lg:px-6">
-          <HomeCatalog
+          <EnterpriseSolutions />
+        </section>
+
+        <PopularCategoryBar />
+
+        {/* Product rows. Primary navigation stays in the header. */}
+        <section className="px-4 py-8 lg:px-6">
+          <HomeProductRows
             products={products}
             flashSaleProducts={flashSale.products}
             flashSaleTitle={flashSale.title}
