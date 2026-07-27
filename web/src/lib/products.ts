@@ -16,6 +16,8 @@ export type Product = {
   description: string;
   category: string;
   categoryId?: string;
+  /** Every subcategory page this product should appear on. */
+  subcategorySlugs?: string[];
   price: number; // Ugandan Shillings
   oldPrice?: number;
   rating: number;

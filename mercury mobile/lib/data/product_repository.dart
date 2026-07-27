@@ -76,6 +76,10 @@ class ProductRepository {
       oldPrice: oldPriceUsd != null ? (oldPriceUsd * rate).round() : null,
       category: category,
       categoryId: (data['categoryId'] as String?),
+      subcategorySlugs: (data['subcategorySlugs'] as List?)
+              ?.map((value) => value.toString())
+              .toList() ??
+          const [],
       icon: _iconFor(category),
       accent: _pastelAccents[index % _pastelAccents.length],
       image: productImage,

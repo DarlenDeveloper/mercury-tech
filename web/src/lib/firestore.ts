@@ -21,6 +21,8 @@ export type FirestoreProduct = {
   shortDescription?: string;
   category: string;
   categoryId: string;
+  subcategory?: string;
+  subcategorySlugs?: string[];
   brand?: string;
   priceUsd: number;
   oldPriceUsd?: number;

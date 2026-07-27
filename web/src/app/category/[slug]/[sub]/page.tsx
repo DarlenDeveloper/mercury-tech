@@ -50,6 +50,10 @@ export default async function SubCategoryPage({
   const allProducts = await getProductsFromFirestore();
   const products = allProducts.filter((p) => {
     if (slug === "desktops" && sub === "all-in-one-pcs") {
+      if (p.categoryId === "desktops" && p.subcategorySlugs?.includes(sub)) {
+        return true;
+      }
+
       const name = p.name.toLowerCase();
       const belongsToDesktopDepartment =
         p.categoryId === "desktops" || p.categoryId === "computers";
@@ -65,7 +69,7 @@ export default async function SubCategoryPage({
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/(^-|-$)/g, "");
-    return prodCatSlug === sub;
+    return p.subcategorySlugs?.includes(sub) || prodCatSlug === sub;
   });
 
   return (

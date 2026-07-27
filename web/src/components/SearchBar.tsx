@@ -44,6 +44,7 @@ export default function SearchBar({
           description: p.shortDescription || p.description || "",
           category: p.category,
           categoryId: p.categoryId,
+          subcategorySlugs: p.subcategorySlugs,
           price: p.priceUsd * 3780,
           rating: 4.5,
           reviews: "0 Reviews",

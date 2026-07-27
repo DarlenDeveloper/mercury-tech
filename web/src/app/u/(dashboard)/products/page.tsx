@@ -34,6 +34,7 @@ type Product = {
   category: string;
   categoryId: string;
   subcategory?: string;
+  subcategorySlugs?: string[];
   brand?: string;
   priceUsd: number;
   oldPriceUsd?: number;
@@ -99,11 +100,16 @@ export default function ProductsPage() {
         catSnap.docs
           .map((d) => {
             const data = d.data();
+            const slug = data.slug ?? d.id;
+            const children = [...((data.children ?? []) as SubCategory[])];
+            if (slug === "desktops" && !children.some((child) => child.slug === "all-in-one-pcs")) {
+              children.unshift({ name: "All-in-One PCs", slug: "all-in-one-pcs" });
+            }
             return {
               id: d.id,
               name: data.name ?? "",
-              slug: data.slug ?? d.id,
-              children: (data.children ?? []) as SubCategory[],
+              slug,
+              children,
             } as Category;
           })
           .sort((a, b) => a.name.localeCompare(b.name))
@@ -415,6 +421,10 @@ function ProductForm({
 
   const [parentCatId, setParentCatId] = useState<string>(initialParent?.id ?? "");
   const [subSlug, setSubSlug] = useState<string>(initialSub?.slug ?? "");
+  const [subSlugs, setSubSlugs] = useState<string[]>(() => {
+    if (product?.subcategorySlugs?.length) return product.subcategorySlugs;
+    return initialSub ? [initialSub.slug] : [];
+  });
 
   const selectedParent = categoryList.find((c) => c.id === parentCatId) ?? null;
   const subOptions = selectedParent?.children ?? [];
@@ -554,6 +564,12 @@ function ProductForm({
     //                  otherwise the parent name (its slug matches /category/[slug]/[sub])
     const categoryLabel = sub?.name ?? parent?.name ?? "";
     const parentSlug = parent?.slug ?? slugify(categoryLabel);
+    const selectedSubcategorySlugs = Array.from(
+      new Set([subSlug, ...subSlugs].filter(Boolean))
+    );
+    const selectedSubcategoryNames = (parent?.children ?? [])
+      .filter((item) => selectedSubcategorySlugs.includes(item.slug))
+      .map((item) => item.name);
 
     const data: any = {
       name: name.trim(),
@@ -562,6 +578,7 @@ function ProductForm({
       category: categoryLabel,
       categoryId: parentSlug,
       subcategory: sub?.name ?? "",
+      subcategorySlugs: selectedSubcategorySlugs,
       brand: brand.trim(),
       priceUsd: parseFloat(priceUsd),
       stock: stock ? parseInt(stock) : 0,
@@ -576,7 +593,15 @@ function ProductForm({
     // name/brand/category/subcategory so the AI agent can find this product.
     data.searchTokens = Array.from(
       new Set(
-        [data.name, data.brand, data.category, data.subcategory, data.categoryId]
+        [
+          data.name,
+          data.brand,
+          data.category,
+          data.subcategory,
+          data.categoryId,
+          ...selectedSubcategorySlugs,
+          ...selectedSubcategoryNames,
+        ]
           .filter(Boolean)
           .join(" ")
           .toLowerCase()
@@ -682,7 +707,11 @@ function ProductForm({
                     <label className="mb-1.5 block text-xs font-semibold text-ink">Category</label>
                     <select
                       value={parentCatId}
-                      onChange={(e) => { setParentCatId(e.target.value); setSubSlug(""); }}
+                      onChange={(e) => {
+                        setParentCatId(e.target.value);
+                        setSubSlug("");
+                        setSubSlugs([]);
+                      }}
                       className="h-11 w-full rounded-full bg-[#F4F5F8] px-4 text-sm text-ink outline-none"
                     >
                       <option value="">Select a category…</option>
@@ -698,11 +727,15 @@ function ProductForm({
                   </div>
                   <div>
                     <label className="mb-1.5 block text-xs font-semibold text-ink">
-                      Subcategory <span className="font-normal text-muted">(optional)</span>
+                      Primary subcategory <span className="font-normal text-muted">(optional)</span>
                     </label>
                     <select
                       value={subSlug}
-                      onChange={(e) => setSubSlug(e.target.value)}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        setSubSlug(value);
+                        if (value) setSubSlugs((current) => Array.from(new Set([...current, value])));
+                      }}
                       disabled={!selectedParent || subOptions.length === 0}
                       className="h-11 w-full rounded-full bg-[#F4F5F8] px-4 text-sm text-ink outline-none disabled:opacity-50"
                     >
@@ -715,6 +748,35 @@ function ProductForm({
                     </select>
                   </div>
                 </div>
+                {subOptions.length > 0 && (
+                  <fieldset>
+                    <legend className="mb-2 block text-xs font-semibold text-ink">
+                      Also show under <span className="font-normal text-muted">(select multiple)</span>
+                    </legend>
+                    <div className="grid gap-2 rounded-2xl bg-[#F4F5F8] p-3 sm:grid-cols-2">
+                      {subOptions.map((item) => {
+                        const checked = subSlugs.includes(item.slug) || subSlug === item.slug;
+                        return (
+                          <label key={item.slug} className="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 text-sm text-ink hover:bg-white">
+                            <input
+                              type="checkbox"
+                              checked={checked}
+                              disabled={subSlug === item.slug}
+                              onChange={() => setSubSlugs((current) =>
+                                current.includes(item.slug)
+                                  ? current.filter((slug) => slug !== item.slug)
+                                  : [...current, item.slug]
+                              )}
+                              className="h-4 w-4 accent-mercury"
+                            />
+                            {item.name}
+                            {subSlug === item.slug && <span className="text-[10px] text-muted">Primary</span>}
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </fieldset>
+                )}
               </div>
             )}
 
