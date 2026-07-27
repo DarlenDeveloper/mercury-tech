@@ -46,7 +46,7 @@ export default function Footer() {
   return (
     <footer className="w-full border-t border-line">
       <div className="w-full px-4 py-12 lg:px-6">
-        <div className="flex flex-col gap-10 md:flex-row md:justify-between">
+        <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-[1fr_0.55fr_1.25fr]">
           {/* Link columns */}
           <div className="flex gap-16">
             {COLUMNS.map((col) => (
@@ -84,6 +84,36 @@ export default function Footer() {
                   <Icon />
                 </a>
               ))}
+            </div>
+          </div>
+
+          {/* Store location */}
+          <div>
+            <div className="mb-4 flex items-end justify-between gap-4">
+              <div>
+                <h3 className="text-base font-bold text-ink">Find Us</h3>
+                <p className="mt-1 text-sm leading-6 text-muted">
+                  Plot 91, Kira Road, Kamwokya, Kampala
+                </p>
+              </div>
+              <a
+                href="https://www.google.com/maps/search/?api=1&query=Mercury+Computers+Limited+Kira+Road+Kampala"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="shrink-0 text-sm font-semibold text-mercury transition hover:underline"
+              >
+                Directions
+              </a>
+            </div>
+            <div className="overflow-hidden rounded-xl border border-line bg-gray-100">
+              <iframe
+                title="Mercury Computers Limited location on Google Maps"
+                src="https://www.google.com/maps?q=Mercury+Computers+Limited,+Plot+91+Kira+Road,+Kamwokya,+Kampala,+Uganda&output=embed"
+                className="h-56 w-full"
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+                allowFullScreen
+              />
             </div>
           </div>
         </div>
