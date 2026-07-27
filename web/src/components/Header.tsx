@@ -22,6 +22,7 @@ import { useCurrency } from "@/components/CurrencyProvider";
 import { signOut } from "@/lib/auth";
 import { getCart, clearCart, type CartItem } from "@/lib/cart";
 import { getFavorites } from "@/lib/wishlist";
+import { usePathname } from "next/navigation";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firestore";
 import SearchBar from "@/components/SearchBar";
@@ -29,6 +30,7 @@ import CategoryNav from "@/components/CategoryNav";
 import CurrencySelector from "@/components/CurrencySelector";
 
 export default function Header() {
+  const pathname = usePathname();
   const { user } = useAuth();
   const { format } = useCurrency();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -39,9 +41,30 @@ export default function Header() {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [wishlistIds, setWishlistIds] = useState<Set<string>>(new Set());
   const [isAdmin, setIsAdmin] = useState(false);
+  const [darkTierControls, setDarkTierControls] = useState(pathname !== "/");
+  const [utilityTierVisible, setUtilityTierVisible] = useState(true);
   const profileRef = useRef<HTMLDivElement>(null);
 
   const rate = 3780;
+
+  // The lower header sits over the homepage hero initially. Once its hero
+  // boundary has passed behind the sticky header, switch controls to dark ink
+  // so they remain readable over the light catalog content. Other routes start
+  // on light backgrounds and use dark controls immediately.
+  useEffect(() => {
+    const updateContrast = () => {
+      const hero = document.querySelector<HTMLElement>("[data-header-contrast-end]");
+      setDarkTierControls(!hero || hero.getBoundingClientRect().bottom <= 74);
+      setUtilityTierVisible(window.scrollY < 40);
+    };
+    updateContrast();
+    window.addEventListener("scroll", updateContrast, { passive: true });
+    window.addEventListener("resize", updateContrast);
+    return () => {
+      window.removeEventListener("scroll", updateContrast);
+      window.removeEventListener("resize", updateContrast);
+    };
+  }, [pathname]);
 
   // Dismiss profile dropdown on outside click
   useEffect(() => {
@@ -312,11 +335,21 @@ export default function Header() {
 
         {/* Tier 3: department bar with search (desktop).
             Fully transparent so the hero shows through completely. */}
-        <div className="hidden bg-transparent lg:block">
+        <div
+          className={`hidden overflow-hidden bg-transparent transition-[max-height,opacity] duration-300 ease-out lg:block ${
+            utilityTierVisible
+              ? "max-h-20 opacity-100"
+              : "pointer-events-none max-h-0 opacity-0"
+          }`}
+        >
           <div className="flex w-full items-center gap-4 px-4 py-2.5 lg:px-6">
             {/* Shop by Department */}
             <div className="group relative shrink-0">
-              <button className="flex items-center gap-2 rounded-full bg-white/10 px-4 py-2.5 text-[13px] font-semibold text-white transition hover:bg-white/15">
+              <button className={`flex items-center gap-2 rounded-full px-4 py-2.5 text-[13px] font-semibold transition ${
+                darkTierControls
+                  ? "bg-black/[0.04] text-ink hover:bg-black/[0.07]"
+                  : "bg-white/10 text-white hover:bg-white/15"
+              }`}>
                 <Menu size={16} />
                 Shop by Department
                 <ChevronDown size={14} className="opacity-80 transition group-hover:rotate-180" />
@@ -344,14 +377,14 @@ export default function Header() {
 
             {/* Right: currency + customer care */}
             <div className="hidden shrink-0 items-center gap-5 xl:flex">
-              <CurrencySelector light />
+              <CurrencySelector light={!darkTierControls} />
               <a
                 href="tel:+256704823800"
-                className="flex items-center gap-2 text-white transition hover:opacity-90"
+                className={`flex items-center gap-2 transition hover:opacity-90 ${darkTierControls ? "text-ink" : "text-white"}`}
               >
                 <Headphones size={20} className="shrink-0" />
                 <span className="leading-tight">
-                  <span className="block text-[11px] text-white/70">Customer Care</span>
+                  <span className={`block text-[11px] ${darkTierControls ? "text-muted" : "text-white/70"}`}>Customer Care</span>
                   <span className="block text-[13px] font-bold">+256 704 823800</span>
                 </span>
               </a>
@@ -560,7 +593,5 @@ function MobileNavLink({ href, children }: { href: string; children: React.React
     </li>
   );
 }
-
-
 
 
