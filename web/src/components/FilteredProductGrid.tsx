@@ -35,7 +35,13 @@ const SPEC_KEYS_OF_INTEREST = [
 
 const PAGE_SIZE = 24;
 
-export default function FilteredProductGrid({ products }: { products: Product[] }) {
+export default function FilteredProductGrid({
+  products,
+  title,
+}: {
+  products: Product[];
+  title?: string;
+}) {
   const { format } = useCurrency();
   const [sort, setSort] = useState<SortOption>("relevance");
   const [brandFilter, setBrandFilter] = useState<Set<string>>(new Set());
@@ -184,7 +190,12 @@ export default function FilteredProductGrid({ products }: { products: Product[] 
       <div ref={filterRef} className="contents">
       {/* Toolbar */}
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3 lg:col-start-2">
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2.5">
+          {title && (
+            <h1 className="mr-1 text-2xl font-bold tracking-tight text-ink">
+              {title}
+            </h1>
+          )}
           <button
             onClick={() => setShowFilters(!showFilters)}
             className={`flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition lg:hidden ${
@@ -212,7 +223,7 @@ export default function FilteredProductGrid({ products }: { products: Product[] 
             </button>
           )}
 
-          <span className="text-sm text-muted">
+          <span className={`text-sm text-muted ${title ? "border-l border-line pl-3" : ""}`}>
             {filtered.length} {filtered.length === 1 ? "product" : "products"}
           </span>
         </div>

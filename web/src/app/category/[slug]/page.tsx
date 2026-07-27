@@ -62,11 +62,7 @@ export default async function CategoryPage({
                 <span className="font-medium text-ink">{category.name}</span>
               </nav>
 
-              <h1 className="mb-6 text-2xl font-bold text-ink">
-                {category.name}
-              </h1>
-
-              <FilteredProductGrid products={products} />
+              <FilteredProductGrid products={products} title={category.name} />
             </div>
           </div>
         </section>
