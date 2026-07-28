@@ -5,7 +5,6 @@ import Image from "next/image";
 import Link from "next/link";
 import {
   Search,
-  ChevronDown,
   User,
   Heart,
   ShoppingCart,
@@ -16,7 +15,6 @@ import {
   Shield,
   Headphones,
 } from "lucide-react";
-import { DEPARTMENTS } from "@/lib/departments";
 import { useAuth } from "@/components/AuthProvider";
 import { useCurrency } from "@/components/CurrencyProvider";
 import { signOut } from "@/lib/auth";
@@ -25,7 +23,6 @@ import { getFavorites } from "@/lib/wishlist";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firestore";
 import SearchBar from "@/components/SearchBar";
-import CategoryNav from "@/components/CategoryNav";
 import CurrencySelector from "@/components/CurrencySelector";
 
 export default function Header() {
@@ -140,9 +137,29 @@ export default function Header() {
             />
           </Link>
 
-          {/* Center: category department dropdowns */}
-          <div className="hidden flex-1 items-center justify-center lg:flex">
-            <CategoryNav />
+          {/* Desktop search */}
+          <div className="hidden min-w-0 flex-1 lg:block">
+            <SearchBar variant="desktop" />
+          </div>
+
+          {/* Services + contact */}
+          <div className="hidden shrink-0 items-center gap-3 lg:flex">
+            <Link
+              href="/repairs"
+              className="rounded-full bg-mercury px-4 py-2.5 text-[13px] font-semibold text-white transition hover:bg-mercury-dark"
+            >
+              Services
+            </Link>
+            <a
+              href="tel:+256704823800"
+              className="hidden items-center gap-2 rounded-full px-2 py-1.5 text-ink transition hover:bg-surface-soft xl:flex"
+            >
+              <Headphones size={19} className="text-mercury" />
+              <span className="leading-tight">
+                <span className="block text-[10px] text-muted">Contact us</span>
+                <span className="block text-[12px] font-semibold">+256 704 823800</span>
+              </span>
+            </a>
           </div>
 
           {/* Right cluster */}
@@ -156,35 +173,10 @@ export default function Header() {
               <Search size={20} />
             </button>
 
-            {/* Mobile AI button */}
-            <Link
-              href="/ai"
-              aria-label="AI Assistant"
-              className="flex h-9 w-9 items-center justify-center rounded-full transition hover:bg-surface-soft md:hidden"
-            >
-              <Image
-                src="/ai-icon-v2.png"
-                alt="AI"
-                width={20}
-                height={20}
-                className="h-5 w-5 object-contain"
-              />
-            </Link>
-
-            {/* AI Assistant (desktop) */}
-            <Link
-              href="/ai"
-              aria-label="AI Shopping Assistant"
-              className="hidden h-10 w-10 shrink-0 items-center justify-center rounded-full transition hover:bg-mercury/10 md:flex"
-            >
-              <Image
-                src="/ai-icon-v2.png"
-                alt="AI Assistant"
-                width={24}
-                height={24}
-                className="h-6 w-6 object-contain"
-              />
-            </Link>
+            {/* Currency */}
+            <div className="ml-1 hidden lg:block">
+              <CurrencySelector />
+            </div>
 
             {/* Account */}
             <div className="relative" ref={profileRef}>
@@ -282,7 +274,7 @@ export default function Header() {
 
             <button
               onClick={openWishlist}
-              className="relative hidden h-9 w-9 items-center justify-center rounded-full text-ink transition hover:bg-surface-soft hover:text-mercury sm:flex sm:h-10 sm:w-10"
+              className="relative hidden h-9 w-9 items-center justify-center rounded-full text-ink transition hover:bg-surface-soft hover:text-mercury sm:flex sm:h-10 sm:w-10 lg:hidden"
             >
               <Heart size={20} />
               {wishlistIds.size > 0 && (
@@ -292,14 +284,14 @@ export default function Header() {
               )}
             </button>
 
-            {/* Cart button */}
+            {/* Cart is always the final header control. */}
             <button
               onClick={openCart}
-              className="ml-1 flex items-center gap-1.5 rounded-full bg-orange-500 py-1.5 pl-1.5 pr-3 text-white transition hover:bg-orange-600 sm:gap-2 sm:pr-4"
+              className="ml-1 flex items-center gap-1.5 rounded-full bg-mercury-accent py-1.5 pl-1.5 pr-3 text-white transition hover:brightness-95 sm:gap-2 sm:pr-4"
             >
               <span className="relative flex h-8 w-8 items-center justify-center rounded-full bg-white/20 sm:h-9 sm:w-9">
                 <ShoppingCart size={17} />
-                <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-white px-1 text-[10px] font-bold leading-none text-orange-600">
+                <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-white px-1 text-[10px] font-bold leading-none text-mercury-accent">
                   {cartCount}
                 </span>
               </span>
@@ -307,55 +299,6 @@ export default function Header() {
                 {formatUgx(cartTotal)}
               </span>
             </button>
-          </div>
-        </div>
-
-        {/* Tier 3: department bar with search (desktop).
-            Fully transparent so the hero shows through completely. */}
-        <div className="hidden bg-transparent lg:block">
-          <div className="flex w-full items-center gap-4 px-4 py-2.5 lg:px-6">
-            {/* Shop by Department */}
-            <div className="group relative shrink-0">
-              <button className="flex items-center gap-2 rounded-full bg-white/10 px-4 py-2.5 text-[13px] font-semibold text-white transition hover:bg-white/15">
-                <Menu size={16} />
-                Shop by Department
-                <ChevronDown size={14} className="opacity-80 transition group-hover:rotate-180" />
-              </button>
-              {/* Departments dropdown */}
-              <div className="invisible absolute left-0 top-full z-50 w-64 pt-2 opacity-0 transition group-hover:visible group-hover:opacity-100">
-                <div className="rounded-2xl border border-line bg-white p-2 shadow-xl">
-                  {DEPARTMENTS.map((d) => (
-                    <Link
-                      key={d.label}
-                      href={d.href}
-                      className="block rounded-lg px-3 py-2 text-[13px] text-ink transition hover:bg-surface-soft hover:text-mercury"
-                    >
-                      {d.label}
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Search (center) */}
-            <div className="flex-1">
-              <SearchBar variant="desktop" />
-            </div>
-
-            {/* Right: currency + customer care */}
-            <div className="hidden shrink-0 items-center gap-5 xl:flex">
-              <CurrencySelector light />
-              <a
-                href="tel:+256704823800"
-                className="flex items-center gap-2 text-white transition hover:opacity-90"
-              >
-                <Headphones size={20} className="shrink-0" />
-                <span className="leading-tight">
-                  <span className="block text-[11px] text-white/70">Customer Care</span>
-                  <span className="block text-[13px] font-bold">+256 704 823800</span>
-                </span>
-              </a>
-            </div>
           </div>
         </div>
 
@@ -560,7 +503,3 @@ function MobileNavLink({ href, children }: { href: string; children: React.React
     </li>
   );
 }
-
-
-
-

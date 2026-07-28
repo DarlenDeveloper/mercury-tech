@@ -36,11 +36,17 @@ class _CategoryScreenState extends State<CategoryScreen> {
         ? all.where((p) => p.categoryId == parentId).toList()
         : List<Product>.from(all);
 
-    // Subcategory filter (product.category holds the subcategory label, e.g.
-    // "HP Laptops"). "All" (or empty) means no subcategory filter.
+    // Match the new multi-subcategory slug list first, with the legacy primary
+    // category label retained as a fallback for older product documents.
     if (_selectedSub.isNotEmpty && _selectedSub.toLowerCase() != 'all') {
+      final selectedSlug = _selectedSub
+          .toLowerCase()
+          .replaceAll(RegExp(r'[^a-z0-9]+'), '-')
+          .replaceAll(RegExp(r'^-|-$'), '');
       result = result
-          .where((p) => p.category.toLowerCase() == _selectedSub.toLowerCase())
+          .where((p) =>
+              p.subcategorySlugs.contains(selectedSlug) ||
+              p.category.toLowerCase() == _selectedSub.toLowerCase())
           .toList();
     }
 

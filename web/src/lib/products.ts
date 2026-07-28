@@ -16,6 +16,8 @@ export type Product = {
   description: string;
   category: string;
   categoryId?: string;
+  /** Every subcategory page this product should appear on. */
+  subcategorySlugs?: string[];
   price: number; // Ugandan Shillings
   oldPrice?: number;
   rating: number;
@@ -29,11 +31,18 @@ export type Product = {
   colors?: ColorOption[];
   /** Units left in stock (drives the "Only N left" urgency note). */
   stock?: number;
+  /** Publishing/availability state set from the admin dashboard. */
+  status?: string;
   /** Longer marketing copy shown on the Description tab. */
   overview?: string;
   /** Four-column spec table shown on the Additional Information tab. */
   specs?: SpecRow[];
 };
+
+/** A product is unavailable when explicitly marked so or its stock is zero. */
+export function isProductOutOfStock(product: Pick<Product, "status" | "stock">): boolean {
+  return product.status === "out_of_stock" || (product.stock != null && product.stock <= 0);
+}
 
 /// Catalog ported from the mobile app's sample_products.dart.
 export const PRODUCTS: Product[] = [

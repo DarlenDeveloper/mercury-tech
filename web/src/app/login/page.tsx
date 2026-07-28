@@ -26,7 +26,12 @@ export default function LoginPage() {
     try {
       const loginEmail = phoneMode ? phoneEmail : email.trim();
       await signIn(loginEmail, password);
-      router.push("/");
+      const requestedPath = new URLSearchParams(window.location.search).get("redirect");
+      const destination =
+        requestedPath?.startsWith("/") && !requestedPath.startsWith("//")
+          ? requestedPath
+          : "/";
+      router.push(destination);
     } catch (err: any) {
       const code = err?.code ?? "";
       if (code === "auth/invalid-credential" || code === "auth/wrong-password") {

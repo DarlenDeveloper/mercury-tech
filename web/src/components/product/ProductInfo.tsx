@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Star, Minus, Plus, Truck, ShieldCheck, Headphones, Check } from "lucide-react";
-import { type Product } from "@/lib/products";
+import { Star, Minus, Plus, Check } from "lucide-react";
+import { isProductOutOfStock, type Product } from "@/lib/products";
 import { useCurrency } from "@/components/CurrencyProvider";
 import AddToCartButton from "@/components/AddToCartButton";
 import RequestQuoteButton from "@/components/RequestQuoteButton";
@@ -32,28 +32,6 @@ function WhatsAppIcon() {
   );
 }
 
-function TrustRow({
-  icon,
-  title,
-  subtitle,
-}: {
-  icon: React.ReactNode;
-  title: string;
-  subtitle: string;
-}) {
-  return (
-    <div className="flex items-start gap-3">
-      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-sky text-mercury">
-        {icon}
-      </span>
-      <div>
-        <p className="text-[13px] font-semibold text-ink">{title}</p>
-        <p className="text-xs text-muted">{subtitle}</p>
-      </div>
-    </div>
-  );
-}
-
 export default function ProductInfo({
   product,
   reviewAverage = 0,
@@ -67,6 +45,7 @@ export default function ProductInfo({
   const [color, setColor] = useState(0);
   const { format } = useCurrency();
   const onSale = product.oldPrice != null && product.oldPrice > product.price;
+  const outOfStock = isProductOutOfStock(product);
   const colors = product.colors ?? [];
 
   // Prefer live review data; fall back to the catalog's static rating.
@@ -83,7 +62,7 @@ export default function ProductInfo({
     `Hello Mercury Computers 👋\n\n` +
     `I'm interested in this product:\n` +
     `*${product.name}*\n` +
-    `Price: ${format(product.price)}\n` +
+    (outOfStock ? `Availability: Out of Stock\n` : `Price: ${format(product.price)}\n`) +
     `${productUrl}\n\n` +
     `Is it available?`;
   const whatsappLink = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(whatsappMessage)}`;
@@ -109,15 +88,21 @@ export default function ProductInfo({
 
       {/* Price */}
       <div className="mt-3 flex flex-wrap items-center gap-2.5">
-        <span className="text-2xl font-extrabold text-ink">
-          {format(product.price)}
-        </span>
-        {onSale && (
+        {outOfStock ? (
+          <span className="rounded-full bg-red-50 px-4 py-2 text-sm font-bold text-red-600">
+            Out of Stock
+          </span>
+        ) : (
+          <span className="text-2xl font-extrabold text-ink">
+            {format(product.price)}
+          </span>
+        )}
+        {onSale && !outOfStock && (
           <span className="text-base font-medium text-muted line-through">
             {format(product.oldPrice!)}
           </span>
         )}
-        {onSale && (
+        {onSale && !outOfStock && (
           <span className="text-xs font-semibold text-mercury-accent">
             Discount only this weekend
           </span>
@@ -155,7 +140,7 @@ export default function ProductInfo({
       )}
 
       {/* Quantity + stock */}
-      <div className="mt-4 flex flex-wrap items-center gap-3">
+      {!outOfStock && <div className="mt-4 flex flex-wrap items-center gap-3">
         <div className="flex items-center gap-1 rounded-full border border-line p-1">
           <button
             type="button"
@@ -184,17 +169,27 @@ export default function ProductInfo({
             Only {product.stock} items left, hurry up!
           </span>
         )}
-      </div>
+      </div>}
 
       {/* CTAs */}
       <div className="mt-5 grid grid-cols-2 gap-3">
-        <AddToCartButton
-          productId={product.id}
-          name={product.name}
-          category={product.category}
-          priceUsd={product.price / 3780}
-          image={product.image}
-        />
+        {outOfStock ? (
+          <button
+            type="button"
+            disabled
+            className="flex h-12 w-full items-center justify-center rounded-full bg-gray-200 text-sm font-semibold text-muted"
+          >
+            Out of Stock
+          </button>
+        ) : (
+          <AddToCartButton
+            productId={product.id}
+            name={product.name}
+            category={product.category}
+            priceUsd={product.price / 3780}
+            image={product.image}
+          />
+        )}
         <RequestQuoteButton
           productId={product.id}
           productName={product.name}
@@ -213,24 +208,6 @@ export default function ProductInfo({
         Chat on WhatsApp
       </a>
 
-      {/* Trust rows */}
-      <div className="mt-6 flex flex-col gap-3.5 border-t border-line pt-5">
-        <TrustRow
-          icon={<Truck size={16} />}
-          title="Free Delivery"
-          subtitle="Free delivery within Kampala Central on this order"
-        />
-        <TrustRow
-          icon={<ShieldCheck size={16} />}
-          title="Secure Payments"
-          subtitle="Trusted, secure checkout options available"
-        />
-        <TrustRow
-          icon={<Headphones size={16} />}
-          title="24/7 Support"
-          subtitle="Our support team is here to help anytime"
-        />
-      </div>
     </div>
   );
 }

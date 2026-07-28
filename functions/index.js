@@ -10,6 +10,9 @@ const db = getFirestore();
 // AI shopping & customer-service assistant (Gemini-backed callable function).
 export { aiAgent } from "./ai-agent.js";
 
+// Admin-only AI writing assistant for catalog descriptions.
+export { enhanceProductDescription } from "./product-description.js";
+
 // Public key-authenticated REST API (products, orders, quotations, repairs).
 export { api } from "./api.js";
 

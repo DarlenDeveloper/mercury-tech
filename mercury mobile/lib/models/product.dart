@@ -15,6 +15,7 @@ class Product {
     required this.icon,
     required this.accent,
     this.categoryId,
+    this.subcategorySlugs = const [],
     this.image,
     this.oldPrice,
     this.priceUsd = 0,
@@ -42,6 +43,10 @@ class Product {
 
   /// Parent category ID (matches Firestore categoryId, e.g. "computers").
   final String? categoryId;
+
+  /// Subcategory slugs this product belongs to. A product may appear in more
+  /// than one storefront subcategory while retaining one primary [category].
+  final List<String> subcategorySlugs;
 
   /// Placeholder glyph used when no [image] is available.
   final IconData icon;
@@ -80,6 +85,7 @@ class Product {
       icon: icon,
       accent: accent,
       categoryId: categoryId,
+      subcategorySlugs: subcategorySlugs,
       image: image,
       oldPrice: oldPrice ?? this.oldPrice,
       priceUsd: priceUsd,

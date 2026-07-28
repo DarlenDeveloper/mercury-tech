@@ -1,64 +1,91 @@
 import Image from "next/image";
 import Link from "next/link";
 
-type Tile = {
-  label: string;
-  sub: string;
+type TechCard = {
+  tag: string;
+  headline: [string, string];
   href: string;
   image: string;
-  big?: boolean;
 };
 
-// The client's focused 6 departments, arranged as a bento grid (2 large + 4 small).
-const TILES: Tile[] = [
-  { label: "Laptops", sub: "Lenovo, HP, Dell & more", href: "/category/laptops", image: "/cat-laptops.png", big: true },
-  { label: "UPS & Power", sub: "Backup & protection", href: "/category/ups-power", image: "/cat-ups.png" },
-  { label: "Printers & Office", sub: "Print, scan & supplies", href: "/category/printers-office", image: "/cat-printers.png" },
-  { label: "Desktops", sub: "Towers & all-in-ones", href: "/category/desktops", image: "/cat-desktops.png", big: true },
-  { label: "Networking & Security", sub: "Routers & cameras", href: "/category/networking-security", image: "/cat-networking.png" },
-  { label: "Software", sub: "Genuine licenses", href: "/category/software", image: "/cat-software.png" },
+const TECH_CARDS: TechCard[] = [
+  {
+    tag: "SHOP LAPTOPS",
+    headline: ["Serious Power.", "Certified Savings."],
+    href: "/category/laptops",
+    image: "/top-tech-laptops.png",
+  },
+  {
+    tag: "SHOP DESKTOPS",
+    headline: ["Built to Perform.", "Ready for Work."],
+    href: "/category/desktops",
+    image: "/cat-desktops.png",
+  },
+  {
+    tag: "SHOP PRINTERS",
+    headline: ["Work Ready.", "Always."],
+    href: "/category/printers-office",
+    image: "/top-tech-printers.png",
+  },
+  {
+    tag: "SHOP NETWORKING",
+    headline: ["Stay Connected.", "Stay Secure."],
+    href: "/category/networking-security",
+    image: "/top-tech-networking.png",
+  },
+  {
+    tag: "SHOP UPS & POWER",
+    headline: ["Reliable Power.", "Zero Interruptions."],
+    href: "/category/ups-power",
+    image: "/cat-ups.png",
+  },
+  {
+    tag: "SHOP SOFTWARE",
+    headline: ["Genuine Software.", "Work Smarter."],
+    href: "/category/software",
+    image: "/cat-software.png",
+  },
 ];
 
 export default function CategoryShowcase() {
   return (
     <section>
-      <h2 className="mb-5 text-xl font-bold tracking-tight text-ink">Shop by category</h2>
+      <div className="text-center">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted">
+          Trusted by many, loved by all.
+        </p>
+        <h2 className="mt-1.5 text-xl font-extrabold tracking-tight text-mercury-accent sm:text-2xl">
+          Explore our Top Tech.
+        </h2>
+      </div>
 
-      <div className="grid grid-cols-2 gap-3 sm:gap-4 md:h-[160px] md:grid-cols-none md:grid-flow-col md:grid-rows-2 md:auto-cols-fr">
-        {TILES.map((t) => (
+      <div className="no-scrollbar -mx-4 mt-5 flex snap-x snap-mandatory gap-3 overflow-x-auto scroll-smooth px-4 pb-2 sm:-mx-1 sm:gap-4 sm:px-1">
+        {TECH_CARDS.map((card) => (
           <Link
-            key={t.label}
-            href={t.href}
-            className={`group relative overflow-hidden rounded-2xl bg-[#F1F2F4] p-4 shadow-[0_2px_10px_rgba(16,24,40,0.06)] ring-1 ring-black/[0.04] transition duration-300 hover:-translate-y-1 hover:bg-[#EDEFF2] hover:shadow-[0_18px_36px_-12px_rgba(16,24,40,0.22)] ${
-              t.big
-                ? "col-span-2 min-h-[168px] md:col-span-1 md:row-span-2 md:min-h-0"
-                : "min-h-[132px] md:min-h-0"
-            }`}
+            key={card.tag}
+            href={card.href}
+            className="relative h-[275px] w-[76vw] max-w-[220px] shrink-0 snap-start overflow-hidden rounded-[18px] bg-white text-center shadow-[0_12px_30px_-14px_rgba(16,24,40,0.24)] sm:h-[290px] sm:w-[235px] sm:max-w-none sm:rounded-[20px]"
           >
-            {/* Image — anchored bottom-right, ~2x larger */}
-            <div
-              className={`pointer-events-none absolute bottom-0 right-0 z-0 ${
-                t.big ? "h-[92%] w-[82%]" : "h-[94%] w-[88%]"
-              }`}
-            >
-              <Image
-                src={t.image}
-                alt={t.label}
-                fill
-                sizes="(max-width: 768px) 60vw, 320px"
-                className="object-contain object-right-bottom transition duration-300 group-hover:scale-[1.05]"
-              />
+            <div className="relative z-10 flex flex-col items-center px-4 pt-5">
+              <span className="rounded-full bg-mercury px-4 py-1.5 text-[11px] font-semibold tracking-wide text-white">
+                {card.tag}
+              </span>
+              <h3 className="mt-3 text-base font-medium leading-[1.25] text-ink">
+                {card.headline[0]}
+                <br />
+                {card.headline[1]}
+              </h3>
             </div>
 
-            {/* Left-fading scrim so the text stays legible over the image */}
-            <div className="pointer-events-none absolute inset-0 z-[1] bg-gradient-to-r from-[#F1F2F4] via-[#F1F2F4]/80 to-transparent" />
-
-            {/* Text */}
-            <div className="relative z-10 max-w-[55%] sm:max-w-[52%]">
-              <h3 className={`font-bold leading-tight tracking-tight text-mercury ${t.big ? "text-base sm:text-lg" : "text-sm sm:text-[15px]"}`}>
-                {t.label}
-              </h3>
-              <p className="mt-0.5 text-[11px] leading-snug text-muted sm:text-[11.5px]">{t.sub}</p>
+            <div className="absolute inset-x-0 bottom-0 h-[175px] bg-gradient-to-b from-transparent via-[#FF7A00]/20 to-[#FF7A00]/60 sm:h-[190px]" />
+            <div className="absolute inset-x-2 bottom-0 h-[170px] sm:h-[185px]">
+              <Image
+                src={card.image}
+                alt={card.tag.replace("SHOP ", "")}
+                fill
+                sizes="235px"
+                className="object-contain object-bottom"
+              />
             </div>
           </Link>
         ))}

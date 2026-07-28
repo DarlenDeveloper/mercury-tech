@@ -21,10 +21,13 @@ export type FirestoreProduct = {
   shortDescription?: string;
   category: string;
   categoryId: string;
+  subcategory?: string;
+  subcategorySlugs?: string[];
   brand?: string;
   priceUsd: number;
   oldPriceUsd?: number;
   stock?: number;
+  status?: string;
   isNew?: boolean;
   image?: string;
   images?: string[];

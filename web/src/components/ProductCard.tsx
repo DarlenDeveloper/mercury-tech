@@ -2,13 +2,14 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { type Product } from "@/lib/products";
+import { isProductOutOfStock, type Product } from "@/lib/products";
 import { useCurrency } from "@/components/CurrencyProvider";
 import WishlistButton from "@/components/WishlistButton";
 
 export default function ProductCard({ product }: { product: Product }) {
   const { format } = useCurrency();
   const onSale = product.oldPrice != null && product.oldPrice > product.price;
+  const outOfStock = isProductOutOfStock(product);
   const href = `/product/${product.id}`;
 
   // Full format for card display (e.g. USh 370,000)
@@ -33,7 +34,7 @@ export default function ProductCard({ product }: { product: Product }) {
             className="object-cover"
           />
 
-          {onSale && (
+          {onSale && !outOfStock && (
             <span className="absolute left-2.5 top-2.5 rounded-full bg-orange-500 px-2.5 py-0.5 text-[9px] font-semibold tracking-wide text-white">
               SALE
             </span>
@@ -56,17 +57,23 @@ export default function ProductCard({ product }: { product: Product }) {
       </p>
 
       {/* Price + old price */}
-      <div className="mt-1.5 flex items-end gap-1.5">
-        <span className="text-[13px] text-ink">
-          <span className="font-normal">{formatPrice(product.price).prefix}</span>{" "}
-          <span className="font-bold">{formatPrice(product.price).value}</span>
+      {outOfStock ? (
+        <span className="mt-1.5 w-fit rounded-full bg-red-50 px-2.5 py-1 text-[11px] font-bold text-red-600">
+          Out of Stock
         </span>
-        {onSale && (
-          <span className="text-[10px] text-muted line-through">
-            {formatPrice(product.oldPrice!).prefix} {formatPrice(product.oldPrice!).value}
+      ) : (
+        <div className="mt-1.5 flex items-end gap-1.5">
+          <span className="text-[13px] text-ink">
+            <span className="font-normal">{formatPrice(product.price).prefix}</span>{" "}
+            <span className="font-bold">{formatPrice(product.price).value}</span>
           </span>
-        )}
-      </div>
+          {onSale && (
+            <span className="text-[10px] text-muted line-through">
+              {formatPrice(product.oldPrice!).prefix} {formatPrice(product.oldPrice!).value}
+            </span>
+          )}
+        </div>
+      )}
     </Link>
   );
 }

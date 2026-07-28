@@ -2,8 +2,7 @@ import Link from "next/link";
 import { Search as SearchIcon, ChevronRight } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import Sidebar from "@/components/Sidebar";
-import SearchResults from "@/components/SearchResults";
+import FilteredProductGrid from "@/components/FilteredProductGrid";
 import { getProductsFromFirestore } from "@/lib/getProducts";
 import { searchProducts } from "@/lib/search";
 
@@ -26,9 +25,8 @@ export default async function SearchPage({
 
       <main className="flex-1">
         <section className="px-4 py-6 lg:px-6 lg:py-8">
-          <div className="flex gap-8">
-            <Sidebar />
-            <div className="min-w-0 flex-1">
+          <div>
+            <div className="min-w-0">
               {/* Breadcrumb */}
               <nav className="mb-4 flex items-center gap-1.5 text-sm text-muted">
                 <Link href="/" className="transition hover:text-mercury">
@@ -66,7 +64,7 @@ export default async function SearchPage({
                       </Link>
                     </div>
                   ) : (
-                    <SearchResults products={results} />
+                    <FilteredProductGrid products={results} />
                   )}
                 </>
               ) : (

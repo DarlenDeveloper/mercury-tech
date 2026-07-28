@@ -9,6 +9,7 @@ import {
   Trash2,
   Pencil,
   Star,
+  Sparkles,
 } from "lucide-react";
 import {
   collection,
@@ -34,6 +35,7 @@ type Product = {
   category: string;
   categoryId: string;
   subcategory?: string;
+  subcategorySlugs?: string[];
   brand?: string;
   priceUsd: number;
   oldPriceUsd?: number;
@@ -99,11 +101,16 @@ export default function ProductsPage() {
         catSnap.docs
           .map((d) => {
             const data = d.data();
+            const slug = data.slug ?? d.id;
+            const children = [...((data.children ?? []) as SubCategory[])];
+            if (slug === "desktops" && !children.some((child) => child.slug === "all-in-one-pcs")) {
+              children.unshift({ name: "All-in-One PCs", slug: "all-in-one-pcs" });
+            }
             return {
               id: d.id,
               name: data.name ?? "",
-              slug: data.slug ?? d.id,
-              children: (data.children ?? []) as SubCategory[],
+              slug,
+              children,
             } as Category;
           })
           .sort((a, b) => a.name.localeCompare(b.name))
@@ -415,6 +422,10 @@ function ProductForm({
 
   const [parentCatId, setParentCatId] = useState<string>(initialParent?.id ?? "");
   const [subSlug, setSubSlug] = useState<string>(initialSub?.slug ?? "");
+  const [subSlugs, setSubSlugs] = useState<string[]>(() => {
+    if (product?.subcategorySlugs?.length) return product.subcategorySlugs;
+    return initialSub ? [initialSub.slug] : [];
+  });
 
   const selectedParent = categoryList.find((c) => c.id === parentCatId) ?? null;
   const subOptions = selectedParent?.children ?? [];
@@ -447,8 +458,41 @@ function ProductForm({
     () => product?.id ?? `tmp-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
   );
   const [description, setDescription] = useState(product?.description ?? "");
+  const [descriptionNotes, setDescriptionNotes] = useState("");
+  const [enhancingDescription, setEnhancingDescription] = useState(false);
+  const [descriptionError, setDescriptionError] = useState("");
 
   const anyUploading = images.some((i) => i.status === "uploading");
+
+  const enhanceDescription = async () => {
+    if (!name.trim() || enhancingDescription) return;
+    setEnhancingDescription(true);
+    setDescriptionError("");
+    try {
+      const { enhanceProductDescription } = await import("@/lib/productDescription");
+      const currentSpecs = Object.fromEntries(
+        specs
+          .filter((item) => item.key.trim() && item.value.trim())
+          .map((item) => [item.key.trim(), item.value.trim()])
+      );
+      const parent = categoryList.find((item) => item.id === parentCatId);
+      const enhanced = await enhanceProductDescription({
+        name: name.trim(),
+        brand: brand.trim(),
+        category: parent?.name ?? "",
+        description: description.trim(),
+        notes: descriptionNotes.trim(),
+        specifications: currentSpecs,
+      });
+      setDescription(enhanced);
+    } catch (error: any) {
+      setDescriptionError(
+        error?.message || "Could not enhance the description. Please try again."
+      );
+    } finally {
+      setEnhancingDescription(false);
+    }
+  };
 
   // Step 4: Specifications
   const [specs, setSpecs] = useState(
@@ -554,6 +598,12 @@ function ProductForm({
     //                  otherwise the parent name (its slug matches /category/[slug]/[sub])
     const categoryLabel = sub?.name ?? parent?.name ?? "";
     const parentSlug = parent?.slug ?? slugify(categoryLabel);
+    const selectedSubcategorySlugs = Array.from(
+      new Set([subSlug, ...subSlugs].filter(Boolean))
+    );
+    const selectedSubcategoryNames = (parent?.children ?? [])
+      .filter((item) => selectedSubcategorySlugs.includes(item.slug))
+      .map((item) => item.name);
 
     const data: any = {
       name: name.trim(),
@@ -562,6 +612,7 @@ function ProductForm({
       category: categoryLabel,
       categoryId: parentSlug,
       subcategory: sub?.name ?? "",
+      subcategorySlugs: selectedSubcategorySlugs,
       brand: brand.trim(),
       priceUsd: parseFloat(priceUsd),
       stock: stock ? parseInt(stock) : 0,
@@ -576,7 +627,15 @@ function ProductForm({
     // name/brand/category/subcategory so the AI agent can find this product.
     data.searchTokens = Array.from(
       new Set(
-        [data.name, data.brand, data.category, data.subcategory, data.categoryId]
+        [
+          data.name,
+          data.brand,
+          data.category,
+          data.subcategory,
+          data.categoryId,
+          ...selectedSubcategorySlugs,
+          ...selectedSubcategoryNames,
+        ]
           .filter(Boolean)
           .join(" ")
           .toLowerCase()
@@ -682,7 +741,11 @@ function ProductForm({
                     <label className="mb-1.5 block text-xs font-semibold text-ink">Category</label>
                     <select
                       value={parentCatId}
-                      onChange={(e) => { setParentCatId(e.target.value); setSubSlug(""); }}
+                      onChange={(e) => {
+                        setParentCatId(e.target.value);
+                        setSubSlug("");
+                        setSubSlugs([]);
+                      }}
                       className="h-11 w-full rounded-full bg-[#F4F5F8] px-4 text-sm text-ink outline-none"
                     >
                       <option value="">Select a category…</option>
@@ -698,11 +761,15 @@ function ProductForm({
                   </div>
                   <div>
                     <label className="mb-1.5 block text-xs font-semibold text-ink">
-                      Subcategory <span className="font-normal text-muted">(optional)</span>
+                      Primary subcategory <span className="font-normal text-muted">(optional)</span>
                     </label>
                     <select
                       value={subSlug}
-                      onChange={(e) => setSubSlug(e.target.value)}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        setSubSlug(value);
+                        if (value) setSubSlugs((current) => Array.from(new Set([...current, value])));
+                      }}
                       disabled={!selectedParent || subOptions.length === 0}
                       className="h-11 w-full rounded-full bg-[#F4F5F8] px-4 text-sm text-ink outline-none disabled:opacity-50"
                     >
@@ -715,6 +782,35 @@ function ProductForm({
                     </select>
                   </div>
                 </div>
+                {subOptions.length > 0 && (
+                  <fieldset>
+                    <legend className="mb-2 block text-xs font-semibold text-ink">
+                      Also show under <span className="font-normal text-muted">(select multiple)</span>
+                    </legend>
+                    <div className="grid gap-2 rounded-2xl bg-[#F4F5F8] p-3 sm:grid-cols-2">
+                      {subOptions.map((item) => {
+                        const checked = subSlugs.includes(item.slug) || subSlug === item.slug;
+                        return (
+                          <label key={item.slug} className="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 text-sm text-ink hover:bg-white">
+                            <input
+                              type="checkbox"
+                              checked={checked}
+                              disabled={subSlug === item.slug}
+                              onChange={() => setSubSlugs((current) =>
+                                current.includes(item.slug)
+                                  ? current.filter((slug) => slug !== item.slug)
+                                  : [...current, item.slug]
+                              )}
+                              className="h-4 w-4 accent-mercury"
+                            />
+                            {item.name}
+                            {subSlug === item.slug && <span className="text-[10px] text-muted">Primary</span>}
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </fieldset>
+                )}
               </div>
             )}
 
@@ -853,7 +949,18 @@ function ProductForm({
 
                 {/* Overview */}
                 <div>
-                  <label className="mb-1.5 block text-xs font-semibold text-ink">Detailed Description</label>
+                  <div className="mb-1.5 flex items-center justify-between gap-3">
+                    <label className="block text-xs font-semibold text-ink">Detailed Description</label>
+                    <button
+                      type="button"
+                      onClick={enhanceDescription}
+                      disabled={!name.trim() || enhancingDescription}
+                      className="flex items-center gap-1.5 rounded-full bg-violet-50 px-3 py-1.5 text-xs font-semibold text-violet-700 transition hover:bg-violet-100 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      <Sparkles size={13} />
+                      {enhancingDescription ? "Enhancing…" : "Enhance with AI"}
+                    </button>
+                  </div>
                   <textarea
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
@@ -861,6 +968,22 @@ function ProductForm({
                     rows={5}
                     className="w-full rounded-2xl border border-line bg-white px-4 py-3 text-sm text-ink outline-none placeholder:text-muted resize-none focus:border-mercury"
                   />
+                  <label className="mt-3 block text-xs font-semibold text-ink">
+                    Notes for AI <span className="font-normal text-muted">(optional)</span>
+                  </label>
+                  <textarea
+                    value={descriptionNotes}
+                    onChange={(e) => setDescriptionNotes(e.target.value)}
+                    placeholder="e.g. Focus on business use, keep the tone simple, mention portability…"
+                    rows={2}
+                    className="mt-1.5 w-full resize-none rounded-2xl border border-line bg-[#F8F9FB] px-4 py-3 text-sm text-ink outline-none placeholder:text-muted focus:border-violet-400"
+                  />
+                  <p className="mt-1.5 text-[11px] text-muted">
+                    AI replaces the description above for your review. Nothing is saved until you save the product.
+                  </p>
+                  {descriptionError && (
+                    <p className="mt-1.5 text-xs text-red-600">{descriptionError}</p>
+                  )}
                 </div>
               </div>
             )}

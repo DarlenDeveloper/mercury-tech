@@ -88,7 +88,14 @@ function decodeCursor(cursor) {
  * security and "24-inch" -> 24, inch).
  */
 export function buildSearchTokens(data) {
-  const text = [data.name, data.brand, data.category, data.subcategory, data.categoryId]
+  const text = [
+    data.name,
+    data.brand,
+    data.category,
+    data.subcategory,
+    data.categoryId,
+    ...(Array.isArray(data.subcategorySlugs) ? data.subcategorySlugs : []),
+  ]
     .filter((v) => typeof v === "string" && v)
     .join(" ")
     .toLowerCase();

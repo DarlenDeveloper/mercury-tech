@@ -1,9 +1,9 @@
 import Header from "@/components/Header";
 import Hero from "@/components/Hero";
-import CategoryShowcase from "@/components/CategoryShowcase";
-import BrandStrip from "@/components/BrandStrip";
-import Sidebar from "@/components/Sidebar";
 import HomeProductRows from "@/components/HomeProductRows";
+import EnterpriseSolutions from "@/components/EnterpriseSolutions";
+import ProductDepartmentNav from "@/components/ProductDepartmentNav";
+import TechnologyPartners from "@/components/TechnologyPartners";
 import Newsletter from "@/components/Newsletter";
 import Footer from "@/components/Footer";
 import { getProductsFromFirestore, getFlashSaleProducts } from "@/lib/getProducts";
@@ -24,26 +24,24 @@ export default async function Home() {
       <main className="flex-1">
         {/* Full-bleed hero. On desktop it slides up behind the translucent
             department bar so the image shows through the blue. */}
-        <section className="relative lg:-mt-[58px]">
+        <section className="relative z-10 overflow-hidden shadow-[0_18px_30px_-20px_rgba(15,35,85,0.42)]">
           <Hero />
         </section>
 
-        {/* Category sidebar on the left; showcase + products on the right. */}
+        <ProductDepartmentNav />
+
+        <section className="px-4 pb-12 pt-14 lg:px-6 lg:pb-16 lg:pt-16">
+          <EnterpriseSolutions />
+          <TechnologyPartners />
+        </section>
+
+        {/* Product rows. Primary navigation stays in the header. */}
         <section className="px-4 py-8 lg:px-6">
-          <div className="flex gap-8">
-            <Sidebar />
-            <div className="min-w-0 flex-1">
-              <CategoryShowcase />
-              <div className="mt-10">
-                <BrandStrip />
-              </div>
-              <HomeProductRows
-                products={products}
-                flashSaleProducts={flashSale.products}
-                flashSaleTitle={flashSale.title}
-              />
-            </div>
-          </div>
+          <HomeProductRows
+            products={products}
+            flashSaleProducts={flashSale.products}
+            flashSaleTitle={flashSale.title}
+          />
         </section>
 
         {/* Newsletter / sales CTA. */}

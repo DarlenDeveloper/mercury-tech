@@ -47,6 +47,7 @@ function mapProduct(p: FirestoreProduct, rate: number): Product {
     description: p.shortDescription || p.description || "",
     category: p.category,
     categoryId: p.categoryId,
+    subcategorySlugs: p.subcategorySlugs,
     price: Math.round(p.priceUsd * rate),
     oldPrice: undefined,
     rating: 4.5,
@@ -54,6 +55,7 @@ function mapProduct(p: FirestoreProduct, rate: number): Product {
     image: p.image ?? "/placeholder-product.svg",
     gallery: p.images && p.images.length > 0 ? p.images : undefined,
     stock: p.stock,
+    status: p.status,
     brand: p.brand,
     overview: p.description,
     specs: p.specifications
@@ -98,6 +100,7 @@ export const getProductsFromFirestore = cache(async (): Promise<Product[]> => {
     description: p.shortDescription || p.description || "",
     category: p.category,
     categoryId: p.categoryId,
+    subcategorySlugs: p.subcategorySlugs,
     price: Math.round(p.priceUsd * rate),
     oldPrice: undefined,
     rating: 4.5,
@@ -105,6 +108,7 @@ export const getProductsFromFirestore = cache(async (): Promise<Product[]> => {
     image: p.image ?? "/placeholder-product.svg",
     gallery: p.images && p.images.length > 0 ? p.images : undefined,
     stock: p.stock,
+    status: p.status,
     brand: p.brand,
     overview: p.description,
     specs: p.specifications
