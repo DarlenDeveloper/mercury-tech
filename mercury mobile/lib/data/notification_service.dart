@@ -1,4 +1,7 @@
+import 'dart:io';
+
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
@@ -46,7 +49,16 @@ class NotificationService {
     _initialised = true;
 
     // Request permission (shows the OS prompt on Android 13+ and iOS).
-    await _messaging.requestPermission(alert: true, badge: true, sound: true);
+    final settings = await _messaging.requestPermission(
+      alert: true,
+      badge: true,
+      sound: true,
+    );
+
+    if (settings.authorizationStatus == AuthorizationStatus.authorized ||
+        settings.authorizationStatus == AuthorizationStatus.provisional) {
+      await _registerForPush();
+    }
 
     // Local notifications (used to render foreground messages).
     const androidInit = AndroidInitializationSettings('@mipmap/ic_launcher');
@@ -75,6 +87,29 @@ class NotificationService {
 
     // Everyone gets broadcast campaigns.
     await _safeSubscribe('all');
+  }
+
+  Future<void> _registerForPush() async {
+    await _messaging.setForegroundNotificationPresentationOptions(
+      alert: true,
+      badge: true,
+      sound: true,
+    );
+
+    if (!kIsWeb && Platform.isIOS) {
+      // FCM on iOS requires a valid APNs token before getToken() succeeds.
+      var apnsToken = await _messaging.getAPNSToken();
+      if (apnsToken == null) {
+        await Future<void>.delayed(const Duration(seconds: 2));
+        apnsToken = await _messaging.getAPNSToken();
+      }
+    }
+
+    try {
+      await _messaging.getToken();
+    } catch (e) {
+      debugPrint('FCM token registration failed: $e');
+    }
   }
 
   void _showForeground(RemoteMessage message) {
