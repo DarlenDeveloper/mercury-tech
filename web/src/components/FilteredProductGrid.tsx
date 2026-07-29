@@ -53,17 +53,16 @@ export default function FilteredProductGrid({
     return () => document.removeEventListener("mousedown", handler);
   }, [showFilters]);
 
-  // Derive filter options from products
-  const brands = useMemo(() => {
+  // Keep the brand order stable while the counts react to the other filters.
+  const brandNames = useMemo(() => {
     const counts = new Map<string, number>();
     for (const p of products) {
       const b = (p.brand || "").trim();
       if (b) counts.set(b, (counts.get(b) || 0) + 1);
     }
     return [...counts.entries()]
-      .filter(([, c]) => c >= 1)
       .sort((a, b) => b[1] - a[1])
-      .map(([brand, count]) => ({ brand, count }));
+      .map(([brand]) => brand);
   }, [products]);
 
   const priceStats = useMemo(() => {
@@ -76,37 +75,34 @@ export default function FilteredProductGrid({
     [categorySlug, products],
   );
 
-  // Counts are derived from normalized buckets, not the inconsistent raw spec text.
+  const brands = useMemo(() => brandNames.map((brand) => ({
+    brand,
+    count: products.filter((product) =>
+      matchesFilters(product, brandFilter, priceRange, specFilters, simpleFilterGroups, "Brand") &&
+      (product.brand || "").trim() === brand,
+    ).length,
+  })), [brandNames, products, brandFilter, priceRange, specFilters, simpleFilterGroups]);
+
+  // Faceted counts apply every active filter except the group being counted.
   const specOptions = useMemo(() => {
     return simpleFilterGroups.map((group) => ({
       key: group.key,
       values: group.values
         .map((value) => ({
           value,
-          count: products.filter((product) => group.classify(product) === value).length,
-        }))
-        .filter(({ count }) => count > 0),
+          count: products.filter((product) =>
+            matchesFilters(product, brandFilter, priceRange, specFilters, simpleFilterGroups, group.key) &&
+            group.classify(product) === value,
+          ).length,
+        })),
     }));
-  }, [products, simpleFilterGroups]);
+  }, [products, brandFilter, priceRange, specFilters, simpleFilterGroups]);
 
   // Apply filters + sort
   const filtered = useMemo(() => {
-    let result = [...products];
-
-    if (brandFilter.size > 0) {
-      result = result.filter((p) => brandFilter.has((p.brand || "").trim()));
-    }
-    if (priceRange) {
-      result = result.filter((p) => p.price >= priceRange[0] && p.price <= priceRange[1]);
-    }
-    // Spec filters
-    for (const [key, vals] of specFilters) {
-      if (vals.size === 0) continue;
-      result = result.filter((p) => {
-        const group = simpleFilterGroups.find((item) => item.key === key);
-        return group ? vals.has(group.classify(p)) : true;
-      });
-    }
+    const result = products.filter((product) =>
+      matchesFilters(product, brandFilter, priceRange, specFilters, simpleFilterGroups),
+    );
 
     // Sort
     switch (sort) {
@@ -243,10 +239,13 @@ export default function FilteredProductGrid({
                     <button
                       key={brand}
                       onClick={() => toggleBrand(brand)}
+                      disabled={count === 0 && !brandFilter.has(brand)}
                       className={`rounded-full border px-3 py-1.5 text-[12px] font-medium capitalize transition ${
                         brandFilter.has(brand)
                           ? "border-mercury bg-mercury text-white"
-                          : "border-line bg-white text-ink hover:border-mercury"
+                          : count === 0
+                            ? "cursor-not-allowed border-line bg-white text-muted opacity-50"
+                            : "border-line bg-white text-ink hover:border-mercury"
                       }`}
                     >
                       {brand} ({count})
@@ -304,10 +303,13 @@ export default function FilteredProductGrid({
                       <button
                         key={value}
                         onClick={() => toggleSpec(spec.key, value)}
+                        disabled={count === 0 && !active}
                         className={`rounded-full border px-3 py-1.5 text-[12px] font-medium transition ${
                           active
                             ? "border-mercury bg-mercury text-white"
-                            : "border-line bg-white text-ink hover:border-mercury"
+                            : count === 0
+                              ? "cursor-not-allowed border-line bg-white text-muted opacity-50"
+                              : "border-line bg-white text-ink hover:border-mercury"
                         }`}
                       >
                         {value.slice(0, 30)} ({count})
@@ -367,6 +369,35 @@ function FilterGroup({ title, children }: { title: string; children: React.React
   );
 }
 
+function matchesFilters(
+  product: Product,
+  brandFilter: Set<string>,
+  priceRange: [number, number] | null,
+  specFilters: Map<string, Set<string>>,
+  groups: SimpleFilterGroup[],
+  omittedGroup?: string,
+) {
+  if (
+    omittedGroup !== "Brand" &&
+    brandFilter.size > 0 &&
+    !brandFilter.has((product.brand || "").trim())
+  ) {
+    return false;
+  }
+
+  if (priceRange && (product.price < priceRange[0] || product.price > priceRange[1])) {
+    return false;
+  }
+
+  for (const [key, values] of specFilters) {
+    if (key === omittedGroup || values.size === 0) continue;
+    const group = groups.find((item) => item.key === key);
+    if (group && !values.has(group.classify(product))) return false;
+  }
+
+  return true;
+}
+
 function productText(product: Product) {
   const specs = product.specs
     ?.map((row) => `${row.spec} ${row.details} ${row.moreInfo} ${row.remarks}`)
@@ -400,6 +431,8 @@ function storageBucket(product: Product) {
 function displayBucket(product: Product) {
   const text = productText(product);
   return bucketByPatterns(text, [
+    ["13.6", /\b13[.]6[- ]*(?:inch|inches|in|\")?/i],
+    ["13", /\b13(?:[.]0)?[- ]*(?:inch|inches|in|\")/i],
     ["15.6", /\b15[.]6[- ]*(?:inch|inches|in|\")?/i],
     ["14", /\b14(?:[.]0)?[- ]*(?:inch|inches|in|\")/i],
     ["16", /\b16(?:[.]0)?[- ]*(?:inch|inches|in|\")/i],
@@ -411,7 +444,7 @@ function getSimpleFilterGroups(categorySlug: string | undefined, products: Produ
 
   if (slug === "laptops" || slug.includes("laptop")) {
     return [
-      { key: "Display", values: ["14", "15.6", "16", "Other"], classify: displayBucket },
+      { key: "Display", values: ["13", "13.6", "14", "15.6", "16", "Other"], classify: displayBucket },
       { key: "Storage", values: ["256GB", "512GB", "1TB", "Other"], classify: storageBucket },
       { key: "Memory", values: ["4GB", "8GB", "16GB", "32GB", "Other"], classify: memoryBucket },
       {
