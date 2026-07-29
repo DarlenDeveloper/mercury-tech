@@ -15,37 +15,26 @@ const SORT_OPTIONS: { value: SortOption; label: string }[] = [
   { value: "name_asc", label: "Name: A → Z" },
 ];
 
-// Spec keys worth surfacing as filters (if they appear often enough)
-const SPEC_KEYS_OF_INTEREST = [
-  "Processor",
-  "Memory (RAM)",
-  "Memory",
-  "RAM",
-  "Storage",
-  "Display",
-  "Graphics",
-  "Connectivity",
-  "Operating System",
-  "Print Technology",
-  "Functions",
-  "Scanner Type",
-  "Screen Size",
-  "Resolution",
-];
-
 const PAGE_SIZE = 24;
+
+type SimpleFilterGroup = {
+  key: string;
+  values: string[];
+  classify: (product: Product) => string;
+};
 
 export default function FilteredProductGrid({
   products,
   title,
+  categorySlug,
 }: {
   products: Product[];
   title?: string;
+  categorySlug?: string;
 }) {
   const { format } = useCurrency();
   const [sort, setSort] = useState<SortOption>("relevance");
   const [brandFilter, setBrandFilter] = useState<Set<string>>(new Set());
-  const [inStockOnly, setInStockOnly] = useState(false);
   const [priceRange, setPriceRange] = useState<[number, number] | null>(null);
   const [specFilters, setSpecFilters] = useState<Map<string, Set<string>>>(new Map());
   const [showFilters, setShowFilters] = useState(false);
@@ -82,30 +71,23 @@ export default function FilteredProductGrid({
     return { min: Math.min(...prices, 0), max: Math.max(...prices, 0) };
   }, [products]);
 
-  // Dynamic spec filters (only show keys that have 3+ distinct values and appear in 5+ products)
+  const simpleFilterGroups = useMemo(
+    () => getSimpleFilterGroups(categorySlug, products),
+    [categorySlug, products],
+  );
+
+  // Counts are derived from normalized buckets, not the inconsistent raw spec text.
   const specOptions = useMemo(() => {
-    const specMap = new Map<string, Map<string, number>>();
-    for (const p of products) {
-      if (!p.specs) continue;
-      for (const row of p.specs) {
-        if (!SPEC_KEYS_OF_INTEREST.includes(row.spec)) continue;
-        if (!specMap.has(row.spec)) specMap.set(row.spec, new Map());
-        const valMap = specMap.get(row.spec)!;
-        const val = row.details.trim();
-        if (val) valMap.set(val, (valMap.get(val) || 0) + 1);
-      }
-    }
-    const result: { key: string; values: { value: string; count: number }[] }[] = [];
-    for (const [key, valMap] of specMap) {
-      const values = [...valMap.entries()]
-        .filter(([, c]) => c >= 2)
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 8)
-        .map(([value, count]) => ({ value, count }));
-      if (values.length >= 2) result.push({ key, values });
-    }
-    return result.slice(0, 4); // Max 4 spec filters
-  }, [products]);
+    return simpleFilterGroups.map((group) => ({
+      key: group.key,
+      values: group.values
+        .map((value) => ({
+          value,
+          count: products.filter((product) => group.classify(product) === value).length,
+        }))
+        .filter(({ count }) => count > 0),
+    }));
+  }, [products, simpleFilterGroups]);
 
   // Apply filters + sort
   const filtered = useMemo(() => {
@@ -114,9 +96,6 @@ export default function FilteredProductGrid({
     if (brandFilter.size > 0) {
       result = result.filter((p) => brandFilter.has((p.brand || "").trim()));
     }
-    if (inStockOnly) {
-      result = result.filter((p) => (p.stock ?? 0) > 0);
-    }
     if (priceRange) {
       result = result.filter((p) => p.price >= priceRange[0] && p.price <= priceRange[1]);
     }
@@ -124,9 +103,8 @@ export default function FilteredProductGrid({
     for (const [key, vals] of specFilters) {
       if (vals.size === 0) continue;
       result = result.filter((p) => {
-        if (!p.specs) return false;
-        const row = p.specs.find((s) => s.spec === key);
-        return row ? vals.has(row.details.trim()) : false;
+        const group = simpleFilterGroups.find((item) => item.key === key);
+        return group ? vals.has(group.classify(p)) : true;
       });
     }
 
@@ -144,7 +122,7 @@ export default function FilteredProductGrid({
     }
 
     return result;
-  }, [products, brandFilter, inStockOnly, priceRange, specFilters, sort]);
+  }, [products, brandFilter, priceRange, specFilters, sort, simpleFilterGroups]);
 
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
   const visible = filtered.slice(0, page * PAGE_SIZE);
@@ -152,13 +130,11 @@ export default function FilteredProductGrid({
 
   const activeFilterCount =
     brandFilter.size +
-    (inStockOnly ? 1 : 0) +
     (priceRange ? 1 : 0) +
     [...specFilters.values()].reduce((s, v) => s + v.size, 0);
 
   const clearAll = () => {
     setBrandFilter(new Set());
-    setInStockOnly(false);
     setPriceRange(null);
     setSpecFilters(new Map());
     setPage(1);
@@ -318,20 +294,7 @@ export default function FilteredProductGrid({
               </div>
             </FilterGroup>
 
-            {/* In stock */}
-            <FilterGroup title="Availability">
-              <label className="flex cursor-pointer items-center gap-2 text-sm">
-                <input
-                  type="checkbox"
-                  checked={inStockOnly}
-                  onChange={(e) => { setInStockOnly(e.target.checked); setPage(1); }}
-                  className="rounded border-line"
-                />
-                <span className="text-ink">In stock only</span>
-              </label>
-            </FilterGroup>
-
-            {/* Dynamic spec filters */}
+            {/* Simple, category-specific filters */}
             {specOptions.map((spec) => (
               <FilterGroup key={spec.key} title={spec.key}>
                 <div className="flex flex-wrap gap-1.5">
@@ -402,4 +365,168 @@ function FilterGroup({ title, children }: { title: string; children: React.React
       {children}
     </div>
   );
+}
+
+function productText(product: Product) {
+  const specs = product.specs
+    ?.map((row) => `${row.spec} ${row.details} ${row.moreInfo} ${row.remarks}`)
+    .join(" ") ?? "";
+  return `${product.name} ${product.description} ${product.category} ${specs}`.toLowerCase();
+}
+
+function bucketByPatterns(text: string, buckets: [string, RegExp][], fallback = "Other") {
+  return buckets.find(([, pattern]) => pattern.test(text))?.[0] ?? fallback;
+}
+
+function memoryBucket(product: Product) {
+  const text = productText(product);
+  return bucketByPatterns(text, [
+    ["32GB", /\b32\s*gb\b/i],
+    ["16GB", /\b16\s*gb\b/i],
+    ["8GB", /\b8\s*gb\b/i],
+    ["4GB", /\b4\s*gb\b/i],
+  ]);
+}
+
+function storageBucket(product: Product) {
+  const text = productText(product);
+  return bucketByPatterns(text, [
+    ["1TB", /\b1\s*tb\b|\b1000\s*gb\b/i],
+    ["512GB", /\b512\s*gb\b/i],
+    ["256GB", /\b256\s*gb\b/i],
+  ]);
+}
+
+function displayBucket(product: Product) {
+  const text = productText(product);
+  return bucketByPatterns(text, [
+    ["15.6", /\b15[.]6[- ]*(?:inch|inches|in|\")?/i],
+    ["14", /\b14(?:[.]0)?[- ]*(?:inch|inches|in|\")/i],
+    ["16", /\b16(?:[.]0)?[- ]*(?:inch|inches|in|\")/i],
+  ]);
+}
+
+function getSimpleFilterGroups(categorySlug: string | undefined, products: Product[]): SimpleFilterGroup[] {
+  const slug = (categorySlug || commonCategory(products)).toLowerCase();
+
+  if (slug === "laptops" || slug.includes("laptop")) {
+    return [
+      { key: "Display", values: ["14", "15.6", "16", "Other"], classify: displayBucket },
+      { key: "Storage", values: ["256GB", "512GB", "1TB", "Other"], classify: storageBucket },
+      { key: "Memory", values: ["4GB", "8GB", "16GB", "32GB", "Other"], classify: memoryBucket },
+      {
+        key: "Capabilities",
+        values: ["Touch screen", "Non-touch screen"],
+        classify: (product) => {
+          const text = productText(product);
+          return /\b(?:touchscreen|touch[ -]?screen|touch display|2-in-1|convertible)\b/i.test(text) &&
+            !/\bnon[ -]?touch\b/i.test(text)
+            ? "Touch screen"
+            : "Non-touch screen";
+        },
+      },
+    ];
+  }
+
+  if (slug === "desktops" || slug.includes("desktop") || slug.includes("monitor")) {
+    return [
+      {
+        key: "Type",
+        values: ["Desktop", "All-in-One", "Monitor", "Other"],
+        classify: (product) => bucketByPatterns(productText(product), [
+          ["All-in-One", /\ball[ -]?in[ -]?one\b|\baio\b|\bproone\b/i],
+          ["Monitor", /\bmonitor\b|\bdisplay\b/i],
+          ["Desktop", /\bdesktop\b|\boptiplex\b|\bprodesk\b|\btower\b|\bsff\b/i],
+        ]),
+      },
+      { key: "Memory", values: ["4GB", "8GB", "16GB", "32GB", "Other"], classify: memoryBucket },
+      { key: "Storage", values: ["256GB", "512GB", "1TB", "Other"], classify: storageBucket },
+    ];
+  }
+
+  if (slug === "printers-office" || slug.includes("printer") || slug.includes("scanner")) {
+    return [
+      {
+        key: "Type",
+        values: ["Ink Tank", "Laser", "Inkjet", "Scanner", "Other"],
+        classify: (product) => bucketByPatterns(productText(product), [
+          ["Ink Tank", /\bink[ -]?tank\b|\becotank\b|\bsmart tank\b/i],
+          ["Laser", /\blaser(?:jet)?\b/i],
+          ["Inkjet", /\binkjet\b|\bdeskjet\b|\bofficejet\b|\bpixma\b/i],
+          ["Scanner", /\bscanner\b|\bscanjet\b/i],
+        ]),
+      },
+      {
+        key: "Functions",
+        values: ["Print only", "Multifunction"],
+        classify: (product) => /\b(?:all[ -]?in[ -]?one|multifunction|mfp|scan|copy)\b/i.test(productText(product))
+          ? "Multifunction"
+          : "Print only",
+      },
+      {
+        key: "Output",
+        values: ["Colour", "Black & white", "Other"],
+        classify: (product) => bucketByPatterns(productText(product), [
+          ["Black & white", /\bblack[ -]?(?:and|&)\s*white\b|\bmonochrome\b|\bmono\b/i],
+          ["Colour", /\bcolou?r\b/i],
+        ]),
+      },
+    ];
+  }
+
+  if (slug === "networking-security" || slug.includes("network") || slug.includes("router")) {
+    return [{
+      key: "Type",
+      values: ["Router", "Switch", "Security camera", "Wi-Fi adapter", "Other"],
+      classify: (product) => bucketByPatterns(productText(product), [
+        ["Router", /\brouter\b|\baccess point\b/i],
+        ["Switch", /\bswitch\b/i],
+        ["Security camera", /\bcamera\b|\bcctv\b|\bnvr\b|\bdvr\b/i],
+        ["Wi-Fi adapter", /\bwi-?fi adapter\b|\bwireless adapter\b/i],
+      ]),
+    }];
+  }
+
+  if (slug === "ups-power" || slug.includes("ups") || slug.includes("power")) {
+    return [
+      {
+        key: "Type",
+        values: ["Standard UPS", "Smart UPS", "UPS battery", "Other"],
+        classify: (product) => bucketByPatterns(productText(product), [
+          ["UPS battery", /\b(?:ups )?battery\b/i],
+          ["Smart UPS", /\bsmart-?ups\b|\bonline ups\b/i],
+          ["Standard UPS", /\bups\b|uninterruptible/i],
+        ]),
+      },
+      {
+        key: "Capacity",
+        values: ["650VA", "1000VA", "1500VA", "2000VA+", "Other"],
+        classify: (product) => bucketByPatterns(productText(product), [
+          ["650VA", /\b650\s*va\b/i],
+          ["1000VA", /\b(?:1000\s*va|1\s*kva)\b/i],
+          ["1500VA", /\b(?:1500\s*va|1[.]5\s*kva)\b/i],
+          ["2000VA+", /\b(?:2(?:000)?|3(?:000)?|5(?:000)?|10(?:000)?)\s*(?:k?va)\b/i],
+        ]),
+      },
+    ];
+  }
+
+  if (slug === "software" || slug.includes("software")) {
+    return [{
+      key: "Type",
+      values: ["Microsoft 365", "Windows", "Security", "Other"],
+      classify: (product) => bucketByPatterns(productText(product), [
+        ["Microsoft 365", /\b(?:microsoft|office) 365\b/i],
+        ["Windows", /\bwindows\b/i],
+        ["Security", /\bantivirus\b|\bsecurity\b|\bkaspersky\b|\bnorton\b/i],
+      ]),
+    }];
+  }
+
+  return [];
+}
+
+function commonCategory(products: Product[]) {
+  const categories = new Set(products.map((product) => product.categoryId).filter(Boolean));
+  return categories.size === 1 ? [...categories][0] ?? "" : "";
 }

@@ -62,7 +62,7 @@ export default async function CategoryPage({
                 <span className="font-medium text-ink">{category.name}</span>
               </nav>
 
-              <FilteredProductGrid products={products} title={category.name} />
+              <FilteredProductGrid products={products} title={category.name} categorySlug={slug} />
             </div>
           </div>
         </section>

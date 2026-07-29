@@ -97,7 +97,7 @@ export default async function SubCategoryPage({
                 </span>
               </nav>
 
-              <FilteredProductGrid products={products} title={subCategory.name} />
+              <FilteredProductGrid products={products} title={subCategory.name} categorySlug={slug} />
             </div>
           </div>
         </section>
