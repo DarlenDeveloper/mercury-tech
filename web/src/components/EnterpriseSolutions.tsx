@@ -35,7 +35,7 @@ const SOLUTIONS = [
     title: "Cybersecurity",
     description: "Protect users, devices and business data with practical, layered security solutions.",
     icon: ShieldSecurity,
-    href: "mailto:sales@mercurycomputerslimited.com?subject=Cybersecurity%20Solutions",
+    href: "mailto:corporate@mercurycomputerslimited.com?subject=Cybersecurity%20Solutions",
     tone: "light",
   },
   {
@@ -49,7 +49,7 @@ const SOLUTIONS = [
     title: "Leasing",
     description: "Equip your workforce with current technology through flexible leasing arrangements.",
     icon: MoneyRecive,
-    href: "mailto:sales@mercurycomputerslimited.com?subject=Technology%20Leasing",
+    href: "mailto:corporate@mercurycomputerslimited.com?subject=Technology%20Leasing",
     tone: "blue",
   },
 ] as const;

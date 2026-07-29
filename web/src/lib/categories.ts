@@ -37,7 +37,7 @@ export const getCategoriesFromFirestore = cache(async (): Promise<Category[]> =>
       }
 
       return {
-        name: c.name,
+        name: slug === "printers-office" ? "Printers & Supplies" : c.name,
         slug,
         image: c.image || "",
         children,
@@ -64,7 +64,7 @@ export const CATEGORIES: Category[] = [
     ],
   },
   {
-    name: "Printers & Office",
+    name: "Printers & Supplies",
     slug: "printers-office",
     image: "/cat-office.jpeg",
     children: [

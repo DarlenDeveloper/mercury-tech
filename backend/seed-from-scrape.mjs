@@ -24,7 +24,7 @@ const db = admin.firestore();
 // ─── Category mapping ───────────────────────────────────────────────────────
 const CATEGORIES = [
   { id: "computers", name: "Computers", order: 1 },
-  { id: "printers-office", name: "Printers & Office", order: 2 },
+  { id: "printers-office", name: "Printers & Supplies", order: 2 },
   { id: "components-power", name: "Components & Power", order: 3 },
   { id: "networking-security", name: "Networking & Security", order: 4 },
   { id: "phones-tv-audio", name: "Phones, TV & Audio", order: 5 },

@@ -1,16 +1,16 @@
 import Link from "next/link";
-import { ChevronRight } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import { DEPARTMENTS } from "@/lib/departments";
 
 export default function ProductDepartmentNav() {
   return (
-    <nav aria-label="Product departments" className="border-b border-line bg-white px-4 pb-12 pt-10 lg:px-6 lg:pb-14 lg:pt-12">
+    <nav aria-label="Product categories" className="border-b border-line bg-white px-4 pb-12 pt-10 lg:px-6 lg:pb-14 lg:pt-12">
       <div className="mb-5 text-center">
         <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted">
           Find what you need
         </p>
         <h2 className="mt-1.5 text-2xl font-extrabold tracking-tight text-mercury-accent">
-          Shop by Department
+          Shop by Category
         </h2>
       </div>
       <div className="no-scrollbar flex gap-3 overflow-x-auto pb-3 lg:grid lg:grid-cols-6 lg:overflow-visible">
@@ -21,7 +21,7 @@ export default function ProductDepartmentNav() {
               className="flex min-h-[72px] items-center justify-between rounded-2xl border border-mercury/30 bg-white px-5 text-[15px] font-semibold text-ink transition hover:border-mercury hover:bg-mercury hover:text-white hover:shadow-[0_12px_30px_-16px_rgba(36,69,159,0.75)]"
             >
               <span>{department.label}</span>
-              <ChevronRight size={23} strokeWidth={2.2} className="shrink-0 transition group-hover:translate-x-1" />
+              <ChevronDown size={23} strokeWidth={2.2} className="shrink-0 transition group-hover:translate-y-1" />
             </Link>
 
             {department.children.length > 0 && (

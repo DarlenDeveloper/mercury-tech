@@ -112,7 +112,7 @@ export function classify(name, category) {
 const DEPT_META = {
   laptops: { name: "Laptops", order: 1, image: "/cat-laptops.png" },
   desktops: { name: "Desktops", order: 2, image: "/cat-desktops.png" },
-  "printers-office": { name: "Printers & Office", order: 3, image: "/cat-printers.png" },
+  "printers-office": { name: "Printers & Supplies", order: 3, image: "/cat-printers.png" },
   "networking-security": { name: "Networking & Security", order: 4, image: "/cat-networking.png" },
   "ups-power": { name: "UPS & Power", order: 5, image: "/cat-ups.png" },
   software: { name: "Software", order: 6, image: "/cat-software.png" },

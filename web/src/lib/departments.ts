@@ -34,7 +34,7 @@ export const DEPARTMENTS: Department[] = [
     ],
   },
   {
-    label: "Printers & Office",
+    label: "Printers & Supplies",
     href: "/category/printers-office",
     children: [
       { name: "Ink Tank Printers", href: "/category/printers-office/ink-tank-printers" },

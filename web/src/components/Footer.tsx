@@ -4,13 +4,13 @@ const COLUMNS = [
     links: [
       { label: "Blog", href: "#" },
       { label: "Meet The Team", href: "#" },
-      { label: "Contact Us", href: "#" },
+      { label: "Contact Us", href: "mailto:corporate@mercurycomputerslimited.com" },
     ],
   },
   {
     title: "Support",
     links: [
-      { label: "Contact Us", href: "#" },
+      { label: "Contact Us", href: "mailto:corporate@mercurycomputerslimited.com" },
       { label: "Repairs & Services", href: "/repairs" },
       { label: "Returns", href: "#" },
       { label: "FAQ", href: "#" },
