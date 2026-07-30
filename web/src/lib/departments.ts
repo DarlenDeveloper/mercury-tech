@@ -18,7 +18,6 @@ export const DEPARTMENTS: Department[] = [
       { name: "Lenovo Laptops", href: "/category/laptops/lenovo-laptops" },
       { name: "HP Laptops", href: "/category/laptops/hp-laptops" },
       { name: "Dell Laptops", href: "/category/laptops/dell-laptops" },
-      { name: "Business Laptops", href: "/category/laptops/business-laptops" },
       { name: "Gaming Laptops", href: "/category/laptops/gaming-laptops" },
     ],
   },
