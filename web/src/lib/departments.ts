@@ -26,7 +26,6 @@ export const DEPARTMENTS: Department[] = [
     label: "Desktops",
     href: "/category/desktops",
     children: [
-      { name: "Desktops", href: "/category/desktops/desktops" },
       { name: "All-in-One PCs", href: "/category/desktops/all-in-one-pcs" },
       { name: "Dell Desktops", href: "/category/desktops/dell-desktops" },
       { name: "HP Desktops", href: "/category/desktops/hp-desktops" },

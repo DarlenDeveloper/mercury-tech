@@ -703,7 +703,16 @@ List<Widget> _departmentSections(BuildContext context, List<Product> all) {
   for (final dept in kShopCategories) {
     if (dept.slug.isEmpty || dept.slug == 'other') continue;
     final items = all.where((p) => p.categoryId == dept.slug).toList()
-      ..sort((a, b) => a.price.compareTo(b.price));
+      ..sort((a, b) {
+        if (dept.slug == 'printers-office') {
+          final printerPriority = _isPrinterDevice(b) ? 1 : 0;
+          final otherPriority = _isPrinterDevice(a) ? 1 : 0;
+          if (printerPriority != otherPriority) {
+            return printerPriority.compareTo(otherPriority);
+          }
+        }
+        return a.price.compareTo(b.price);
+      });
     if (items.isEmpty) continue;
     widgets.add(
       _SectionHeader(
@@ -716,6 +725,21 @@ List<Widget> _departmentSections(BuildContext context, List<Product> all) {
     widgets.add(_ProductRail(products: items.take(rowSize).toList()));
   }
   return widgets;
+}
+
+bool _isPrinterDevice(Product product) {
+  final text = [
+    product.category,
+    product.name,
+    ...product.subcategorySlugs,
+  ].join(' ').toLowerCase();
+  final isSupply = RegExp(
+    r'ink|toner|cartridge|ribbon|accessor|printhead|print head',
+  ).hasMatch(text);
+  return !isSupply &&
+      RegExp(
+        r'printer|laserjet|deskjet|officejet|smart tank',
+      ).hasMatch(text);
 }
 
 class _ProductRail extends StatelessWidget {
