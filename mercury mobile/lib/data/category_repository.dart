@@ -8,7 +8,7 @@ import 'categories.dart';
 /// hardcoded visual properties in [kShopCategories].
 class CategoryRepository {
   CategoryRepository({FirebaseFirestore? firestore})
-      : _db = firestore ?? FirebaseFirestore.instance;
+    : _db = firestore ?? FirebaseFirestore.instance;
 
   final FirebaseFirestore _db;
 
@@ -23,26 +23,29 @@ class CategoryRepository {
         final data = doc.data();
         if (data['active'] == false) continue;
         final slug = (data['slug'] as String?) ?? doc.id;
-        final children = (data['children'] as List?)
-                ?.map((c) => (c as Map<String, dynamic>)['name'] as String? ?? '')
+        final children =
+            (data['children'] as List?)
+                ?.map(
+                  (c) => (c as Map<String, dynamic>)['name'] as String? ?? '',
+                )
                 .where((n) => n.isNotEmpty)
                 .toList() ??
             [];
         firestoreMap[slug] = children;
       }
 
-      // Merge: for each local category, replace subcategories with Firestore
-      // children (keeping "All" at front and using generic icons). Matched by
-      // the department slug (aligned with the web taxonomy).
+      // Merge each local category with Firestore children. Printers and
+      // Desktops intentionally lead their respective category chips.
       return kShopCategories.map((local) {
         final fsChildren = firestoreMap[local.slug];
         if (fsChildren == null || fsChildren.isEmpty) return local;
 
+        final allIndex = local.subcategories.indexWhere(
+          (subcategory) => subcategory.label == 'All',
+        );
+        final all = allIndex == -1 ? null : local.subcategories[allIndex];
         final merged = <Subcategory>[
-          // Keep the "All" chip from the hardcoded list (has image).
-          if (local.subcategories.isNotEmpty) local.subcategories.first,
-          // Add Firestore children as subcategories.
-          ...fsChildren.map((name) {
+          ...fsChildren.where((name) => name != 'All').map((name) {
             // Try to reuse existing chip if name matches.
             final existing = local.subcategories
                 .where((s) => s.label.toLowerCase() == name.toLowerCase())
@@ -50,7 +53,25 @@ class CategoryRepository {
             if (existing.isNotEmpty) return existing.first;
             return Subcategory(name, IconsaxPlusBold.category);
           }),
+          if (all != null) all,
         ];
+        final preferred = switch (local.slug) {
+          'printers-office' => 'Printers',
+          'desktops' => 'Desktops',
+          _ => null,
+        };
+        if (preferred != null) {
+          final preferredIndex = merged.indexWhere(
+            (subcategory) => subcategory.label == preferred,
+          );
+          if (preferredIndex != -1) {
+            final preferredSubcategory = merged.removeAt(preferredIndex);
+            merged.insert(0, preferredSubcategory);
+          }
+        } else if (all != null) {
+          merged.remove(all);
+          merged.insert(0, all);
+        }
 
         return Category(
           name: local.name,

@@ -26,8 +26,8 @@ export const DEPARTMENTS: Department[] = [
     label: "Desktops",
     href: "/category/desktops",
     children: [
-      { name: "All-in-One PCs", href: "/category/desktops/all-in-one-pcs" },
       { name: "Desktops", href: "/category/desktops/desktops" },
+      { name: "All-in-One PCs", href: "/category/desktops/all-in-one-pcs" },
       { name: "Dell Desktops", href: "/category/desktops/dell-desktops" },
       { name: "HP Desktops", href: "/category/desktops/hp-desktops" },
       { name: "Monitors", href: "/category/desktops/monitors" },
@@ -37,6 +37,7 @@ export const DEPARTMENTS: Department[] = [
     label: "Printers & Supplies",
     href: "/category/printers-office",
     children: [
+      { name: "Printers", href: "/category/printers-office/printers" },
       { name: "Ink Tank Printers", href: "/category/printers-office/ink-tank-printers" },
       { name: "Laser Printers", href: "/category/printers-office/a4-black-white-laser-printers" },
       { name: "HP Toner Cartridges", href: "/category/printers-office/hp-toner-cartridges" },

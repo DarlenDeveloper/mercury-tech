@@ -18,10 +18,16 @@ const List<Category> kShopCategories = [
     imageScaleX: 2.15,
     imageRotationDeg: -90,
     subcategories: [
-      Subcategory('All', IconsaxPlusBold.category_2,
-          image: 'assets/images/computers-removebg-preview.png'),
-      Subcategory('HP Laptops', IconsaxPlusBold.monitor,
-          image: 'assets/images/HP 250 G9 Laptop.jpeg'),
+      Subcategory(
+        'All',
+        IconsaxPlusBold.category_2,
+        image: 'assets/images/computers-removebg-preview.png',
+      ),
+      Subcategory(
+        'HP Laptops',
+        IconsaxPlusBold.monitor,
+        image: 'assets/images/HP 250 G9 Laptop.jpeg',
+      ),
       Subcategory('Lenovo Laptops', IconsaxPlusBold.monitor),
       Subcategory('Dell Laptops', IconsaxPlusBold.monitor),
       Subcategory('Gaming Laptops', IconsaxPlusBold.monitor),
@@ -35,15 +41,23 @@ const List<Category> kShopCategories = [
     image: 'assets/images/computers-removebg-preview.png',
     photo: 'assets/images/cat-desktops.jpeg',
     subcategories: [
-      Subcategory('All', IconsaxPlusBold.category_2,
-          image: 'assets/images/computers-removebg-preview.png'),
-      Subcategory('Desktops', IconsaxPlusBold.devices,
-          image:
-              'assets/images/Dell OptiPlex 7020 MT (desktop + monitor).jpeg'),
+      Subcategory(
+        'Desktops',
+        IconsaxPlusBold.devices,
+        image: 'assets/images/Dell OptiPlex 7020 MT (desktop + monitor).jpeg',
+      ),
+      Subcategory(
+        'All',
+        IconsaxPlusBold.category_2,
+        image: 'assets/images/computers-removebg-preview.png',
+      ),
       Subcategory('Dell Desktops', IconsaxPlusBold.devices),
       Subcategory('HP Desktops', IconsaxPlusBold.devices),
-      Subcategory('Monitors', IconsaxPlusBold.monitor_mobbile,
-          image: 'assets/images/Dell E2020H.jpeg'),
+      Subcategory(
+        'Monitors',
+        IconsaxPlusBold.monitor_mobbile,
+        image: 'assets/images/Dell E2020H.jpeg',
+      ),
     ],
   ),
   Category(
@@ -54,10 +68,16 @@ const List<Category> kShopCategories = [
     photo: 'assets/images/cat-office.jpeg',
     imageScale: 1.3,
     subcategories: [
-      Subcategory('All', IconsaxPlusBold.category_2,
-          image: 'assets/images/printers___power-removebg-preview.png'),
-      Subcategory('Printers', IconsaxPlusBold.printer,
-          image: 'assets/images/HP DeskJet 2320.jpeg'),
+      Subcategory(
+        'Printers',
+        IconsaxPlusBold.printer,
+        image: 'assets/images/HP DeskJet 2320.jpeg',
+      ),
+      Subcategory(
+        'All',
+        IconsaxPlusBold.category_2,
+        image: 'assets/images/printers___power-removebg-preview.png',
+      ),
       Subcategory('Ink & Toner', IconsaxPlusBold.colorfilter),
       Subcategory('Scanners', IconsaxPlusBold.scanner),
     ],
@@ -70,8 +90,11 @@ const List<Category> kShopCategories = [
     photo: 'assets/images/cat-networking.jpeg',
     imageScale: 1.45,
     subcategories: [
-      Subcategory('All', IconsaxPlusBold.category_2,
-          image: 'assets/images/networking___security-removebg-preview.png'),
+      Subcategory(
+        'All',
+        IconsaxPlusBold.category_2,
+        image: 'assets/images/networking___security-removebg-preview.png',
+      ),
       Subcategory('Routers', IconsaxPlusBold.routing),
       Subcategory('Switches', IconsaxPlusBold.routing),
       Subcategory('Wi-Fi', IconsaxPlusBold.wifi),
@@ -85,8 +108,11 @@ const List<Category> kShopCategories = [
     image: 'assets/images/components___power-removebg-preview.png',
     photo: 'assets/images/cat-components.jpeg',
     subcategories: [
-      Subcategory('All', IconsaxPlusBold.category_2,
-          image: 'assets/images/components___power-removebg-preview.png'),
+      Subcategory(
+        'All',
+        IconsaxPlusBold.category_2,
+        image: 'assets/images/components___power-removebg-preview.png',
+      ),
       Subcategory('UPS', IconsaxPlusBold.battery_full),
       Subcategory('Power', IconsaxPlusBold.flash),
     ],
@@ -99,8 +125,11 @@ const List<Category> kShopCategories = [
     photo: 'assets/images/cat-software.jpeg',
     imageScale: 1.3,
     subcategories: [
-      Subcategory('All', IconsaxPlusBold.category_2,
-          image: 'assets/images/accessories-removebg-preview.png'),
+      Subcategory(
+        'All',
+        IconsaxPlusBold.category_2,
+        image: 'assets/images/accessories-removebg-preview.png',
+      ),
       Subcategory('Computer Software', IconsaxPlusBold.document_text),
       Subcategory('Microsoft 365 Family', IconsaxPlusBold.document_text),
     ],
@@ -113,8 +142,11 @@ const List<Category> kShopCategories = [
     photo: 'assets/images/cat-accessories.jpeg',
     imageScale: 1.45,
     subcategories: [
-      Subcategory('All', IconsaxPlusBold.category_2,
-          image: 'assets/images/accessories-removebg-preview.png'),
+      Subcategory(
+        'All',
+        IconsaxPlusBold.category_2,
+        image: 'assets/images/accessories-removebg-preview.png',
+      ),
       Subcategory('Phones', IconsaxPlusBold.mobile),
       Subcategory('Tablets', IconsaxPlusBold.mobile),
       Subcategory('Audio', IconsaxPlusBold.headphone),

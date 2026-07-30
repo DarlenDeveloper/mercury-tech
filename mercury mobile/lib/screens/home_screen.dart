@@ -80,8 +80,8 @@ class _HomeScreenState extends State<HomeScreen> {
     }
     final products =
         _selectedCategory == kCategories.first || selectedSlug == null
-            ? all
-            : all.where((p) => p.categoryId == selectedSlug).toList();
+        ? all
+        : all.where((p) => p.categoryId == selectedSlug).toList();
     final topPadding = MediaQuery.of(context).padding.top;
 
     return Stack(
@@ -94,14 +94,14 @@ class _HomeScreenState extends State<HomeScreen> {
             gradient: LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
-              colors: [
-                Color(0xFF1A4D4D),
-                Color(0xFF163F3F),
-              ],
+              colors: [Color(0xFF1A4D4D), Color(0xFF163F3F)],
             ),
           ),
           alignment: Alignment.center,
-          padding: EdgeInsets.only(top: (topPadding - 4).clamp(0, double.infinity), bottom: 24),
+          padding: EdgeInsets.only(
+            top: (topPadding - 4).clamp(0, double.infinity),
+            bottom: 24,
+          ),
           child: GestureDetector(
             onTap: () {
               // TODO: navigate to deals
@@ -115,70 +115,87 @@ class _HomeScreenState extends State<HomeScreen> {
           color: AppColors.primary,
           displacement: topPadding + 60,
           child: CustomScrollView(
-          slivers: [
-            // Spacer so carousel starts below the green banner
-            SliverToBoxAdapter(
-              child: SizedBox(height: topPadding + 48),
-            ),
-            // Full-bleed carousel
-            SliverToBoxAdapter(
-              child: Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(24),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.15),
-                      blurRadius: 20,
-                      offset: const Offset(0, 8),
-                    ),
-                  ],
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(24),
-                  child: const _PromoCarousel(),
-                ),
-              ),
-            ),
-            SliverToBoxAdapter(
-              child: Container(
-                color: Colors.white,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(height: 16),
-                    const _TopTechSection(),
-                    if (loading)
-                      const Padding(
-                        padding: EdgeInsets.only(top: 8),
-                        child: ProductRailSkeleton(),
-                      )
-                    else if (_selectedCategory == kCategories.first) ...[
-                      // "All Products": flash sale + one rail per department.
-                      if (catalogScope.flashSale.isNotEmpty) ...[
-                        _SectionHeader(
-                          title: catalogScope.flashSaleTitle,
-                          accent: true,
-                        ),
-                        _ProductRail(products: catalogScope.flashSale),
-                        const SizedBox(height: 4),
-                      ],
-                      ..._departmentSections(context, all),
-                    ] else ...[
-                      // A specific department chip is selected.
-                      _SectionHeader(title: _selectedCategory),
-                      _ProductRail(products: products),
+            slivers: [
+              // Spacer so carousel starts below the green banner
+              SliverToBoxAdapter(child: SizedBox(height: topPadding + 48)),
+              // Full-bleed carousel
+              SliverToBoxAdapter(
+                child: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(24),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.15),
+                        blurRadius: 20,
+                        offset: const Offset(0, 8),
+                      ),
                     ],
-                    const SizedBox(height: 120),
-                  ],
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(24),
+                    child: const _PromoCarousel(),
+                  ),
                 ),
               ),
-            ),
-          ],
-        ),
+              SliverToBoxAdapter(
+                child: Container(
+                  color: Colors.white,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SizedBox(height: 16),
+                      const _TopTechSection(),
+                      if (loading)
+                        const Padding(
+                          padding: EdgeInsets.only(top: 8),
+                          child: ProductRailSkeleton(),
+                        )
+                      else if (_selectedCategory == kCategories.first) ...[
+                        // "All Products": flash sale + one rail per department.
+                        if (catalogScope.flashSale.isNotEmpty) ...[
+                          _SectionHeader(
+                            title: catalogScope.flashSaleTitle,
+                            accent: true,
+                          ),
+                          _ProductRail(products: catalogScope.flashSale),
+                          const SizedBox(height: 4),
+                        ],
+                        if (_appleProducts(all).isNotEmpty) ...[
+                          const _SectionHeader(title: 'Apple Products'),
+                          _ProductRail(products: _appleProducts(all)),
+                          const SizedBox(height: 4),
+                        ],
+                        ..._departmentSections(context, all),
+                      ] else ...[
+                        // A specific department chip is selected.
+                        _SectionHeader(title: _selectedCategory),
+                        _ProductRail(products: products),
+                      ],
+                      const SizedBox(height: 120),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ],
     );
   }
+}
+
+/// Apple gets a dedicated homepage rail for App Store review visibility.
+/// Prefer structured brand data, while tolerating older catalog entries that
+/// only identify the product in its name.
+List<Product> _appleProducts(List<Product> products) {
+  const appleNames = ['apple', 'iphone', 'ipad', 'macbook', 'imac', 'airpods'];
+  final matches = products.where((product) {
+    final brand = product.brand?.trim().toLowerCase();
+    if (brand == 'apple') return true;
+    final name = product.name.toLowerCase();
+    return appleNames.any(name.contains);
+  }).toList()..sort((a, b) => a.price.compareTo(b.price));
+  return matches.take(10).toList();
 }
 
 class _UserRow extends StatelessWidget {
@@ -229,10 +246,7 @@ class _UserRow extends StatelessWidget {
             child: const Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
-                  '🇺🇸',
-                  style: TextStyle(fontSize: 16),
-                ),
+                Text('🇺🇸', style: TextStyle(fontSize: 16)),
                 SizedBox(width: 4),
                 Text(
                   'USD',
@@ -295,8 +309,11 @@ class _SearchField extends StatelessWidget {
               ),
               child: Row(
                 children: const [
-                  Icon(IconsaxPlusLinear.search_normal,
-                      size: 20, color: AppColors.inactive),
+                  Icon(
+                    IconsaxPlusLinear.search_normal,
+                    size: 20,
+                    color: AppColors.inactive,
+                  ),
                   SizedBox(width: 12),
                   Text(
                     'Search products & brands',
@@ -437,11 +454,7 @@ class _PromoCard extends StatelessWidget {
             gradient: LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
-              colors: [
-                Color(0x33000000),
-                Color(0x00000000),
-                Color(0xAA000000),
-              ],
+              colors: [Color(0x33000000), Color(0x00000000), Color(0xAA000000)],
               stops: [0.0, 0.4, 1.0],
             ),
           ),
@@ -466,18 +479,20 @@ class _PromoCard extends StatelessWidget {
               Text(
                 slide.subtitle,
                 textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontSize: 14,
-                  color: Color(0xFFE5E7EB),
-                ),
+                style: const TextStyle(fontSize: 14, color: Color(0xFFE5E7EB)),
               ),
               const SizedBox(height: 16),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 10,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(24),
-                  border: Border.all(color: Colors.white.withValues(alpha: 0.4)),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.4),
+                  ),
                 ),
                 child: const Text(
                   'Shop now',
@@ -656,8 +671,11 @@ class _SectionHeader extends StatelessWidget {
                   color: Color(0xFFEDF1F7),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.chevron_right,
-                    size: 18, color: Color(0xFF1F2937)),
+                child: const Icon(
+                  Icons.chevron_right,
+                  size: 18,
+                  color: Color(0xFF1F2937),
+                ),
               ),
             const Spacer(),
             if (onTap != null)
@@ -687,12 +705,14 @@ List<Widget> _departmentSections(BuildContext context, List<Product> all) {
     final items = all.where((p) => p.categoryId == dept.slug).toList()
       ..sort((a, b) => a.price.compareTo(b.price));
     if (items.isEmpty) continue;
-    widgets.add(_SectionHeader(
-      title: dept.name,
-      onTap: () => Navigator.of(context).push(
-        MaterialPageRoute(builder: (_) => CategoryScreen(category: dept)),
+    widgets.add(
+      _SectionHeader(
+        title: dept.name,
+        onTap: () => Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => CategoryScreen(category: dept)),
+        ),
       ),
-    ));
+    );
     widgets.add(_ProductRail(products: items.take(rowSize).toList()));
   }
   return widgets;
@@ -758,10 +778,7 @@ class _HomeGradientBackdrop extends StatelessWidget {
 
 /// Definition for a single quick-action shortcut tile.
 class _QuickAction {
-  const _QuickAction({
-    required this.label,
-    required this.image,
-  });
+  const _QuickAction({required this.label, required this.image});
 
   final String label;
 
@@ -788,7 +805,9 @@ class _QuickActions extends StatelessWidget {
       child: Row(
         children: [
           for (final action in _actions)
-            Expanded(child: _QuickActionTile(action: action, onTap: () {})),
+            Expanded(
+              child: _QuickActionTile(action: action, onTap: () {}),
+            ),
         ],
       ),
     );
@@ -843,7 +862,6 @@ class _QuickActionTile extends StatelessWidget {
     );
   }
 }
-
 
 // ─────────────────────────────────────────────────────────────────────────────
 // "Explore our Top Tech" — horizontally scrollable category cards
@@ -979,8 +997,9 @@ class _TopTechCard extends StatelessWidget {
           // Product image with green gradient at bottom
           Expanded(
             child: ClipRRect(
-              borderRadius:
-                  const BorderRadius.vertical(bottom: Radius.circular(20)),
+              borderRadius: const BorderRadius.vertical(
+                bottom: Radius.circular(20),
+              ),
               child: Stack(
                 fit: StackFit.expand,
                 children: [
@@ -990,20 +1009,14 @@ class _TopTechCard extends StatelessWidget {
                       gradient: LinearGradient(
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
-                        colors: [
-                          Color(0x00FFFFFF),
-                          Color(0xFFFDE8C8),
-                        ],
+                        colors: [Color(0x00FFFFFF), Color(0xFFFDE8C8)],
                         stops: [0.3, 1.0],
                       ),
                     ),
                   ),
                   Padding(
                     padding: const EdgeInsets.all(0),
-                    child: Image.asset(
-                      item.image,
-                      fit: BoxFit.contain,
-                    ),
+                    child: Image.asset(item.image, fit: BoxFit.contain),
                   ),
                 ],
               ),
@@ -1014,7 +1027,6 @@ class _TopTechCard extends StatelessWidget {
     );
   }
 }
-
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Animated deals banner — cycles through promo messages
@@ -1048,12 +1060,14 @@ class _AnimatedDealsBannerState extends State<_AnimatedDealsBanner>
       vsync: this,
       duration: const Duration(milliseconds: 600),
     );
-    _fadeIn = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeIn),
-    );
-    _fadeOut = Tween<double>(begin: 1.0, end: 0.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeOut),
-    );
+    _fadeIn = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeIn));
+    _fadeOut = Tween<double>(
+      begin: 1.0,
+      end: 0.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
     _controller.forward();
     _timer = Timer.periodic(const Duration(seconds: 3), (_) => _next());
   }
@@ -1094,10 +1108,7 @@ class _AnimatedDealsBannerState extends State<_AnimatedDealsBanner>
             const SizedBox(width: 6),
             Text(
               msg.$2,
-              style: const TextStyle(
-                fontSize: 13,
-                color: Colors.white,
-              ),
+              style: const TextStyle(fontSize: 13, color: Colors.white),
             ),
           ],
         ),
@@ -1105,7 +1116,6 @@ class _AnimatedDealsBannerState extends State<_AnimatedDealsBanner>
     );
   }
 }
-
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Floating search bar that sits on top of the carousel
@@ -1136,10 +1146,7 @@ class _FloatingSearchBar extends StatelessWidget {
                   const Expanded(
                     child: Text(
                       'Search for brands or products',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: AppColors.inactive,
-                      ),
+                      style: TextStyle(fontSize: 14, color: AppColors.inactive),
                     ),
                   ),
                   Icon(

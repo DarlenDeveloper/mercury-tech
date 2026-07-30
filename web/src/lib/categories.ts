@@ -36,6 +36,16 @@ export const getCategoriesFromFirestore = cache(async (): Promise<Category[]> =>
         children.unshift({ name: "All-in-One PCs", slug: "all-in-one-pcs" });
       }
 
+      const preferredChildSlug = slug === "desktops"
+        ? "desktops"
+        : slug === "printers-office"
+          ? "printers"
+          : null;
+      if (preferredChildSlug) {
+        const preferredIndex = children.findIndex((child) => child.slug === preferredChildSlug);
+        if (preferredIndex > 0) children.unshift(...children.splice(preferredIndex, 1));
+      }
+
       return {
         name: slug === "printers-office" ? "Printers & Supplies" : c.name,
         slug,
@@ -68,6 +78,7 @@ export const CATEGORIES: Category[] = [
     slug: "printers-office",
     image: "/cat-office.jpeg",
     children: [
+      { name: "Printers", slug: "printers" },
       { name: "All-in-One Printers", slug: "multifunction-all-in-one-printers" },
       { name: "Ink Tank Printers", slug: "ink-tank-printers" },
       { name: "Laser Printers", slug: "a4-black-white-laser-printers" },
