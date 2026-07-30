@@ -28,7 +28,7 @@ export default function HomeProductRows({
         const slug = dept.href.replace("/category/", "");
         const items = products
           .filter((p) => p.categoryId === slug)
-          .sort((a, b) => b.price - a.price)
+          .sort((a, b) => a.price - b.price)
           .slice(0, ROW_SIZE);
         return (
           <ProductRow

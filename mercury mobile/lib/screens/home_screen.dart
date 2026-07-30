@@ -678,14 +678,14 @@ class _SectionHeader extends StatelessWidget {
 
 /// Builds one horizontal rail per main department (skips "Other"), each with a
 /// tappable "View all" header that opens the department's CategoryScreen.
-/// Products are sorted high → low price and capped, mirroring the website.
+/// Products are sorted low → high price and capped, mirroring the website.
 List<Widget> _departmentSections(BuildContext context, List<Product> all) {
   const rowSize = 10;
   final widgets = <Widget>[];
   for (final dept in kShopCategories) {
     if (dept.slug.isEmpty || dept.slug == 'other') continue;
     final items = all.where((p) => p.categoryId == dept.slug).toList()
-      ..sort((a, b) => b.price.compareTo(a.price));
+      ..sort((a, b) => a.price.compareTo(b.price));
     if (items.isEmpty) continue;
     widgets.add(_SectionHeader(
       title: dept.name,
