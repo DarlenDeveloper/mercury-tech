@@ -11,16 +11,7 @@ const PARTNERS = [
 
 export default function TechnologyPartners() {
   return (
-    <section className="mt-14 border-y border-line/70 py-9 sm:mt-16">
-      <div className="mb-7 text-center">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted">
-          Trusted partnerships
-        </p>
-        <h2 className="mt-1.5 text-2xl font-extrabold tracking-tight text-mercury-accent">
-          Our Partners
-        </h2>
-      </div>
-
+    <section className="mt-14 py-9 sm:mt-16">
       <div className="no-scrollbar flex items-center gap-6 overflow-x-auto sm:gap-10 lg:grid lg:grid-cols-6 lg:overflow-visible">
         {PARTNERS.map((partner) => (
           <div
