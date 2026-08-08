@@ -16,7 +16,6 @@ export default function RequestQuoteButton({
 }) {
   const { user } = useAuth();
   const [open, setOpen] = useState(false);
-  const [preferredPrice, setPreferredPrice] = useState("");
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState(false);
@@ -36,13 +35,12 @@ export default function RequestQuoteButton({
         userName: user.displayName || "",
         userEmail: user.email || "",
         userPhone: "",
-        message: `Preferred price: USh ${Number(preferredPrice || 0).toLocaleString("en-UG")}${message ? `. ${message.trim()}` : ""}`,
+        message: message.trim(),
       });
       setDone(true);
       setTimeout(() => {
         setOpen(false);
         setDone(false);
-        setPreferredPrice("");
         setMessage("");
       }, 2000);
     } catch (e) {
@@ -99,18 +97,6 @@ export default function RequestQuoteButton({
                 </p>
 
                 <div className="mt-5 flex flex-col gap-3">
-                  <div>
-                    <label className="mb-1 block text-xs font-semibold text-ink">
-                      Your preferred price (UGX)
-                    </label>
-                    <input
-                      type="number"
-                      value={preferredPrice}
-                      onChange={(e) => setPreferredPrice(e.target.value)}
-                      placeholder="e.g. 150,000"
-                      className="h-11 w-full rounded-xl border border-line bg-[#FAFBFC] px-4 text-sm text-ink outline-none focus:border-mercury focus:bg-white"
-                    />
-                  </div>
                   <div>
                     <label className="mb-1 block text-xs font-semibold text-ink">
                       Message (optional)
