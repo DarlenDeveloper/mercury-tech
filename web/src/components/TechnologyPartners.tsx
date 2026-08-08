@@ -11,7 +11,7 @@ const PARTNERS = [
 
 export default function TechnologyPartners() {
   return (
-    <section className="mt-14 py-9 sm:mt-16">
+    <section className="mt-2 py-1 sm:mt-2">
       <div className="no-scrollbar flex items-center gap-6 overflow-x-auto sm:gap-10 lg:grid lg:grid-cols-6 lg:overflow-visible">
         {PARTNERS.map((partner) => (
           <div
