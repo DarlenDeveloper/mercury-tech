@@ -77,8 +77,13 @@ class _CatalogLoaderState extends State<CatalogLoader> {
       _error = null;
     });
     try {
-      final products = await _repo.fetchProducts();
+      final allProducts = await _repo.fetchProducts();
       final homepage = await _repo.fetchHomepage();
+      final products = homepage.appleOnlyStorefront
+          ? allProducts
+                .where((p) => p.brand?.trim().toLowerCase() == 'apple')
+                .toList()
+          : allProducts;
       // Build the flash-sale list: match each config entry to a product and
       // apply the promo price (converted with the same rate baked into price).
       final byId = {for (final p in products) p.id: p};
@@ -88,10 +93,9 @@ class _CatalogLoaderState extends State<CatalogLoader> {
         if (p == null || p.priceUsd <= 0) continue;
         final rate = p.price / p.priceUsd;
         final sale = (e.salePriceUsd * rate).round();
-        flash.add(p.copyWith(
-          price: sale,
-          oldPrice: sale < p.price ? p.price : null,
-        ));
+        flash.add(
+          p.copyWith(price: sale, oldPrice: sale < p.price ? p.price : null),
+        );
       }
       if (!mounted) return;
       setState(() {

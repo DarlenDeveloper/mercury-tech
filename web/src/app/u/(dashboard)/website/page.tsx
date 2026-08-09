@@ -46,6 +46,7 @@ export default function WebsitePage() {
 
   const [flashTitle, setFlashTitle] = useState("Flash Sale");
   const [flash, setFlash] = useState<FlashEntry[]>([]);
+  const [appleOnlyStorefront, setAppleOnlyStorefront] = useState(false);
   const [saving, setSaving] = useState(false);
   const [savedAt, setSavedAt] = useState<number | null>(null);
 
@@ -71,6 +72,7 @@ export default function WebsitePage() {
             : [];
           setFlash(entries);
           setFlashTitle(d.flashSaleTitle || "Flash Sale");
+          setAppleOnlyStorefront(d.appleOnlyStorefront === true);
         }
       } catch (e) {
         console.error("Website config fetch error:", e);
@@ -135,6 +137,7 @@ export default function WebsitePage() {
         {
           flashSale: clean,
           flashSaleTitle: flashTitle.trim() || "Flash Sale",
+          appleOnlyStorefront,
           updatedAt: serverTimestamp(),
         },
         { merge: true }
@@ -176,6 +179,26 @@ export default function WebsitePage() {
           Saved. The homepage updates within a few minutes.
         </p>
       )}
+
+      <div className="mt-6 admin-card p-5">
+        <div className="flex items-center justify-between gap-5">
+          <div>
+            <h3 className="text-[15px] font-bold text-ink">Apple-only storefront</h3>
+            <p className="mt-1 text-[12px] text-muted">
+              Show only Apple products to shoppers in the mobile app. The website and admin inventory remain unchanged.
+            </p>
+          </div>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={appleOnlyStorefront}
+            onClick={() => setAppleOnlyStorefront((enabled) => !enabled)}
+            className={`relative h-7 w-12 shrink-0 rounded-full transition ${appleOnlyStorefront ? "bg-mercury" : "bg-gray-300"}`}
+          >
+            <span className={`absolute top-1 h-5 w-5 rounded-full bg-white shadow transition-all ${appleOnlyStorefront ? "left-6" : "left-1"}`} />
+          </button>
+        </div>
+      </div>
 
       {/* Flash sale */}
       <div className="mt-6 admin-card p-5">

@@ -8,7 +8,7 @@ import '../models/product.dart';
 /// converts to Ugandan Shillings using the admin-managed `config/rate`.
 class ProductRepository {
   ProductRepository({FirebaseFirestore? firestore})
-      : _db = firestore ?? FirebaseFirestore.instance;
+    : _db = firestore ?? FirebaseFirestore.instance;
 
   final FirebaseFirestore _db;
 
@@ -62,7 +62,8 @@ class ProductRepository {
     final images = (data['images'] as List?)?.cast<String>() ?? const [];
     final singleImage = data['image'] as String?;
     final productImage = images.isNotEmpty ? images.first : singleImage;
-    final specs = (data['specifications'] as Map?)?.map(
+    final specs =
+        (data['specifications'] as Map?)?.map(
           (k, v) => MapEntry(k.toString(), v.toString()),
         ) ??
         const <String, String>{};
@@ -76,7 +77,8 @@ class ProductRepository {
       oldPrice: oldPriceUsd != null ? (oldPriceUsd * rate).round() : null,
       category: category,
       categoryId: (data['categoryId'] as String?),
-      subcategorySlugs: (data['subcategorySlugs'] as List?)
+      subcategorySlugs:
+          (data['subcategorySlugs'] as List?)
               ?.map((value) => value.toString())
               .toList() ??
           const [],
@@ -101,8 +103,14 @@ class ProductRepository {
 
   /// Fetches the homepage flash-sale config (config/homepage). Returns the row
   /// title and the selected entries with their promo price in USD.
-  Future<({String title, List<({String id, double salePriceUsd})> entries})>
-      fetchHomepage() async {
+  Future<
+    ({
+      String title,
+      List<({String id, double salePriceUsd})> entries,
+      bool appleOnlyStorefront,
+    })
+  >
+  fetchHomepage() async {
     try {
       final doc = await _db.collection('config').doc('homepage').get();
       final data = doc.data() ?? {};
@@ -118,9 +126,17 @@ class ProductRepository {
           }
         }
       }
-      return (title: title, entries: entries);
+      return (
+        title: title,
+        entries: entries,
+        appleOnlyStorefront: data['appleOnlyStorefront'] == true,
+      );
     } catch (_) {
-      return (title: 'Flash Sale', entries: <({String id, double salePriceUsd})>[]);
+      return (
+        title: 'Flash Sale',
+        entries: <({String id, double salePriceUsd})>[],
+        appleOnlyStorefront: false,
+      );
     }
   }
 

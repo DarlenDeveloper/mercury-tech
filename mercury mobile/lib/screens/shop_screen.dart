@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:iconsax_plus/iconsax_plus.dart';
 
 import '../data/category_scope.dart';
+import '../data/catalog_scope.dart';
 import '../models/category.dart';
 import '../theme/app_colors.dart';
 import '../widgets/ai_search_button.dart';
@@ -14,6 +15,9 @@ class ShopScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final topPadding = MediaQuery.of(context).padding.top;
+    final visibleCategoryIds = CatalogScope.of(
+      context,
+    ).products.map((product) => product.categoryId).whereType<String>().toSet();
     return ListView(
       padding: EdgeInsets.fromLTRB(0, topPadding + 8, 0, 120),
       children: [
@@ -37,12 +41,18 @@ class ShopScreen extends StatelessWidget {
                     ),
                     child: Row(
                       children: const [
-                        Icon(IconsaxPlusLinear.search_normal,
-                            size: 20, color: AppColors.inactive),
+                        Icon(
+                          IconsaxPlusLinear.search_normal,
+                          size: 20,
+                          color: AppColors.inactive,
+                        ),
                         SizedBox(width: 12),
                         Text(
                           'What are you looking for?',
-                          style: TextStyle(fontSize: 14, color: AppColors.inactive),
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: AppColors.inactive,
+                          ),
                         ),
                       ],
                     ),
@@ -56,7 +66,9 @@ class ShopScreen extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         // Category cards — departments in their configured order
-        for (final category in CategoryScope.of(context))
+        for (final category in CategoryScope.of(
+          context,
+        ).where((category) => visibleCategoryIds.contains(category.slug)))
           _ShopCategoryCard(
             category: category,
             onTap: () => Navigator.of(context).push(
@@ -101,9 +113,7 @@ class _ShopCategoryCard extends StatelessWidget {
                   ),
                 ],
                 // Subtle scrim for text legibility
-                Container(
-                  color: Colors.black.withValues(alpha: 0.15),
-                ),
+                Container(color: Colors.black.withValues(alpha: 0.15)),
                 // Centered label
                 Center(
                   child: Text(
