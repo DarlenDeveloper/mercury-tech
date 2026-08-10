@@ -133,7 +133,10 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(24),
-                    child: const _PromoCarousel(),
+                    child: _PromoCarousel(
+                      key: ValueKey(catalogScope.appleOnlyStorefront),
+                      appleOnlyStorefront: catalogScope.appleOnlyStorefront,
+                    ),
                   ),
                 ),
               ),
@@ -144,7 +147,9 @@ class _HomeScreenState extends State<HomeScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const SizedBox(height: 16),
-                      const _TopTechSection(),
+                      _TopTechSection(
+                        appleOnlyStorefront: catalogScope.appleOnlyStorefront,
+                      ),
                       if (loading)
                         const Padding(
                           padding: EdgeInsets.only(top: 8),
@@ -332,7 +337,9 @@ class _SearchField extends StatelessWidget {
 }
 
 class _PromoCarousel extends StatefulWidget {
-  const _PromoCarousel();
+  const _PromoCarousel({super.key, required this.appleOnlyStorefront});
+
+  final bool appleOnlyStorefront;
 
   @override
   State<_PromoCarousel> createState() => _PromoCarouselState();
@@ -384,7 +391,9 @@ class _PromoCarouselState extends State<_PromoCarousel> {
   void initState() {
     super.initState();
     _timer = Timer.periodic(const Duration(seconds: 4), (_) {
-      if (!mounted || !_controller.hasClients) return;
+      if (widget.appleOnlyStorefront || !mounted || !_controller.hasClients) {
+        return;
+      }
       final next = (_page + 1) % _slides.length;
       _controller.animateToPage(
         next,
@@ -397,40 +406,42 @@ class _PromoCarouselState extends State<_PromoCarousel> {
   @override
   Widget build(BuildContext context) {
     final topPadding = MediaQuery.of(context).padding.top;
+    final slides = widget.appleOnlyStorefront ? [_slides.last] : _slides;
     return SizedBox(
       height: 340,
       child: Stack(
         children: [
           PageView.builder(
             controller: _controller,
-            itemCount: _slides.length,
+            itemCount: slides.length,
             onPageChanged: (i) => setState(() => _page = i),
-            itemBuilder: (context, i) => _PromoCard(slide: _slides[i]),
+            itemBuilder: (context, i) => _PromoCard(slide: slides[i]),
           ),
           // Page dots
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 18,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                for (var i = 0; i < _slides.length; i++)
-                  AnimatedContainer(
-                    duration: const Duration(milliseconds: 250),
-                    margin: const EdgeInsets.symmetric(horizontal: 3),
-                    width: i == _page ? 18 : 7,
-                    height: 7,
-                    decoration: BoxDecoration(
-                      color: i == _page
-                          ? Colors.white
-                          : Colors.white.withValues(alpha: 0.4),
-                      borderRadius: BorderRadius.circular(4),
+          if (slides.length > 1)
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 18,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  for (var i = 0; i < slides.length; i++)
+                    AnimatedContainer(
+                      duration: const Duration(milliseconds: 250),
+                      margin: const EdgeInsets.symmetric(horizontal: 3),
+                      width: i == _page ? 18 : 7,
+                      height: 7,
+                      decoration: BoxDecoration(
+                        color: i == _page
+                            ? Colors.white
+                            : Colors.white.withValues(alpha: 0.4),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
                     ),
-                  ),
-              ],
+                ],
+              ),
             ),
-          ),
         ],
       ),
     );
@@ -737,9 +748,7 @@ bool _isPrinterDevice(Product product) {
     r'ink|toner|cartridge|ribbon|accessor|printhead|print head',
   ).hasMatch(text);
   return !isSupply &&
-      RegExp(
-        r'printer|laserjet|deskjet|officejet|smart tank',
-      ).hasMatch(text);
+      RegExp(r'printer|laserjet|deskjet|officejet|smart tank').hasMatch(text);
 }
 
 class _ProductRail extends StatelessWidget {
@@ -904,7 +913,9 @@ class _TopTechItem {
 }
 
 class _TopTechSection extends StatelessWidget {
-  const _TopTechSection();
+  const _TopTechSection({required this.appleOnlyStorefront});
+
+  final bool appleOnlyStorefront;
 
   static const _items = <_TopTechItem>[
     _TopTechItem(
@@ -936,6 +947,15 @@ class _TopTechSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final items = appleOnlyStorefront
+        ? _items
+              .where(
+                (item) =>
+                    item.tag != 'SHOP PRINTERS' &&
+                    item.tag != 'SHOP NETWORKING',
+              )
+              .toList()
+        : _items;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
@@ -963,9 +983,9 @@ class _TopTechSection extends StatelessWidget {
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 20),
-            itemCount: _items.length,
+            itemCount: items.length,
             separatorBuilder: (_, __) => const SizedBox(width: 14),
-            itemBuilder: (context, i) => _TopTechCard(item: _items[i]),
+            itemBuilder: (context, i) => _TopTechCard(item: items[i]),
           ),
         ),
       ],

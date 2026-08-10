@@ -13,6 +13,7 @@ class CatalogScope extends InheritedWidget {
     required this.reload,
     required this.flashSale,
     required this.flashSaleTitle,
+    required this.appleOnlyStorefront,
     required super.child,
   });
 
@@ -24,6 +25,7 @@ class CatalogScope extends InheritedWidget {
   /// Admin-curated flash-sale products (promo price applied), in order.
   final List<Product> flashSale;
   final String flashSaleTitle;
+  final bool appleOnlyStorefront;
 
   static CatalogScope of(BuildContext context) {
     final scope = context.dependOnInheritedWidgetOfExactType<CatalogScope>();
@@ -42,7 +44,8 @@ class CatalogScope extends InheritedWidget {
       products != old.products ||
       loading != old.loading ||
       error != old.error ||
-      flashSale != old.flashSale;
+      flashSale != old.flashSale ||
+      appleOnlyStorefront != old.appleOnlyStorefront;
 }
 
 /// Loads the catalog from Firestore once and provides it via [CatalogScope].
@@ -62,6 +65,7 @@ class _CatalogLoaderState extends State<CatalogLoader> {
   List<Product> _products = const [];
   List<Product> _flashSale = const [];
   String _flashSaleTitle = 'Flash Sale';
+  bool _appleOnlyStorefront = false;
   bool _loading = true;
   Object? _error;
 
@@ -102,6 +106,7 @@ class _CatalogLoaderState extends State<CatalogLoader> {
         _products = products;
         _flashSale = flash;
         _flashSaleTitle = homepage.title;
+        _appleOnlyStorefront = homepage.appleOnlyStorefront;
         _loading = false;
       });
     } catch (e) {
@@ -122,6 +127,7 @@ class _CatalogLoaderState extends State<CatalogLoader> {
       reload: _load,
       flashSale: _flashSale,
       flashSaleTitle: _flashSaleTitle,
+      appleOnlyStorefront: _appleOnlyStorefront,
       child: widget.child,
     );
   }
