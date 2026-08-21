@@ -36,6 +36,94 @@ const RESOURCES = {
   repairs: "repair_tickets",
 };
 
+// Stable specification fields exposed for every product. Existing custom
+// specification fields are retained as well, so non-computer products can
+// describe attributes specific to their category.
+const PRODUCT_SPECIFICATION_KEYS = [
+  "processor",
+  "ram",
+  "storage",
+  "storageType",
+  "displaySize",
+  "displayResolution",
+  "graphics",
+  "operatingSystem",
+  "battery",
+  "ports",
+  "connectivity",
+  "camera",
+  "color",
+  "weight",
+  "warranty",
+  "model",
+];
+
+const PRODUCT_SPECIFICATION_ALIASES = {
+  processor: "processor",
+  cpu: "processor",
+  memory: "ram",
+  ram: "ram",
+  storage: "storage",
+  "storage type": "storageType",
+  storagetype: "storageType",
+  "screen size": "displaySize",
+  "display size": "displaySize",
+  displaysize: "displaySize",
+  display: "displaySize",
+  resolution: "displayResolution",
+  "display resolution": "displayResolution",
+  displayresolution: "displayResolution",
+  graphics: "graphics",
+  gpu: "graphics",
+  "operating system": "operatingSystem",
+  operatingsystem: "operatingSystem",
+  os: "operatingSystem",
+  battery: "battery",
+  ports: "ports",
+  connectivity: "connectivity",
+  camera: "camera",
+  colour: "color",
+  color: "color",
+  weight: "weight",
+  warranty: "warranty",
+  model: "model",
+  "model number": "model",
+};
+
+/**
+ * Return a predictable product specifications object without discarding
+ * category-specific fields already stored in Firestore.
+ */
+export function normalizeProductSpecifications(specifications) {
+  const normalized = Object.fromEntries(
+    PRODUCT_SPECIFICATION_KEYS.map((key) => [key, ""])
+  );
+
+  if (!specifications || typeof specifications !== "object") return normalized;
+
+  const entries = Array.isArray(specifications)
+    ? specifications.map((row) => [row?.key ?? row?.spec, row?.value ?? row?.details])
+    : Object.entries(specifications);
+
+  for (const [rawKey, rawValue] of entries) {
+    const key = String(rawKey ?? "").trim();
+    if (!key || rawValue == null) continue;
+    const value = typeof rawValue === "string" ? rawValue.trim() : String(rawValue);
+    const alias = PRODUCT_SPECIFICATION_ALIASES[key.toLowerCase()] || key;
+    normalized[alias] = value;
+  }
+
+  return normalized;
+}
+
+function serializeApiDocument(resource, id, data) {
+  const document = { id, ...data };
+  if (resource === "products") {
+    document.specifications = normalizeProductSpecifications(data?.specifications);
+  }
+  return serialize(document);
+}
+
 // Recursively convert Firestore Timestamps to ISO strings for JSON output.
 function serialize(value) {
   if (value instanceof Timestamp) return value.toDate().toISOString();
@@ -166,7 +254,9 @@ export const api = onRequest({ cors: true }, async (req, res) => {
         if (id) {
           const doc = await db.collection(collection).doc(id).get();
           if (!doc.exists) return sendJson(res, 404, { error: "Not found." });
-          return sendJson(res, 200, { data: serialize({ id: doc.id, ...doc.data() }) });
+          return sendJson(res, 200, {
+            data: serializeApiDocument(resource, doc.id, doc.data()),
+          });
         }
         // ── List: text search (q), structured filters, cursor pagination ──
         const q = qstr(req.query.q);
@@ -217,7 +307,10 @@ export const api = onRequest({ cors: true }, async (req, res) => {
         for (const [field, value] of inMemoryFilters) {
           rows = rows.filter((r) => String(r[field] ?? "") === value);
         }
-        const data = rows.map(serialize);
+        const data = rows.map((row) => {
+          const { id: rowId, ...fields } = row;
+          return serializeApiDocument(resource, rowId, fields);
+        });
 
         const payload = { data, count: data.length, nextCursor };
 

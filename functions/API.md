@@ -95,7 +95,30 @@ Response:
 ```json
 {
   "data": [
-    { "id": "lenovo-...", "name": "Lenovo ThinkPad ...", "brand": "lenovo", "priceUsd": 899 }
+    {
+      "id": "lenovo-...",
+      "name": "Lenovo ThinkPad ...",
+      "brand": "lenovo",
+      "priceUsd": 899,
+      "specifications": {
+        "processor": "Intel Core i5-1235U",
+        "ram": "16GB DDR4",
+        "storage": "512GB",
+        "storageType": "NVMe SSD",
+        "displaySize": "15.6 inches",
+        "displayResolution": "1920×1080 Full HD",
+        "graphics": "Intel Iris Xe",
+        "operatingSystem": "Windows 11 Pro",
+        "battery": "",
+        "ports": "",
+        "connectivity": "",
+        "camera": "",
+        "color": "",
+        "weight": "",
+        "warranty": "1 year",
+        "model": ""
+      }
+    }
   ],
   "count": 1,
   "nextCursor": "ChZsZW5vdm8t...",
@@ -117,6 +140,11 @@ curl https://us-central1-mercurycomputers-tech.cloudfunctions.net/api/v1/product
   -H "Authorization: Bearer mck_live_xxx"
 ```
 Returns `{ "data": { ... } }`, or `404` if not found.
+
+For products, both list and single-item responses always include a
+`specifications` object with the normalized fields shown below. Unknown values
+are returned as empty strings. Products may also include additional
+category-specific specification fields; these are preserved in the response.
 
 ### Create
 ```
@@ -199,6 +227,17 @@ name, description, shortDescription, category, categoryId, subcategory,
 brand, priceUsd, oldPriceUsd, stock, isNew, image, images[],
 specifications{}, status
 ```
+
+The normalized `specifications` fields are:
+```
+processor, ram, storage, storageType, displaySize, displayResolution,
+graphics, operatingSystem, battery, ports, connectivity, camera, color,
+weight, warranty, model
+```
+
+Legacy labels stored in Firestore—such as `Processor`, `Memory`, `Screen Size`,
+`Resolution`, `GPU`, or `OS`—are normalized to the corresponding fields in API
+responses. Additional product-type-specific fields are returned unchanged.
 
 **Order** (`orders`)
 ```
