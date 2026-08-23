@@ -5,6 +5,8 @@ import EnterpriseSolutions from "@/components/EnterpriseSolutions";
 import ProductDepartmentNav from "@/components/ProductDepartmentNav";
 import TechnologyPartners from "@/components/TechnologyPartners";
 import Newsletter from "@/components/Newsletter";
+import AppDownloadSection from "@/components/AppDownloadSection";
+import AppDownloadBanner from "@/components/AppDownloadBanner";
 import Footer from "@/components/Footer";
 import { getProductsFromFirestore, getFlashSaleProducts } from "@/lib/getProducts";
 
@@ -48,7 +50,9 @@ export default async function Home() {
         <Newsletter />
       </main>
 
+      <AppDownloadSection />
       <Footer />
+      <AppDownloadBanner />
     </>
   );
 }
