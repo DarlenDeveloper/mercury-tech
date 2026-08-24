@@ -12,29 +12,36 @@ export const getHomepageConfig = cache(async (): Promise<HomepageConfig> => {
  * price applied as the current price and the original price struck through.
  * Sale prices come from config (USD) and are converted with the live rate;
  * the product records themselves are never modified.
+ *
+ * Performance: fetches only the specific product documents referenced in the
+ * flash sale config rather than scanning the entire products collection.
  */
 export const getFlashSaleProducts = cache(
   async (): Promise<{ title: string; products: Product[] }> => {
-    const [cfg, firestoreProducts, rate] = await Promise.all([
+    const [cfg, rate] = await Promise.all([
       fetchHomepageConfig(),
-      fetchProducts(),
       fetchRate(),
     ]);
-    const byId = new Map(firestoreProducts.map((p) => [p.id, p]));
-    const products = cfg.flashSale
-      .map((entry): Product | null => {
-        const fp = byId.get(entry.id);
-        if (!fp) return null;
-        const base = mapProduct(fp, rate);
-        const salePrice = Math.round(entry.salePriceUsd * rate);
-        // Only treat it as a deal if the promo price is actually lower.
-        return {
-          ...base,
-          price: salePrice,
-          oldPrice: salePrice < base.price ? base.price : undefined,
-        };
-      })
-      .filter((p): p is Product => p !== null);
+
+    // Fetch only the specific products in the flash sale (parallel individual
+    // doc reads) instead of loading the entire products collection.
+    const products = (
+      await Promise.all(
+        cfg.flashSale.map(async (entry): Promise<Product | null> => {
+          const fp = await fetchProductById(entry.id);
+          if (!fp) return null;
+          const base = mapProduct(fp, rate);
+          const salePrice = Math.round(entry.salePriceUsd * rate);
+          // Only treat it as a deal if the promo price is actually lower.
+          return {
+            ...base,
+            price: salePrice,
+            oldPrice: salePrice < base.price ? base.price : undefined,
+          };
+        })
+      )
+    ).filter((p): p is Product => p !== null);
+
     return { title: cfg.flashSaleTitle, products };
   }
 );
