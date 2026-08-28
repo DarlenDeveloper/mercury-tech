@@ -27,7 +27,7 @@ export default function BrandStrip({ variant = "default" }: { variant?: "default
   if (inHero) {
     const highlights = [
       { value: "20+", label: "Years of Experience", icon: Award },
-      { value: "1M+", label: "Happy Clients", icon: Users },
+      { value: "200,000+", label: "Happy Clients", icon: Users },
       { value: "100+", label: "Leading Brands", icon: BadgeCheck },
       { value: "24/7", label: "Expert Support", icon: Headphones },
     ];
