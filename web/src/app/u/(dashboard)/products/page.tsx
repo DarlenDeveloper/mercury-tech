@@ -471,6 +471,7 @@ function ProductForm({
   const [descriptionNotes, setDescriptionNotes] = useState("");
   const [enhancingDescription, setEnhancingDescription] = useState(false);
   const [descriptionError, setDescriptionError] = useState("");
+  const [descriptionSuccess, setDescriptionSuccess] = useState("");
 
   const anyUploading = images.some((i) => i.status === "uploading");
 
@@ -478,6 +479,7 @@ function ProductForm({
     if (!name.trim() || enhancingDescription) return;
     setEnhancingDescription(true);
     setDescriptionError("");
+    setDescriptionSuccess("");
     try {
       const { enhanceProductDescription } = await import("@/lib/productDescription");
       const currentSpecs = Object.fromEntries(
@@ -486,7 +488,7 @@ function ProductForm({
           .map((item) => [item.key.trim(), item.value.trim()])
       );
       const parent = categoryList.find((item) => item.id === parentCatId);
-      const enhanced = await enhanceProductDescription({
+      const generated = await enhanceProductDescription({
         name: name.trim(),
         brand: brand.trim(),
         category: parent?.name ?? "",
@@ -494,10 +496,34 @@ function ProductForm({
         notes: descriptionNotes.trim(),
         specifications: currentSpecs,
       });
-      setDescription(enhanced);
+
+      setDescription(generated.description);
+      const generatedEntries = Object.entries(generated.specifications);
+      setSpecs((current) => {
+        const merged = new Map<string, { key: string; value: string }>();
+        current.forEach((item) => {
+          const key = item.key.trim();
+          const value = item.value.trim();
+          if (key && value) merged.set(key.toLowerCase(), { key, value });
+        });
+        generatedEntries.forEach(([key, value]) => {
+          const cleanKey = key.trim();
+          const cleanValue = value.trim();
+          if (cleanKey && cleanValue) {
+            merged.set(cleanKey.toLowerCase(), { key: cleanKey, value: cleanValue });
+          }
+        });
+        return merged.size > 0 ? Array.from(merged.values()) : [{ key: "", value: "" }];
+      });
+
+      setDescriptionSuccess(
+        generatedEntries.length > 0
+          ? `Generated the description and ${generatedEntries.length} specification${generatedEntries.length === 1 ? "" : "s"}. Review them before saving.`
+          : "Generated the description. No explicit specifications were found in the supplied product details."
+      );
     } catch (error: any) {
       setDescriptionError(
-        error?.message || "Could not enhance the description. Please try again."
+        error?.message || "Could not generate the product content. Please try again."
       );
     } finally {
       setEnhancingDescription(false);
@@ -968,7 +994,7 @@ function ProductForm({
                       className="flex items-center gap-1.5 rounded-full bg-violet-50 px-3 py-1.5 text-xs font-semibold text-violet-700 transition hover:bg-violet-100 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       <Sparkles size={13} />
-                      {enhancingDescription ? "Enhancing…" : "Enhance with AI"}
+                      {enhancingDescription ? "Generating…" : "Generate with AI"}
                     </button>
                   </div>
                   <textarea
@@ -979,18 +1005,21 @@ function ProductForm({
                     className="w-full rounded-2xl border border-line bg-white px-4 py-3 text-sm text-ink outline-none placeholder:text-muted resize-none focus:border-mercury"
                   />
                   <label className="mt-3 block text-xs font-semibold text-ink">
-                    Notes for AI <span className="font-normal text-muted">(optional)</span>
+                    Product details for AI <span className="font-normal text-muted">(optional)</span>
                   </label>
                   <textarea
                     value={descriptionNotes}
                     onChange={(e) => setDescriptionNotes(e.target.value)}
-                    placeholder="e.g. Focus on business use, keep the tone simple, mention portability…"
-                    rows={2}
+                    placeholder="Paste supplier text or rough details, e.g. Intel Core i5, 8GB RAM, 512GB SSD, 15.6-inch display…"
+                    rows={3}
                     className="mt-1.5 w-full resize-none rounded-2xl border border-line bg-[#F8F9FB] px-4 py-3 text-sm text-ink outline-none placeholder:text-muted focus:border-violet-400"
                   />
                   <p className="mt-1.5 text-[11px] text-muted">
-                    AI replaces the description above for your review. Nothing is saved until you save the product.
+                    AI uses the product name, text above, current description, and existing specs to generate both the description and specification rows. Nothing is saved until you save the product.
                   </p>
+                  {descriptionSuccess && (
+                    <p className="mt-1.5 text-xs text-green-700">{descriptionSuccess}</p>
+                  )}
                   {descriptionError && (
                     <p className="mt-1.5 text-xs text-red-600">{descriptionError}</p>
                   )}
