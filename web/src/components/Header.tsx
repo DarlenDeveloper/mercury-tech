@@ -15,6 +15,7 @@ import {
   Shield,
   Headphones,
   Truck,
+  Pencil,
 } from "lucide-react";
 import { useAuth } from "@/components/AuthProvider";
 import { useCurrency } from "@/components/CurrencyProvider";
@@ -26,7 +27,7 @@ import { db } from "@/lib/firestore";
 import SearchBar from "@/components/SearchBar";
 import CurrencySelector from "@/components/CurrencySelector";
 
-export default function Header() {
+export default function Header({ productId }: { productId?: string }) {
   const { user } = useAuth();
   const { format } = useCurrency();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -231,14 +232,26 @@ export default function Header() {
                       </Link>
                       <hr className="my-1 border-line" />
                       {isAdmin && (
-                        <Link
-                          href="/u"
-                          onClick={() => setProfileOpen(false)}
-                          className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-semibold text-mercury transition hover:bg-surface-soft"
-                        >
-                          <Shield size={16} />
-                          Admin Dashboard
-                        </Link>
+                        <>
+                          {productId && (
+                            <Link
+                              href={`/u/products?edit=${encodeURIComponent(productId)}`}
+                              onClick={() => setProfileOpen(false)}
+                              className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-semibold text-mercury transition hover:bg-surface-soft"
+                            >
+                              <Pencil size={16} />
+                              Edit Product
+                            </Link>
+                          )}
+                          <Link
+                            href="/u"
+                            onClick={() => setProfileOpen(false)}
+                            className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-semibold text-mercury transition hover:bg-surface-soft"
+                          >
+                            <Shield size={16} />
+                            Admin Dashboard
+                          </Link>
+                        </>
                       )}
                       <button
                         onClick={() => {

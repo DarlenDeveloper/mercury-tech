@@ -81,10 +81,10 @@ export default function ProductsPage() {
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchData();
+    fetchData(true);
   }, []);
 
-  const fetchData = async () => {
+  const fetchData = async (openRequestedEdit = false) => {
     setLoading(true);
     try {
       const [prodSnap, rateSnap, catSnap] = await Promise.all([
@@ -93,9 +93,19 @@ export default function ProductsPage() {
         getDocs(collection(db, "categories")),
       ]);
 
-      setProducts(
-        prodSnap.docs.map((d) => ({ id: d.id, ...d.data() } as Product))
+      const loadedProducts = prodSnap.docs.map(
+        (d) => ({ id: d.id, ...d.data() } as Product)
       );
+      setProducts(loadedProducts);
+
+      if (openRequestedEdit) {
+        const requestedId = new URLSearchParams(window.location.search).get("edit");
+        const requestedProduct = loadedProducts.find((product) => product.id === requestedId);
+        if (requestedProduct) {
+          setEditingProduct(requestedProduct);
+          setShowForm(true);
+        }
+      }
 
       setCategoryList(
         catSnap.docs
@@ -776,8 +786,8 @@ function ProductForm({
                       <option value="">
                         {subOptions.length === 0 ? "No subcategories" : "None"}
                       </option>
-                      {subOptions.map((s) => (
-                        <option key={s.slug} value={s.slug}>{s.name}</option>
+                      {subOptions.map((s, index) => (
+                        <option key={`${parentCatId}-${s.slug}-${index}`} value={s.slug}>{s.name}</option>
                       ))}
                     </select>
                   </div>
@@ -788,10 +798,10 @@ function ProductForm({
                       Also show under <span className="font-normal text-muted">(select multiple)</span>
                     </legend>
                     <div className="grid gap-2 rounded-2xl bg-[#F4F5F8] p-3 sm:grid-cols-2">
-                      {subOptions.map((item) => {
+                      {subOptions.map((item, index) => {
                         const checked = subSlugs.includes(item.slug) || subSlug === item.slug;
                         return (
-                          <label key={item.slug} className="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 text-sm text-ink hover:bg-white">
+                          <label key={`${parentCatId}-${item.slug}-${index}`} className="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 text-sm text-ink hover:bg-white">
                             <input
                               type="checkbox"
                               checked={checked}
