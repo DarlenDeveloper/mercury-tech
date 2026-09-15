@@ -14,6 +14,7 @@ import {
   Package,
   Shield,
   Headphones,
+  Truck,
 } from "lucide-react";
 import { useAuth } from "@/components/AuthProvider";
 import { useCurrency } from "@/components/CurrencyProvider";
@@ -114,6 +115,11 @@ export default function Header() {
   return (
     <>
       <header className="sticky top-0 z-40 w-full">
+        <div className="flex h-8 items-center justify-center gap-2 bg-mercury px-4 text-center text-xs font-semibold text-white">
+          <Truck size={15} aria-hidden="true" />
+          <span>Free delivery within Kampala</span>
+        </div>
+
         {/* Main bar (solid white) */}
         <div className="flex w-full items-center gap-3 bg-white px-4 py-3 lg:gap-6 lg:px-6 lg:py-4">
           {/* Mobile menu toggle */}

@@ -9,5 +9,16 @@
   "functions": {
     "source": "functions",
     "runtime": "nodejs20"
+  },
+  "hosting": {
+    "source": "web",
+    "ignore": [
+      "firebase-debug.log",
+      "firebase-debug.*.log",
+      "node_modules"
+    ],
+    "frameworksBackend": {
+      "region": "us-central1"
+    }
   }
 }

@@ -8,6 +8,9 @@ const nextConfig: NextConfig = {
     root: path.join(__dirname),
   },
   images: {
+    // Firebase framework-aware Hosting rejects remote Storage URLs in its
+    // generated image optimizer. Serve the original URLs directly instead.
+    unoptimized: true,
     // Allow the higher quality used on the hero carousel images.
     qualities: [75, 90, 100],
     remotePatterns: [
