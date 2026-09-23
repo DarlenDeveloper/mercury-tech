@@ -1,3 +1,4 @@
+import PromotionCarousel from "@/components/PromotionCarousel";
 import Header from "@/components/Header";
 import Hero from "@/components/Hero";
 import HomeProductRows from "@/components/HomeProductRows";
@@ -31,6 +32,8 @@ export default async function Home() {
         </section>
 
         <ProductDepartmentNav />
+
+        <PromotionCarousel starlinkWhatsAppNumber="256704823800" />
 
         <section className="px-4 pb-12 pt-14 lg:px-6 lg:pb-16 lg:pt-16">
           <EnterpriseSolutions />
