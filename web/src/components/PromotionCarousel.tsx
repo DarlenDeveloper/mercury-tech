@@ -16,11 +16,11 @@ export default function PromotionCarousel({ starlinkWhatsAppNumber }: { starlink
       message: "Hi Mercury, I'm interested in the ASUS ExpertBook B1 flash sale with backpack for USh 2,200,000. Is it available?",
     },
     {
-      name: "Starlink waitlist",
-      src: "/starlink-waitlist-wide.png",
-      alt: "Starlink by Mercury Computers Limited. Join the waitlist — register your interest today.",
+      name: "Starlink high-speed internet",
+      src: "/starlink-high-speed-internet.jpeg",
+      alt: "Starlink by Mercury Computers: reliable, high-speed internet from space. Get online in minutes. Download the Starlink app, activate your kit. No contracts, cancel anytime.",
       number: starlinkWhatsAppNumber,
-      message: "Hi Mercury, I'd like to join the Starlink waitlist. Please share more details.",
+      message: "Hi Mercury, I'm interested in Starlink high-speed internet. Please share kit pricing and availability.",
     },
   ];
 
