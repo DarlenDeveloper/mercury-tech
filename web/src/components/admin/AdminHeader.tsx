@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { ArrowSwapHorizontal } from "@/components/admin/WorkspaceIcons";
+import { ArrowSwapHorizontal, Shop } from "@/components/admin/WorkspaceIcons";
 import { WORKSHOP_PAGES } from "@/lib/workspaces";
 import { useAdminAccess } from "./AdminGuard";
 import { hasPageAccess } from "@/lib/adminAccess";
@@ -273,6 +273,14 @@ export default function AdminHeader({
                 >
                   <ArrowSwapHorizontal size={18} className="text-muted" />
                   Switch role
+                </Link>
+                <Link
+                  href="/"
+                  onClick={() => setShowProfile(false)}
+                  className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-ink transition hover:bg-surface-soft"
+                >
+                  <Shop size={18} className="text-muted" />
+                  Back to Main Website
                 </Link>
                 <hr className="my-1 border-line" />
                 <button
