@@ -11,6 +11,7 @@ import { hasPageAccess } from "@/lib/adminAccess";
 import { logAudit } from "@/lib/auditLog";
 import { useAuth } from "@/components/AuthProvider";
 import { db } from "@/lib/firestore";
+import { SALES_PAGES } from "@/lib/workspaces";
 import {
   House,
   ChartNoAxesColumn,
@@ -128,7 +129,7 @@ export default function AdminSidebar() {
   const canAccess = (item: Item) => {
     // Dashboard is always visible
     if (item.slug === "") return true;
-    return hasPageAccess(adminEntry, item.slug);
+    return SALES_PAGES.includes(item.slug) && hasPageAccess(adminEntry, item.slug);
   };
 
   const renderItem = ({ label, icon: Icon, href, slug }: Item) => {

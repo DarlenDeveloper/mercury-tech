@@ -30,6 +30,20 @@ const nextConfig: NextConfig = {
     dangerouslyAllowSVG: true,
   },
 
+  // Back-office routes are protected by authentication and must never appear
+  // in search results, cached snippets, or image search.
+  async headers() {
+    const noIndexHeader = {
+      key: "X-Robots-Tag",
+      value: "noindex, nofollow, noarchive, nosnippet, noimageindex",
+    };
+
+    return [
+      { source: "/u/:path*", headers: [noIndexHeader] },
+      { source: "/workshop/:path*", headers: [noIndexHeader] },
+    ];
+  },
+
   // ─── 301 redirects to preserve SEO from the old WooCommerce site ──────────
   // Product URLs (/product/{slug}) are unchanged, so they carry over natively.
   // These map the old category / shop / info URLs to the new structure.

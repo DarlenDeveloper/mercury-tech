@@ -8,13 +8,19 @@ export const revalidate = 3600; // rebuild sitemap hourly
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date();
+  const repairTrackerLastModified = new Date("2026-10-06T00:00:00+03:00");
 
   // Static pages
   const staticPages: MetadataRoute.Sitemap = [
     { url: SITE_URL, lastModified: now, changeFrequency: "daily", priority: 1 },
     { url: `${SITE_URL}/login`, lastModified: now, changeFrequency: "monthly", priority: 0.3 },
     { url: `${SITE_URL}/signup`, lastModified: now, changeFrequency: "monthly", priority: 0.3 },
-    { url: `${SITE_URL}/repair-status`, lastModified: now, changeFrequency: "monthly", priority: 0.6 },
+    {
+      url: `${SITE_URL}/repair-status`,
+      lastModified: repairTrackerLastModified,
+      changeFrequency: "monthly",
+      priority: 0.8,
+    },
   ];
 
   // Category + subcategory pages

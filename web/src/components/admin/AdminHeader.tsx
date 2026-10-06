@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { ArrowSwapHorizontal, Shop } from "@/components/admin/WorkspaceIcons";
-import { WORKSHOP_PAGES } from "@/lib/workspaces";
+import { SALES_PAGES, WORKSHOP_PAGES } from "@/lib/workspaces";
 import { useAdminAccess } from "./AdminGuard";
 import { hasPageAccess } from "@/lib/adminAccess";
 import Link from "next/link";
@@ -69,9 +69,10 @@ export default function AdminHeader({
   const pathname = usePathname();
   const workshop = pathname.startsWith("/workshop");
   const { adminEntry } = useAdminAccess();
+  const workspacePages = workshop ? WORKSHOP_PAGES : SALES_PAGES;
   const searchItems = SEARCH_ITEMS.filter(item => {
     const slug = item.href.replace("/u", "").split("/").filter(Boolean)[0];
-    return !slug || ((!workshop || WORKSHOP_PAGES.includes(slug)) && hasPageAccess(adminEntry, slug));
+    return !slug || (workspacePages.includes(slug) && hasPageAccess(adminEntry, slug));
   }).map(item => ({ ...item, href: workshop ? item.href.replace("/u", "/workshop") : item.href }));
   const displayName = user?.displayName || "Admin";
   const initials = displayName

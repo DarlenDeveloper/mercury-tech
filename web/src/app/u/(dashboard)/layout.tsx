@@ -7,6 +7,14 @@ import AuditTracker from "@/components/admin/AuditTracker";
 export const metadata: Metadata = {
   title: "Mercury Admin — Dashboard",
   description: "Mercury Computers store admin dashboard.",
+  alternates: { canonical: null },
+  robots: {
+    index: false,
+    follow: false,
+    noarchive: true,
+    nosnippet: true,
+    noimageindex: true,
+  },
 };
 
 export default function AdminLayout({

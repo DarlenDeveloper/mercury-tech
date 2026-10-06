@@ -8,7 +8,7 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: "*",
         allow: "/",
-        // Keep the admin dashboard and account areas out of the index.
+        // Block crawling of both protected admin workspaces and account areas.
         disallow: ["/u", "/u/", "/cart", "/ai", "/select-role", "/workshop"],
       },
     ],
