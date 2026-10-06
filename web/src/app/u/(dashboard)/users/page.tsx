@@ -2,8 +2,6 @@
 
 import { useEffect, useState } from "react";
 import {
-  collection,
-  getDocs,
   doc,
   getDoc,
   updateDoc,
@@ -11,6 +9,7 @@ import {
 import { Search, Plus, ShieldCheck, X, Trash2, Lock } from "@/components/admin/WorkspaceIcons";
 import AdminHeader from "@/components/admin/AdminHeader";
 import { db } from "@/lib/firestore";
+import { fetchAdminProfiles, type AdminProfile } from "@/lib/adminProfiles";
 import { useAdminAccess } from "@/components/admin/AdminGuard";
 import {
   isSuperAdmin,
@@ -21,15 +20,7 @@ import {
   type StaffRole,
 } from "@/lib/adminAccess";
 
-type AdminUser = {
-  id: string;
-  name: string;
-  email: string;
-  phone: string;
-  location: string;
-  role: string;
-  createdAt: Date | null;
-};
+type AdminUser = AdminProfile;
 
 const ROLE_COLORS: Record<string, string> = {
   Admin: "bg-[#eaf1fc] text-mercury",
@@ -86,7 +77,7 @@ export default function UsersRolesPage() {
     try {
       const adminDoc = await getDoc(doc(db, "config", "admins"));
       const data = adminDoc.exists() ? adminDoc.data() : {};
-      const entries: AdminEntry[] = data?.admins ?? [];
+      const entries: AdminEntry[] = [...(data?.admins ?? [])];
       const legacyEmails: string[] = data?.emails ?? [];
 
       // Merge legacy emails that aren't in the new system
@@ -98,24 +89,8 @@ export default function UsersRolesPage() {
 
       setAdminEntries(entries);
 
-      // Get user profiles for these admins
-      const usersSnap = await getDocs(collection(db, "users"));
-      const allEmails = entries.map((e) => e.email.toLowerCase());
-      const adminUsers = usersSnap.docs
-        .filter((d) => allEmails.includes((d.data().email ?? "").toLowerCase()))
-        .map((d) => {
-          const data = d.data();
-          return {
-            id: d.id,
-            name: data.name || "Unknown",
-            email: data.email || "",
-            phone: data.phone || "",
-            location: data.location || "",
-            role: data.role || "Admin",
-            createdAt: data.createdAt?.toDate?.() ?? null,
-          };
-        });
-      setAdmins(adminUsers);
+      // Query only profiles that are configured as admins/super admins.
+      setAdmins(await fetchAdminProfiles(entries.map(entry => entry.email)));
     } catch (e) {
       console.error(e);
     } finally {

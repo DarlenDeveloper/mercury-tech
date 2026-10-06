@@ -1,18 +1,14 @@
-import { collection, doc, getDoc, getDocs } from "firebase/firestore";
+import { doc, getDoc } from "firebase/firestore";
 import { db } from "./firestore";
 import { STAFF_ROLES, type AdminEntry } from "./adminAccess";
 import type { RepairAssignee } from "./repairAssignment";
+import { fetchAdminProfiles } from "./adminProfiles";
 
 export async function fetchRepairStaff(): Promise<RepairAssignee[]> {
-  const [config, profiles] = await Promise.all([
-    getDoc(doc(db, "config", "admins")),
-    getDocs(collection(db, "users")),
-  ]);
+  const config = await getDoc(doc(db, "config", "admins"));
   const entries: AdminEntry[] = config.data()?.admins || [];
-  const names = new Map(profiles.docs.map(profile => {
-    const data = profile.data();
-    return [String(data.email || "").toLowerCase(), String(data.name || "")];
-  }));
+  const profiles = await fetchAdminProfiles(entries.map(entry => entry.email));
+  const names = new Map(profiles.map(profile => [profile.email.toLowerCase(), profile.name]));
   const staff = new Map<string, RepairAssignee>();
   for (const entry of entries) {
     if (!entry.jobRole || !STAFF_ROLES.includes(entry.jobRole)) continue;

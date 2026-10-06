@@ -25,7 +25,7 @@
 
 export type AccessLevel = "super_admin" | "admin";
 
-export const STAFF_ROLES = ["Sales", "Technician", "Support"] as const;
+export const STAFF_ROLES = ["Sales", "Technician", "Support", "Developer"] as const;
 export type StaffRole = (typeof STAFF_ROLES)[number];
 
 export type AdminEntry = {
