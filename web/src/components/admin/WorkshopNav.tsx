@@ -2,7 +2,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { Setting2, People, Headphone, ReceiptText, ArrowSwapHorizontal, Home2 } from "@/components/admin/WorkspaceIcons";
+import { Setting2, People, Headphone, ReceiptText, ArrowSwapHorizontal, Home2, ShieldCheck, Wallet } from "@/components/admin/WorkspaceIcons";
 import { useAdminAccess } from "./AdminGuard";
 import { hasPageAccess } from "@/lib/adminAccess";
 export const workshopLinks = [
@@ -11,6 +11,8 @@ export const workshopLinks = [
   { slug: "customers", label: "Customers", icon: People },
   { slug: "customer-care", label: "Customer service", icon: Headphone },
   { slug: "quotations", label: "Quotations", icon: ReceiptText },
+  { slug: "payments", label: "Payments", icon: Wallet },
+  { slug: "users", label: "Users & Roles", icon: ShieldCheck },
 ];
 export default function WorkshopNav() {
  const pathname = usePathname();

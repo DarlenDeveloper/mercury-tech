@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { CheckCircle2, LoaderCircle, Wrench } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -107,6 +108,12 @@ export default function RepairsPage() {
                 >
                   Return home
                 </button>
+                <Link
+                  href="/repair-status"
+                  className="ml-3 inline-flex rounded-xl border border-line px-6 py-3 text-sm font-semibold text-ink transition hover:border-mercury hover:text-mercury"
+                >
+                  Track repair
+                </Link>
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="grid gap-5 sm:grid-cols-2">

@@ -248,6 +248,11 @@ export const api = onRequest({ cors: true }, async (req, res) => {
   logCtx.keyId = auth.keyId;
   logCtx.keyLabel = auth.data?.label || null;
 
+  // Generic Admin SDK writes must not bypass payment-gated repair validation.
+  if (resource === "repairs" && isWrite) {
+    return sendJson(res, 409, { error: "Repair mutations require the authenticated manageRepair workflow." });
+  }
+
   try {
     switch (method) {
       case "GET": {

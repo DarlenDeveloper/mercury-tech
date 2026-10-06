@@ -7,16 +7,22 @@ import '../theme/app_colors.dart';
 
 const _statusLabels = {
   'received': 'Received',
+  'awaiting_payment': 'Awaiting Payment',
+  'ready_for_assignment': 'Ready for Assignment',
   'in_progress': 'In Progress',
   'awaiting_parts': 'Awaiting Parts',
-  'completed': 'Completed',
+  'completed': 'Ready for Collection',
+  'collected': 'Collected',
 };
 
 const _statusColors = {
   'received': Color(0xFF6B7280),
+  'awaiting_payment': Color(0xFFB45309),
+  'ready_for_assignment': Color(0xFF0F766E),
   'in_progress': Color(0xFF1f3e97),
   'awaiting_parts': Color(0xFFB45309),
   'completed': Color(0xFF16A34A),
+  'collected': Color(0xFF64748B),
 };
 
 // ─── Repairs List Screen ─────────────────────────────────────────────────────
@@ -203,6 +209,7 @@ class _NewRepairScreenState extends State<_NewRepairScreen> {
 
   final _deviceCtrl = TextEditingController();
   final _issueCtrl = TextEditingController();
+  final _phoneCtrl = TextEditingController();
   String _deviceType = 'Laptop';
   String _urgency = 'Normal';
   int _quantity = 1;
@@ -216,13 +223,16 @@ class _NewRepairScreenState extends State<_NewRepairScreen> {
   void dispose() {
     _deviceCtrl.dispose();
     _issueCtrl.dispose();
+    _phoneCtrl.dispose();
     super.dispose();
   }
 
   Future<void> _submit() async {
-    if (_deviceCtrl.text.trim().isEmpty || _issueCtrl.text.trim().isEmpty) {
+    if (_deviceCtrl.text.trim().isEmpty ||
+        _issueCtrl.text.trim().isEmpty ||
+        _phoneCtrl.text.replaceAll(RegExp(r'\D'), '').length < 9) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please fill in device and issue'), behavior: SnackBarBehavior.floating),
+        const SnackBar(content: Text('Enter the device, issue and a valid phone number'), behavior: SnackBarBehavior.floating),
       );
       return;
     }
@@ -232,11 +242,11 @@ class _NewRepairScreenState extends State<_NewRepairScreen> {
 
     setState(() => _busy = true);
 
-    await FirebaseFirestore.instance.collection('repair_tickets').add({
+    final repair = await FirebaseFirestore.instance.collection('repair_tickets').add({
       'userId': user.uid,
       'userName': user.displayName ?? '',
       'userEmail': user.email ?? '',
-      'userPhone': '',
+      'userPhone': _phoneCtrl.text.trim(),
       'device': _deviceCtrl.text.trim(),
       'deviceType': _deviceType,
       'issue': _issueCtrl.text.trim(),
@@ -252,10 +262,26 @@ class _NewRepairScreenState extends State<_NewRepairScreen> {
     });
 
     if (!mounted) return;
-    Navigator.pop(context);
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Repair request submitted!'), behavior: SnackBarBehavior.floating),
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Repair request received'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Keep this reference to check your repair status:'),
+            const SizedBox(height: 12),
+            SelectableText(repair.id, style: const TextStyle(fontWeight: FontWeight.w700)),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Done')),
+        ],
+      ),
     );
+    if (mounted) Navigator.pop(context);
   }
 
   @override
@@ -288,6 +314,12 @@ class _NewRepairScreenState extends State<_NewRepairScreen> {
             child: ListView(
               padding: const EdgeInsets.fromLTRB(20, 24, 20, 40),
               children: [
+                _Label('Phone number'),
+                const SizedBox(height: 6),
+                _InputField(controller: _phoneCtrl, hint: 'e.g. 0704 823800', keyboardType: TextInputType.phone),
+
+                const SizedBox(height: 20),
+
                 // Device name
                 _Label('Device'),
                 const SizedBox(height: 6),
@@ -467,14 +499,16 @@ class _Label extends StatelessWidget {
 }
 
 class _InputField extends StatelessWidget {
-  const _InputField({required this.controller, required this.hint});
+  const _InputField({required this.controller, required this.hint, this.keyboardType});
   final TextEditingController controller;
   final String hint;
+  final TextInputType? keyboardType;
 
   @override
   Widget build(BuildContext context) {
     return TextField(
       controller: controller,
+      keyboardType: keyboardType,
       decoration: InputDecoration(
         hintText: hint,
         hintStyle: const TextStyle(color: AppColors.inactive, fontSize: 14),

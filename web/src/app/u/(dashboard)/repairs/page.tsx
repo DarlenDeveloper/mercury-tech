@@ -1,37 +1,46 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Plus, Search, X, Wrench } from "@/components/admin/WorkspaceIcons";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { Search, X, Wrench } from "@/components/admin/WorkspaceIcons";
+import RepairIntake from "@/components/admin/RepairIntake";
 import AdminHeader from "@/components/admin/AdminHeader";
-import { fetchRepairTickets, updateRepairTicket, type RepairTicket, type RepairStatus } from "@/lib/repairs";
+import { allowedRepairStatuses, fetchRepairTickets, updateRepairTicket, type RepairTicket, type RepairStatus, REPAIR_STATUS_LABELS, repairPaid, paymentLabel } from "@/lib/repairs";
+import { fetchRepairStaff } from "@/lib/repairStaff";
+import { type RepairAssignee } from "@/lib/repairAssignment";
+
 import { logAudit } from "@/lib/auditLog";
 import { useAuth } from "@/components/AuthProvider";
 
 const STATUS_STYLES: Record<RepairStatus, string> = {
   received: "bg-surface-soft text-muted",
+  awaiting_payment: "bg-amber-50 text-amber-700",
+  ready_for_assignment: "bg-teal-50 text-teal-700",
+  collected: "bg-slate-100 text-slate-600",
   in_progress: "bg-[#e8eefc] text-mercury",
   awaiting_parts: "bg-[#fff3dc] text-[#b45309]",
   completed: "bg-[#e7f6ee] text-[#16a34a]",
 };
 
-const STATUS_LABELS: Record<RepairStatus, string> = {
-  received: "Received",
-  in_progress: "In Progress",
-  awaiting_parts: "Awaiting Parts",
-  completed: "Completed",
-};
-
-const TABS: ("all" | RepairStatus)[] = ["all", "received", "in_progress", "awaiting_parts", "completed"];
+const STATUS_LABELS = REPAIR_STATUS_LABELS;
+const TABS: ("all" | RepairStatus)[] = ["all", ...Object.keys(STATUS_LABELS) as RepairStatus[]];
 
 export default function RepairsPage() {
   const { user } = useAuth();
+  const base = usePathname().startsWith("/workshop") ? "/workshop" : "/u";
+  const [editTechnicians, setEditTechnicians] = useState<string[]>([]);
   const [tickets, setTickets] = useState<RepairTicket[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [tab, setTab] = useState<"all" | RepairStatus>("all");
   const [selected, setSelected] = useState<RepairTicket | null>(null);
   const [editStatus, setEditStatus] = useState<RepairStatus>("received");
-  const [editTechnician, setEditTechnician] = useState("");
+  const [editAssignee, setEditAssignee] = useState("");
+  const [staff, setStaff] = useState<RepairAssignee[]>([]);
+  const [staffLoading, setStaffLoading] = useState(false);
+  const [staffError, setStaffError] = useState("");
+  const [error, setError] = useState("");
   const [editNotes, setEditNotes] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -39,24 +48,31 @@ export default function RepairsPage() {
 
   const load = async () => {
     setLoading(true);
-    try { setTickets(await fetchRepairTickets()); } catch (e) { console.error(e); }
+    try { setTickets(await fetchRepairTickets()); } catch { setError("Could not load repairs. Please refresh to try again."); }
     finally { setLoading(false); }
   };
 
   const openDetail = (t: RepairTicket) => {
     setSelected(t);
     setEditStatus(t.status);
-    setEditTechnician(t.technician);
+    setEditAssignee(t.coordinatorEmail || (["Sales", "Support"].includes(t.assigneeRole || "") ? t.assigneeEmail || "" : ""));
+    setEditTechnicians(t.technicianEmails || []);
+    setError("");
+    setStaffError("");
+    setStaffLoading(true);
+    fetchRepairStaff().then(setStaff).catch(() => setStaffError("Could not load team members. Close and reopen this ticket to retry.")).finally(() => setStaffLoading(false));
     setEditNotes(t.notes);
   };
 
   const handleUpdate = async () => {
     if (!selected) return;
+    setError("");
     setBusy(true);
     try {
       await updateRepairTicket(selected.id, {
         status: editStatus,
-        technician: editTechnician.trim(),
+        coordinatorEmail: editAssignee,
+        technicianEmails: editTechnicians,
         notes: editNotes.trim(),
       });
       logAudit({
@@ -64,10 +80,11 @@ export default function RepairsPage() {
         actorId: user?.uid || "",
         action: "settings_updated",
         target: `Repair ${selected.id} → ${STATUS_LABELS[editStatus]}`,
+        details: `Coordinator: ${editAssignee || "Unassigned"}; technicians: ${editTechnicians.join(", ") || "Unassigned"}`,
       });
       setSelected(null);
       load();
-    } finally { setBusy(false); }
+    } catch (error) { setError(error instanceof Error ? error.message : "Could not update the ticket."); } finally { setBusy(false); }
   };
 
   const filtered = tickets.filter((t) => {
@@ -75,11 +92,17 @@ export default function RepairsPage() {
     const matchSearch = !search ||
       t.userName.toLowerCase().includes(search.toLowerCase()) ||
       t.device.toLowerCase().includes(search.toLowerCase()) ||
-      t.issue.toLowerCase().includes(search.toLowerCase());
+      t.issue.toLowerCase().includes(search.toLowerCase()) ||
+      t.technician.toLowerCase().includes(search.toLowerCase()) ||
+      (t.assigneeEmail || "").toLowerCase().includes(search.toLowerCase()) ||
+      (t.assigneeRole || "").toLowerCase().includes(search.toLowerCase());
     return matchTab && matchSearch;
   });
 
   const counts = {
+    awaiting_payment: tickets.filter(t => t.status === "awaiting_payment").length,
+    ready_for_assignment: tickets.filter(t => t.status === "ready_for_assignment").length,
+    collected: tickets.filter(t => t.status === "collected").length,
     all: tickets.length,
     received: tickets.filter((t) => t.status === "received").length,
     in_progress: tickets.filter((t) => t.status === "in_progress").length,
@@ -92,8 +115,11 @@ export default function RepairsPage() {
       <AdminHeader
         title="Repairs & Services"
         subtitle="Track repair tickets and on-site service jobs"
+        action={<RepairIntake onCreated={load} />}
       />
 
+      <Link href={`${base}/payments`} className="mt-4 inline-block text-sm font-medium text-mercury hover:underline">Manage repair payments →</Link>
+      {error && !selected && <p role="alert" className="mt-4 text-sm text-red-600">{error}</p>}
       {/* Summary */}
       <div className="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
         <StatCard label="Total Tickets" value={counts.all} />
@@ -122,7 +148,7 @@ export default function RepairsPage() {
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search by customer, device..."
+            placeholder="Search customer, device, assignee or role..."
             className="w-full bg-transparent text-sm text-ink outline-none placeholder:text-muted"
           />
         </div>
@@ -147,7 +173,8 @@ export default function RepairsPage() {
                   <th className="pb-3 pl-1 font-medium">Customer</th>
                   <th className="pb-3 font-medium">Device</th>
                   <th className="pb-3 font-medium">Issue</th>
-                  <th className="pb-3 font-medium">Technician</th>
+                  <th className="pb-3 font-medium">Assigned to</th>
+                  <th className="pb-3 font-medium">Payment</th>
                   <th className="pb-3 font-medium">Status</th>
                   <th className="pb-3 font-medium">Date</th>
                 </tr>
@@ -162,10 +189,12 @@ export default function RepairsPage() {
                     <td className="py-3 pl-1">
                       <p className="font-medium text-ink">{t.userName || t.userEmail}</p>
                       <p className="text-[11px] text-muted">{t.userPhone || t.userEmail}</p>
+                      <p className="mt-1 text-[10px] text-muted">{t.trackingReference || t.id}</p>
                     </td>
                     <td className="py-3 text-ink">{t.device}</td>
                     <td className="py-3 text-muted max-w-[180px] truncate">{t.issue}</td>
-                    <td className="py-3 text-muted">{t.technician || "—"}</td>
+                    <td className="py-3 text-muted">{t.technicianEmails?.join(", ") || t.coordinatorEmail || t.technician || "Unassigned"}{t.assigneeRole && <p className="mt-1 text-[11px] text-mercury">{t.assigneeRole}</p>}</td>
+                    <td className="py-3 text-xs text-muted">{paymentLabel(t)}</td>
                     <td className="py-3">
                       <span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${STATUS_STYLES[t.status]}`}>
                         {STATUS_LABELS[t.status]}
@@ -184,14 +213,16 @@ export default function RepairsPage() {
 
       {/* Detail/Edit Modal */}
       {selected && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4" onClick={() => setSelected(null)}>
-          <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4" onClick={() => { if (!busy) setSelected(null); }}>
+          <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-white p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-bold text-ink">Repair Ticket</h3>
-              <button onClick={() => setSelected(null)} className="text-muted hover:text-ink"><X size={20} /></button>
+              <button onClick={() => { if (!busy) setSelected(null); }} className="text-muted hover:text-ink"><X size={20} /></button>
             </div>
 
             <div className="mt-4 space-y-2 text-sm">
+              <Row label="Reference" value={selected.trackingReference || selected.id} />
+              <Row label="Payment" value={`${paymentLabel(selected)} · UGX ${(selected.totalPaid || 0).toLocaleString()} / ${(selected.amountDue || 0).toLocaleString()}`} />
               <Row label="Customer" value={`${selected.userName} (${selected.userEmail})`} />
               <Row label="Phone" value={selected.userPhone || "—"} />
               <Row label="Device" value={selected.device} />
@@ -210,21 +241,29 @@ export default function RepairsPage() {
                   onChange={(e) => setEditStatus(e.target.value as RepairStatus)}
                   className="h-11 w-full rounded-xl border border-line bg-[#FAFBFC] px-4 text-sm text-ink outline-none"
                 >
-                  <option value="received">Received</option>
-                  <option value="in_progress">In Progress</option>
-                  <option value="awaiting_parts">Awaiting Parts</option>
-                  <option value="completed">Completed</option>
+                  {Object.entries(STATUS_LABELS).map(([value, label]) => <option key={value} value={value} disabled={!allowedRepairStatuses(selected.status).includes(value as RepairStatus)}>{label}</option>)}
                 </select>
               </div>
               <div>
-                <label className="mb-1 block text-xs font-semibold text-ink">Assigned Technician</label>
-                <input
-                  value={editTechnician}
-                  onChange={(e) => setEditTechnician(e.target.value)}
-                  placeholder="Technician name"
-                  className="h-11 w-full rounded-xl border border-line bg-[#FAFBFC] px-4 text-sm text-ink outline-none focus:border-mercury"
-                />
+                <label htmlFor="repair-assignee" className="mb-1 block text-xs font-semibold text-ink">Sales / Support coordinator</label>
+                <select id="repair-assignee" value={editAssignee} onChange={e => setEditAssignee(e.target.value)} disabled={staffLoading || !!staffError || busy} className="h-11 w-full rounded-xl border border-line bg-[#FAFBFC] px-4 text-sm text-ink">
+                  <option value="">Unassigned</option>
+                  {editAssignee && !staff.some(person => person.email === editAssignee) && <option value={editAssignee}>{editAssignee} (existing)</option>}
+                  {staff.filter(person => ["Sales", "Support"].includes(person.role)).map(person => <option key={person.email} value={person.email}>{person.name} — {person.role}</option>)}
+                </select>
               </div>
+              <fieldset disabled={!repairPaid(selected) || staffLoading || !!staffError || busy}>
+                <legend className="mb-2 text-xs font-semibold text-ink">Technicians</legend>
+                {!repairPaid(selected) && <p className="mb-3 text-xs leading-5 text-amber-700">Record full payment in Payments before assigning technicians.</p>}
+                <div className="max-h-40 space-y-2 overflow-y-auto rounded-xl border border-line p-3">
+                  {staff.filter(person => person.role === "Technician").map(person => <label key={person.email} className="flex items-center gap-3 text-sm"><input type="checkbox" checked={editTechnicians.includes(person.email)} onChange={e => setEditTechnicians(previous => e.target.checked ? [...previous, person.email] : previous.filter(email => email !== person.email))} />{person.name}<span className="text-xs text-muted">{person.email}</span></label>)}
+                  {editTechnicians.filter(email => !staff.some(person => person.email === email && person.role === "Technician")).map(email => <label key={email} className="flex items-center gap-3 text-sm"><input type="checkbox" checked onChange={() => setEditTechnicians(previous => previous.filter(value => value !== email))} />{email} (no longer available)</label>)}
+                  {!staffLoading && !staff.some(person => person.role === "Technician") && <p className="text-xs text-muted">Tag team members as Technician in Users & Roles.</p>}
+                  {staffLoading && <p className="text-xs text-muted">Loading team…</p>}
+                </div>
+              </fieldset>
+              {staffError && <p role="alert" className="text-xs text-red-600">{staffError}</p>}
+              <div className="border-t border-line pt-3"><p className="mb-2 text-xs font-semibold">Status history</p>{selected.statusHistory?.map((event, index) => <p key={index} className="py-1 text-xs text-muted">{STATUS_LABELS[event.status]} · {event.at.toLocaleString("en-UG")}</p>)}</div>
               <div>
                 <label className="mb-1 block text-xs font-semibold text-ink">Notes</label>
                 <textarea
@@ -237,6 +276,7 @@ export default function RepairsPage() {
               </div>
             </div>
 
+            {error && <p role="alert" className="mt-4 text-sm text-red-600">{error}</p>}
             <button
               onClick={handleUpdate}
               disabled={busy}

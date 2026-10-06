@@ -152,6 +152,12 @@ export default function Header({ productId }: { productId?: string }) {
           {/* Services + contact */}
           <div className="hidden shrink-0 items-center gap-3 lg:flex">
             <Link
+              href="/repair-status"
+              className="rounded-full px-3 py-2.5 text-[13px] font-semibold text-ink transition hover:bg-surface-soft"
+            >
+              Track repair
+            </Link>
+            <Link
               href="/repairs"
               className="rounded-full bg-mercury px-4 py-2.5 text-[13px] font-semibold text-white transition hover:bg-mercury-dark"
             >
@@ -333,6 +339,8 @@ export default function Header({ productId }: { productId?: string }) {
           <nav className="border-t border-line bg-white px-4 py-4 md:hidden">
             <ul className="flex flex-col gap-1">
               <MobileNavLink href="/">Home</MobileNavLink>
+              <MobileNavLink href="/repairs">Repairs &amp; Services</MobileNavLink>
+              <MobileNavLink href="/repair-status">Track Repair</MobileNavLink>
               <MobileNavLink href="/cart">Cart</MobileNavLink>
               {user ? (
                 <>

@@ -149,6 +149,9 @@ export const onQuotationStatusChanged = onDocumentUpdated("quotations/{quoteId}"
 // ─── Repair tickets ──────────────────────────────────────────────────────────
 
 const REPAIR_STATUS_COPY = {
+  awaiting_payment: { title: "Repair awaiting payment", body: "Your repair quotation or LPO is ready. Please contact our team to arrange payment." },
+  ready_for_assignment: { title: "Repair payment received", body: "Your repair is paid and ready for technician assignment." },
+  collected: { title: "Device collected", body: "Your repaired device has been collected. Thank you for choosing Mercury." },
   received: { title: "Repair received", body: "We have received your device and logged your repair ticket." },
   in_progress: { title: "Repair in progress", body: "Our technicians have started working on your device." },
   awaiting_parts: { title: "Repair on hold", body: "Your repair is awaiting parts. We will resume shortly." },

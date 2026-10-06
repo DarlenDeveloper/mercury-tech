@@ -29,6 +29,7 @@ const SEARCH_ITEMS: SearchItem[] = [
   { label: "Orders", href: "/u/orders", icon: <ClipboardList size={16} />, category: "Pages" },
   { label: "Customers", href: "/u/customers", icon: <Users size={16} />, category: "Pages" },
   { label: "Analytics", href: "/u/analytics", icon: <Sparkles size={16} />, category: "Pages" },
+  { label: "Payments", href: "/u/payments", icon: <ClipboardList size={16} />, category: "Pages" },
   { label: "Financial Reports", href: "/u/finance", icon: <Sparkles size={16} />, category: "Pages" },
   { label: "User Tracking", href: "/u/user-tracking", icon: <Sparkles size={16} />, category: "Pages" },
   { label: "Users & Roles", href: "/u/users", icon: <Users size={16} />, category: "Pages" },

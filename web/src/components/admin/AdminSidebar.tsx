@@ -59,6 +59,7 @@ const GROUPS: Group[] = [
     title: "Growth",
     items: [
       { label: "User Tracking", icon: Activity, href: "/u/user-tracking", slug: "user-tracking" },
+      { label: "Payments", icon: Wallet, href: "/u/payments", slug: "payments" },
       { label: "Financial Reports", icon: Wallet, href: "/u/finance", slug: "finance" },
       { label: "Quotations", icon: ScrollText, href: "/u/quotations", slug: "quotations" },
     ],

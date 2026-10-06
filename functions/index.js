@@ -174,3 +174,6 @@ async function sendPushNotification(title, body, audience, notifId) {
     });
   }
 }
+
+// Payment-gated repair workflow and public status lookup. SMS is added separately.
+export { manageRepair, listRepairPayments, lookupRepairStatus } from "./repair-admin.js";

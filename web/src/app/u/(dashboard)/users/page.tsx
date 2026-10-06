@@ -17,6 +17,8 @@ import {
   ALL_PAGES,
   type AdminEntry,
   type AccessLevel,
+  STAFF_ROLES,
+  type StaffRole,
 } from "@/lib/adminAccess";
 
 type AdminUser = {
@@ -31,6 +33,8 @@ type AdminUser = {
 
 const ROLE_COLORS: Record<string, string> = {
   Admin: "bg-[#eaf1fc] text-mercury",
+  Sales: "bg-[#eaf1fc] text-mercury",
+  Technician: "bg-[#f3e8ff] text-[#7c3aed]",
   Manager: "bg-[#f3e8ff] text-[#7c3aed]",
   Support: "bg-[#eef7ee] text-[#16a34a]",
   Developer: "bg-[#fef3e2] text-[#b45309]",
@@ -49,6 +53,9 @@ const PAGE_LABELS: Record<string, string> = {
   categories: "Categories",
   customers: "Customers",
   repairs: "Repairs & Services",
+  payments: "Payments",
+  quotations: "Quotations",
+  "customer-care": "Customer Service",
   "user-tracking": "User Tracking",
   finance: "Financial Reports",
   website: "Website",
@@ -203,7 +210,7 @@ export default function UsersRolesPage() {
                 <tr className="border-b border-line text-[12px] font-medium text-muted">
                   <th className="pb-3 pl-1 font-medium">User</th>
                   <th className="pb-3 font-medium">Email</th>
-                  <th className="pb-3 font-medium">Role</th>
+                  <th className="pb-3 font-medium">Job role</th>
                   <th className="pb-3 font-medium">Access</th>
                   <th className="pb-3 font-medium">Pages</th>
                   <th className="pb-3 font-medium">Joined</th>
@@ -234,8 +241,8 @@ export default function UsersRolesPage() {
                       </td>
                       <td className="py-3 text-muted">{admin.email}</td>
                       <td className="py-3">
-                        <span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${ROLE_COLORS[admin.role] ?? ROLE_COLORS.Admin}`}>
-                          {admin.role}
+                        <span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${ROLE_COLORS[entry?.jobRole || ""] ?? ROLE_COLORS.Admin}`}>
+                          {entry?.jobRole || "Not tagged"}
                         </span>
                       </td>
                       <td className="py-3">
@@ -259,7 +266,7 @@ export default function UsersRolesPage() {
                             <button
                               onClick={() => entry && setEditingAccess(entry)}
                               className="rounded-lg p-1.5 text-muted transition hover:bg-surface-soft hover:text-ink"
-                              title="Edit access"
+                              title="Edit role & access" aria-label={`Edit role and access for ${admin.name}`}
                             >
                               <Lock size={14} />
                             </button>
@@ -299,6 +306,8 @@ export default function UsersRolesPage() {
                       {entry.access === "super_admin" ? "Super Admin" : "Admin"}
                     </span>
                   </div>
+                  {isSuper && <button onClick={() => setEditingAccess(entry)} className="ml-auto mr-4 text-xs font-medium text-mercury hover:underline">Edit role & access</button>}
+                  {entry.jobRole && <span className="mr-4 text-xs text-muted">{entry.jobRole}</span>}
                   {isSuper && (
                     <button
                       onClick={() => removeAdmin(entry.email)}
@@ -348,6 +357,8 @@ function AddAdminModal({
 }) {
   const [email, setEmail] = useState("");
   const [access, setAccess] = useState<AccessLevel>("admin");
+  const [jobRole, setJobRole] = useState<StaffRole | "">("");
+  const [error, setError] = useState("");
   const [selectedPages, setSelectedPages] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
 
@@ -358,12 +369,15 @@ function AddAdminModal({
   };
 
   const handleAdd = async () => {
-    if (!email.trim()) return;
+    setError("");
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) { setError("Enter a valid email address."); return; }
+    if (existingEntries.some(e => e.email.toLowerCase() === email.trim().toLowerCase())) { setError("This person already has admin access. Edit their role instead."); return; }
     setBusy(true);
     try {
       const newEntry: AdminEntry = {
         email: email.trim().toLowerCase(),
         access,
+        jobRole,
         pages: access === "super_admin" ? ["*"] : selectedPages,
       };
       const updated = [...existingEntries, newEntry];
@@ -374,6 +388,7 @@ function AddAdminModal({
       onAdded();
     } catch (e) {
       console.error(e);
+      setError("Could not save changes. Please try again.");
     } finally {
       setBusy(false);
     }
@@ -403,6 +418,9 @@ function AddAdminModal({
             className="h-11 w-full rounded-full bg-[#F4F5F8] px-4 text-sm text-ink outline-none placeholder:text-muted"
           />
         </div>
+
+        <JobRoleField value={jobRole} onChange={setJobRole} />
+        {error && <p role="alert" className="mt-3 text-sm text-red-600">{error}</p>}
 
         {/* Access level */}
         <div className="mt-4">
@@ -499,6 +517,8 @@ function EditAccessModal({
   allEntries: AdminEntry[];
 }) {
   const [access, setAccess] = useState<AccessLevel>(entry.access);
+  const [jobRole, setJobRole] = useState<StaffRole | "">(entry.jobRole || "");
+  const [error, setError] = useState("");
   const [selectedPages, setSelectedPages] = useState<string[]>(
     entry.pages.includes("*") ? [...ALL_PAGES] : entry.pages
   );
@@ -511,11 +531,14 @@ function EditAccessModal({
   };
 
   const handleSave = async () => {
+    setError("");
     setBusy(true);
     try {
       const updatedEntry: AdminEntry = {
+        ...entry,
         email: entry.email,
         access,
+        jobRole,
         pages: access === "super_admin" ? ["*"] : selectedPages,
       };
       const updated = allEntries.map((e) =>
@@ -528,6 +551,7 @@ function EditAccessModal({
       onSaved();
     } catch (e) {
       console.error(e);
+      setError("Could not save changes. Please try again.");
     } finally {
       setBusy(false);
     }
@@ -545,6 +569,9 @@ function EditAccessModal({
         <p className="mt-1 text-sm text-muted">
           Update access for <strong>{entry.email}</strong>
         </p>
+
+        <JobRoleField value={jobRole} onChange={setJobRole} />
+        {error && <p role="alert" className="mt-3 text-sm text-red-600">{error}</p>}
 
         {/* Access level */}
         <div className="mt-5">
@@ -623,6 +650,19 @@ function EditAccessModal({
           </button>
         </div>
       </div>
+    </div>
+  );
+}
+
+function JobRoleField({ value, onChange }: { value: StaffRole | ""; onChange: (role: StaffRole | "") => void }) {
+  return (
+    <div className="mt-5">
+      <label htmlFor="staff-job-role" className="mb-1.5 block text-xs font-semibold text-ink">Job role</label>
+      <select id="staff-job-role" value={value} onChange={e => onChange(e.target.value as StaffRole | "")} className="h-11 w-full rounded-xl border border-line bg-[#FAFBFC] px-4 text-sm text-ink focus:border-mercury">
+        <option value="">No job tag</option>
+        {STAFF_ROLES.map(role => <option key={role} value={role}>{role}</option>)}
+      </select>
+      <p className="mt-2 text-xs leading-5 text-muted">Tagged staff can be assigned to repairs and service jobs. Their access permissions stay the same.</p>
     </div>
   );
 }

@@ -101,12 +101,32 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
-    // Repair tickets: customers can create their own; admins can read/update all.
+    // Repair writes after intake go through manageRepair, which checks page
+    // permissions, payment balances and technician membership transactionally.
     match /repair_tickets/{ticketId} {
       allow read: if request.auth != null;
-      allow create: if request.auth != null;
-      allow update: if request.auth != null;
-      allow delete: if false;
+      allow create: if request.auth != null
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.status == "received"
+        && request.resource.data.get('totalPaid', 0) == 0
+        && request.resource.data.get('amountDue', 0) == 0
+        && request.resource.data.get('technician', '') == ''
+        && request.resource.data.get('technicianEmails', []).size() == 0
+        && request.resource.data.get('assigneeEmail', '') == ''
+        && request.resource.data.get('coordinatorEmail', '') == ''
+        && !request.resource.data.keys().hasAny(['billingReference', 'billingType', 'statusHistory']);
+      allow update, delete: if false;
+    }
+
+    // Immutable receipts are created by the payment callable only. This
+    // collection is never readable by an unauthenticated status checker.
+    match /repair_payments/{paymentId} {
+      allow read: if false;
+      allow write: if false;
+    }
+
+    match /repair_payment_refs/{referenceId} {
+      allow read, write: if false;
     }
   }
 }

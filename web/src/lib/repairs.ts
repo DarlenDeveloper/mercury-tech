@@ -11,8 +11,10 @@ import {
   Timestamp,
 } from "firebase/firestore";
 import { db } from "./firestore";
+import { getFunctions, httpsCallable } from "firebase/functions";
+import { firebaseApp } from "./firebase";
 
-export type RepairStatus = "received" | "in_progress" | "awaiting_parts" | "completed";
+export type RepairStatus = "received" | "awaiting_payment" | "ready_for_assignment" | "in_progress" | "awaiting_parts" | "completed" | "collected";
 
 export type RepairTicket = {
   id: string;
@@ -25,6 +27,17 @@ export type RepairTicket = {
   service: string;
   status: RepairStatus;
   technician: string;
+  assigneeEmail?: string;
+  assigneeRole?: string;
+  trackingReference?: string;
+  billingType?: "quotation" | "lpo";
+  billingReference?: string;
+  amountDue?: number;
+  totalPaid?: number;
+  coordinatorEmail?: string;
+  technicianEmails?: string[];
+  statusHistory?: { status: RepairStatus; at: Date }[];
+  workflowVersion?: number;
   notes: string;
   createdAt: Date;
   updatedAt: Date;
@@ -59,6 +72,10 @@ export async function submitRepairRequest({
     issue,
     service,
     status: "received",
+    workflowVersion: 1,
+    totalPaid: 0,
+    technicianEmails: [],
+    coordinatorEmail: "",
     technician: "",
     notes: "",
     createdAt: serverTimestamp(),
@@ -84,6 +101,17 @@ export async function fetchRepairTickets(): Promise<RepairTicket[]> {
       service: data.service || "Repair",
       status: data.status || "received",
       technician: data.technician || "",
+      assigneeEmail: data.assigneeEmail || "",
+      assigneeRole: data.assigneeRole || "",
+      trackingReference: data.trackingReference || d.id,
+      billingType: data.billingType,
+      billingReference: data.billingReference || "",
+      amountDue: data.amountDue || 0,
+      totalPaid: data.totalPaid || 0,
+      coordinatorEmail: data.coordinatorEmail || "",
+      technicianEmails: data.technicianEmails || [],
+      workflowVersion: data.workflowVersion,
+      statusHistory: (data.statusHistory || [{ status: data.status || "received", at: data.createdAt }]).map((event: { status: RepairStatus; at?: Timestamp }) => ({ status: event.status, at: event.at instanceof Timestamp ? event.at.toDate() : new Date() })),
       notes: data.notes || "",
       createdAt: data.createdAt instanceof Timestamp ? data.createdAt.toDate() : new Date(),
       updatedAt: data.updatedAt instanceof Timestamp ? data.updatedAt.toDate() : new Date(),
@@ -108,6 +136,17 @@ export async function fetchMyRepairTickets(userId: string): Promise<RepairTicket
       service: data.service || "Repair",
       status: data.status || "received",
       technician: data.technician || "",
+      assigneeEmail: data.assigneeEmail || "",
+      assigneeRole: data.assigneeRole || "",
+      trackingReference: data.trackingReference || d.id,
+      billingType: data.billingType,
+      billingReference: data.billingReference || "",
+      amountDue: data.amountDue || 0,
+      totalPaid: data.totalPaid || 0,
+      coordinatorEmail: data.coordinatorEmail || "",
+      technicianEmails: data.technicianEmails || [],
+      workflowVersion: data.workflowVersion,
+      statusHistory: (data.statusHistory || [{ status: data.status || "received", at: data.createdAt }]).map((event: { status: RepairStatus; at?: Timestamp }) => ({ status: event.status, at: event.at instanceof Timestamp ? event.at.toDate() : new Date() })),
       notes: data.notes || "",
       createdAt: data.createdAt instanceof Timestamp ? data.createdAt.toDate() : new Date(),
       updatedAt: data.updatedAt instanceof Timestamp ? data.updatedAt.toDate() : new Date(),
@@ -115,13 +154,56 @@ export async function fetchMyRepairTickets(userId: string): Promise<RepairTicket
   });
 }
 
-/** Admin updates a repair ticket. */
-export async function updateRepairTicket(
-  id: string,
-  fields: { status?: RepairStatus; technician?: string; notes?: string; service?: string }
-): Promise<void> {
-  await updateDoc(doc(db, COL, id), {
-    ...fields,
-    updatedAt: serverTimestamp(),
-  });
+export const REPAIR_STATUS_LABELS: Record<RepairStatus, string> = {
+  received: "Received", awaiting_payment: "Awaiting payment", ready_for_assignment: "Ready for assignment",
+  in_progress: "In progress", awaiting_parts: "Awaiting parts", completed: "Ready for collection", collected: "Collected",
+};
+const REPAIR_STATUS_TRANSITIONS: Record<RepairStatus, RepairStatus[]> = {
+  received: ["received"],
+  awaiting_payment: ["awaiting_payment"],
+  ready_for_assignment: ["ready_for_assignment", "in_progress"],
+  in_progress: ["in_progress", "awaiting_parts", "completed"],
+  awaiting_parts: ["awaiting_parts", "in_progress", "completed"],
+  completed: ["completed", "in_progress", "collected"],
+  collected: ["collected"],
+};
+export function allowedRepairStatuses(status: RepairStatus) { return REPAIR_STATUS_TRANSITIONS[status]; }
+export function repairPaid(ticket: RepairTicket) { return (ticket.amountDue || 0) > 0 && (ticket.totalPaid || 0) >= (ticket.amountDue || 0); }
+export function paymentLabel(ticket: RepairTicket) {
+  if (!ticket.amountDue) return "Needs quotation / LPO";
+  if (repairPaid(ticket)) return "Paid";
+  return ticket.totalPaid ? "Part paid" : "Unpaid";
+}
+export async function manageRepair(id: string, action: string, fields: Record<string, unknown>) {
+  await httpsCallable(getFunctions(firebaseApp), "manageRepair")({ id, action, ...fields });
+}
+export async function updateRepairTicket(id: string, fields: { status: RepairStatus; notes: string; coordinatorEmail: string; technicianEmails: string[] }) {
+  await manageRepair(id, "update", fields);
+}
+export type RepairPayment = { id: string; ticketId: string; amount: number; method: string; reference: string; recordedBy: string; recordedAt: Date };
+export async function fetchRepairPayments(ticketId: string): Promise<RepairPayment[]> {
+  const response = await httpsCallable<{ ticketId: string }, { payments: Array<Omit<RepairPayment, "recordedAt"> & { recordedAt: string | null }> }>(
+    getFunctions(firebaseApp),
+    "listRepairPayments"
+  )({ ticketId });
+  return response.data.payments
+    .map(payment => ({ ...payment, recordedAt: payment.recordedAt ? new Date(payment.recordedAt) : new Date(0) }))
+    .sort((a, b) => b.recordedAt.getTime() - a.recordedAt.getTime());
+}
+
+export type PublicRepairStatus = {
+  reference: string;
+  service: string;
+  device: string;
+  status: RepairStatus;
+  history: { status: RepairStatus; at: string | null }[];
+  updatedAt: string | null;
+};
+
+export async function lookupRepairStatus(reference: string, phone: string): Promise<PublicRepairStatus> {
+  const response = await httpsCallable<{ reference: string; phone: string }, PublicRepairStatus>(
+    getFunctions(firebaseApp),
+    "lookupRepairStatus"
+  )({ reference: reference.trim(), phone: phone.trim() });
+  return response.data;
 }

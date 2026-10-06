@@ -16,7 +16,8 @@
  *
  * Page slugs match sidebar hrefs without /u/ prefix:
  *   "analytics", "orders", "products", "categories", "customers",
- *   "repairs", "user-tracking", "finance", "website", "users",
+ *   "repairs",
+  "payments", "user-tracking", "finance", "website", "users",
  *   "notifications", "audit-logs", "settings", "help"
  *
  * The dashboard ("/u") is always accessible to any admin.
@@ -24,7 +25,11 @@
 
 export type AccessLevel = "super_admin" | "admin";
 
+export const STAFF_ROLES = ["Sales", "Technician", "Support"] as const;
+export type StaffRole = (typeof STAFF_ROLES)[number];
+
 export type AdminEntry = {
+  jobRole?: StaffRole | "";
   email: string;
   access: AccessLevel;
   pages: string[]; // ["*"] = all pages
@@ -37,6 +42,7 @@ export const ALL_PAGES = [
   "categories",
   "customers",
   "repairs",
+  "payments",
   "user-tracking",
   "finance",
   "website",
