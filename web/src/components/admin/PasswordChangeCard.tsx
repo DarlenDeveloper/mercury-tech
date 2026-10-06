@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Lock, Eye, EyeOff } from "lucide-react";
+import { Lock, Eye, EyeOff } from "@/components/admin/WorkspaceIcons";
 import { EmailAuthProvider, reauthenticateWithCredential, updatePassword } from "firebase/auth";
 import { useAuth } from "@/components/AuthProvider";
 

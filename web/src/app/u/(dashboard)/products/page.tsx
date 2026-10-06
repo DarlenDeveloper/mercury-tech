@@ -10,7 +10,7 @@ import {
   Pencil,
   Star,
   Sparkles,
-} from "lucide-react";
+} from "@/components/admin/WorkspaceIcons";
 import {
   collection,
   getDocs,

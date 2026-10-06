@@ -18,8 +18,8 @@ import {
   CreditCard,
   Package,
   X,
-  type LucideIcon,
-} from "lucide-react";
+  type WorkspaceIcon,
+} from "@/components/admin/WorkspaceIcons";
 import AdminHeader from "@/components/admin/AdminHeader";
 import { db } from "@/lib/firestore";
 
@@ -82,7 +82,7 @@ function timeAgo(date: Date | null) {
   return `${days}d ago`;
 }
 
-const ACTION_META: Record<string, { icon: LucideIcon; tint: string; color: string }> = {
+const ACTION_META: Record<string, { icon: WorkspaceIcon; tint: string; color: string }> = {
   wishlist: { icon: Heart, tint: "bg-[#fde8ea]", color: "#e11d48" },
   cart: { icon: ShoppingCart, tint: "bg-[#e8eefc]", color: "#1f3e97" },
   order: { icon: CreditCard, tint: "bg-[#e7f6ee]", color: "#16a34a" },

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { ArrowSwapHorizontal } from "@/components/admin/WorkspaceIcons";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -30,10 +31,10 @@ import {
   Sparkles,
   KeyRound,
   Megaphone,
-  type LucideIcon,
-} from "lucide-react";
+  type WorkspaceIcon,
+} from "@/components/admin/WorkspaceIcons";
 
-type Item = { label: string; icon: LucideIcon; href: string; slug: string };
+type Item = { label: string; icon: WorkspaceIcon; href: string; slug: string };
 type Group = { title?: string; items: Item[] };
 
 const GROUPS: Group[] = [
@@ -169,6 +170,7 @@ export default function AdminSidebar() {
         />
       </Link>
 
+      <p className="mt-4 px-3 text-[10px] font-semibold uppercase tracking-[0.2em] text-muted">Sales workspace</p>
       {/* Scrollable nav */}
       <div className="no-scrollbar mt-6 flex-1 overflow-y-auto">
         {GROUPS.map((group, i) => {
@@ -189,6 +191,7 @@ export default function AdminSidebar() {
         })}
       </div>
 
+      <Link href="/select-role" className="mt-4 flex items-center gap-3 px-3.5 py-2.5 text-sm text-muted hover:text-ink"><ArrowSwapHorizontal size={19} />Switch role</Link>
       {/* Log out */}
       <button
         type="button"

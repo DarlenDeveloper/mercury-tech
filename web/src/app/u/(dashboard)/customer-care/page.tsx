@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo, useRef } from "react";
-import { ChevronRight, Send, Headphones } from "lucide-react";
+import { ChevronRight, Send, Headphones } from "@/components/admin/WorkspaceIcons";
 import {
   watchAllConversations,
   watchConversation,

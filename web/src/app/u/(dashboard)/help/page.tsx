@@ -4,11 +4,11 @@ import {
   LifeBuoy,
   Activity,
   ChevronRight,
-  type LucideIcon,
-} from "lucide-react";
+  type WorkspaceIcon,
+} from "@/components/admin/WorkspaceIcons";
 import AdminHeader from "@/components/admin/AdminHeader";
 
-const CARDS: { icon: LucideIcon; title: string; desc: string; action: string }[] = [
+const CARDS: { icon: WorkspaceIcon; title: string; desc: string; action: string }[] = [
   { icon: BookOpen, title: "Documentation", desc: "Guides for managing products, orders and the storefront.", action: "Browse docs" },
   { icon: MessageSquare, title: "Contact Support", desc: "Reach the Mercury team for account or technical help.", action: "Start a chat" },
   { icon: LifeBuoy, title: "Submit a Ticket", desc: "Report an issue and track it to resolution.", action: "Open ticket" },

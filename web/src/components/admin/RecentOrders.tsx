@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { collection, getDocs, query, orderBy, limit, Timestamp } from "firebase/firestore";
-import { Package } from "lucide-react";
+import { Package } from "@/components/admin/WorkspaceIcons";
 import { db } from "@/lib/firestore";
 
 type RecentOrder = {

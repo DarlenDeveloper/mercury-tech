@@ -8,7 +8,7 @@ import {
   getDoc,
   updateDoc,
 } from "firebase/firestore";
-import { Search, Plus, ShieldCheck, X, Trash2, Lock } from "lucide-react";
+import { Search, Plus, ShieldCheck, X, Trash2, Lock } from "@/components/admin/WorkspaceIcons";
 import AdminHeader from "@/components/admin/AdminHeader";
 import { db } from "@/lib/firestore";
 import { useAdminAccess } from "@/components/admin/AdminGuard";

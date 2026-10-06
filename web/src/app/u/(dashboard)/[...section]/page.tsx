@@ -1,4 +1,4 @@
-import { Hammer } from "lucide-react";
+import { Hammer } from "@/components/admin/WorkspaceIcons";
 import AdminHeader from "@/components/admin/AdminHeader";
 
 function titleFor(section: string[]): string {

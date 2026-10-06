@@ -1,9 +1,13 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
+import { ArrowSwapHorizontal } from "@/components/admin/WorkspaceIcons";
+import { WORKSHOP_PAGES } from "@/lib/workspaces";
+import { useAdminAccess } from "./AdminGuard";
+import { hasPageAccess } from "@/lib/adminAccess";
 import Link from "next/link";
-import { Search, Bell, ChevronDown, X, Package, LayoutGrid, ClipboardList, Users, Settings, Sparkles, Store, LogOut } from "lucide-react";
+import { Search, Bell, ChevronDown, X, Package, LayoutGrid, ClipboardList, Users, Settings, Sparkles, LogOut } from "@/components/admin/WorkspaceIcons";
 import { collection, getDocs, query, orderBy, limit, Timestamp } from "firebase/firestore";
 import { useAuth } from "@/components/AuthProvider";
 import { db } from "@/lib/firestore";
@@ -61,6 +65,13 @@ export default function AdminHeader({
 }) {
   const { user } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
+  const workshop = pathname.startsWith("/workshop");
+  const { adminEntry } = useAdminAccess();
+  const searchItems = SEARCH_ITEMS.filter(item => {
+    const slug = item.href.replace("/u", "").split("/").filter(Boolean)[0];
+    return !slug || ((!workshop || WORKSHOP_PAGES.includes(slug)) && hasPageAccess(adminEntry, slug));
+  }).map(item => ({ ...item, href: workshop ? item.href.replace("/u", "/workshop") : item.href }));
   const displayName = user?.displayName || "Admin";
   const initials = displayName
     .split(" ")
@@ -120,10 +131,10 @@ export default function AdminHeader({
 
   // Search filtering
   const filtered = searchQuery.trim()
-    ? SEARCH_ITEMS.filter((item) =>
+    ? searchItems.filter((item) =>
         item.label.toLowerCase().includes(searchQuery.toLowerCase())
       )
-    : SEARCH_ITEMS;
+    : searchItems;
 
   const handleSearchSelect = (href: string) => {
     setShowSearch(false);
@@ -164,7 +175,7 @@ export default function AdminHeader({
             type="button"
             aria-label="Search"
             onClick={() => setShowSearch(true)}
-            className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-muted shadow-sm transition hover:text-ink"
+            className="flex h-10 w-10 items-center justify-center rounded-full text-muted transition hover:text-ink"
           >
             <Search size={18} />
           </button>
@@ -175,7 +186,7 @@ export default function AdminHeader({
               type="button"
               aria-label="Notifications"
               onClick={() => setShowNotifs(!showNotifs)}
-              className="relative flex h-10 w-10 items-center justify-center rounded-full bg-white text-muted shadow-sm transition hover:text-ink"
+              className="relative flex h-10 w-10 items-center justify-center rounded-full text-muted transition hover:text-ink"
             >
               <Bell size={18} />
               {unreadCount > 0 && (
@@ -212,14 +223,14 @@ export default function AdminHeader({
                     ))
                   )}
                 </div>
-                <div className="border-t border-line px-4 py-2.5">
+                {!workshop && hasPageAccess(adminEntry, "notifications") && <div className="border-t border-line px-4 py-2.5">
                   <button
                     onClick={() => { setShowNotifs(false); router.push("/u/notifications"); }}
                     className="w-full text-center text-[12px] font-semibold text-mercury hover:text-mercury-dark"
                   >
                     View All Notifications
                   </button>
-                </div>
+                </div>}
               </div>
             )}
           </div>
@@ -255,12 +266,12 @@ export default function AdminHeader({
                 </div>
                 <hr className="my-1 border-line" />
                 <Link
-                  href="/"
+                  href="/select-role"
                   onClick={() => setShowProfile(false)}
                   className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-ink transition hover:bg-surface-soft"
                 >
-                  <Store size={16} className="text-muted" />
-                  Back to Main Website
+                  <ArrowSwapHorizontal size={18} className="text-muted" />
+                  Switch role
                 </Link>
                 <hr className="my-1 border-line" />
                 <button
@@ -315,7 +326,7 @@ export default function AdminHeader({
                     onClick={() => handleSearchSelect(item.href)}
                     className="flex w-full items-center gap-3 rounded-xl px-4 py-2.5 text-left text-sm transition hover:bg-surface-soft"
                   >
-                    <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-surface-soft text-muted">
+                    <span className="flex h-8 w-8 items-center justify-center text-muted">
                       {item.icon}
                     </span>
                     <div>

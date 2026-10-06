@@ -9,7 +9,7 @@ export default function robots(): MetadataRoute.Robots {
         userAgent: "*",
         allow: "/",
         // Keep the admin dashboard and account areas out of the index.
-        disallow: ["/u", "/u/", "/cart", "/ai"],
+        disallow: ["/u", "/u/", "/cart", "/ai", "/select-role", "/workshop"],
       },
     ],
     sitemap: `${SITE_URL}/sitemap.xml`,

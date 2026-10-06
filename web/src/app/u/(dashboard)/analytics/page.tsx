@@ -9,7 +9,7 @@ import {
   query,
   orderBy,
 } from "firebase/firestore";
-import { TrendingUp, TrendingDown, Download, EyeOff } from "lucide-react";
+import { TrendingUp, TrendingDown, Download, EyeOff } from "@/components/admin/WorkspaceIcons";
 import AdminHeader from "@/components/admin/AdminHeader";
 import Sparkline from "@/components/admin/Sparkline";
 import AreaChart from "@/components/admin/charts/AreaChart";

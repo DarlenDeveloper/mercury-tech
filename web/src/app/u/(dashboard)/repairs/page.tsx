@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Plus, Search, X, Wrench } from "lucide-react";
+import { Plus, Search, X, Wrench } from "@/components/admin/WorkspaceIcons";
 import AdminHeader from "@/components/admin/AdminHeader";
 import { fetchRepairTickets, updateRepairTicket, type RepairTicket, type RepairStatus } from "@/lib/repairs";
 import { logAudit } from "@/lib/auditLog";

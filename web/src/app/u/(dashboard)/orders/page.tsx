@@ -20,7 +20,7 @@ import {
   Mail,
   User,
   Package,
-} from "lucide-react";
+} from "@/components/admin/WorkspaceIcons";
 import AdminHeader from "@/components/admin/AdminHeader";
 import { db } from "@/lib/firestore";
 

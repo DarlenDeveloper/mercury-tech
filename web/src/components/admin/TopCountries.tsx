@@ -1,4 +1,4 @@
-import { TrendingUp, TrendingDown } from "lucide-react";
+import { TrendingUp, TrendingDown } from "@/components/admin/WorkspaceIcons";
 import { TOP_COUNTRIES } from "@/lib/adminData";
 
 export default function TopCountries() {

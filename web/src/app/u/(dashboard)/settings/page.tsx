@@ -1,4 +1,4 @@
-import { Store, Bell, Lock, type LucideIcon } from "lucide-react";
+import { Store, Bell, Lock, type WorkspaceIcon } from "@/components/admin/WorkspaceIcons";
 import AdminHeader from "@/components/admin/AdminHeader";
 import PasswordChangeCard from "@/components/admin/PasswordChangeCard";
 
@@ -47,7 +47,7 @@ function Card({
   title,
   children,
 }: {
-  icon: LucideIcon;
+  icon: WorkspaceIcon;
   title: string;
   children: React.ReactNode;
 }) {

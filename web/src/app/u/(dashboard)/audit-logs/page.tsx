@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Search, Download, RefreshCw } from "lucide-react";
+import { Search, Download, RefreshCw } from "@/components/admin/WorkspaceIcons";
 import AdminHeader from "@/components/admin/AdminHeader";
 import { fetchAuditLogs, actionLabel, type AuditLogEntry, type AuditAction } from "@/lib/auditLog";
 

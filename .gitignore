@@ -1,0 +1,6 @@
+# Generated Firebase hosting artifacts and local dependencies
+/.firebase/
+/node_modules/
+
+# Build and debug logs
+*.log

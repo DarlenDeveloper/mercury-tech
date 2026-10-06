@@ -9,7 +9,7 @@ import {
   ArrowUp,
   ArrowDown,
   Zap,
-} from "lucide-react";
+} from "@/components/admin/WorkspaceIcons";
 import {
   collection,
   getDocs,

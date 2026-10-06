@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { collection, getDocs, query, orderBy } from "firebase/firestore";
-import { Search, ListFilter, Download, ChevronRight } from "lucide-react";
+import { Search, ListFilter, Download, ChevronRight } from "@/components/admin/WorkspaceIcons";
 import AdminHeader from "@/components/admin/AdminHeader";
 import { db } from "@/lib/firestore";
 

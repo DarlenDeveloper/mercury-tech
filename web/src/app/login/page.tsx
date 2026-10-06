@@ -30,7 +30,7 @@ export default function LoginPage() {
       const destination =
         requestedPath?.startsWith("/") && !requestedPath.startsWith("//")
           ? requestedPath
-          : "/";
+          : "/select-role";
       router.push(destination);
     } catch (err: any) {
       const code = err?.code ?? "";

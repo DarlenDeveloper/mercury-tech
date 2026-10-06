@@ -11,7 +11,7 @@ import {
   X,
   Eye,
   EyeOff,
-} from "lucide-react";
+} from "@/components/admin/WorkspaceIcons";
 import {
   collection,
   getDocs,

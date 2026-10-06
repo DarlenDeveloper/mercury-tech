@@ -5,7 +5,7 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 
 // Routes where the floating assistant would be redundant or intrusive.
-const HIDDEN_PREFIXES = ["/ai", "/u"];
+const HIDDEN_PREFIXES = ["/ai", "/u", "/select-role", "/workshop"];
 
 export default function AiFloatingButton() {
   const pathname = usePathname();

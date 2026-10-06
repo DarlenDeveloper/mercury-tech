@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Plus, X, Copy, Check, Trash2, Ban, KeyRound, ShieldAlert } from "lucide-react";
+import { Plus, X, Copy, Check, Trash2, Ban, KeyRound, ShieldAlert } from "@/components/admin/WorkspaceIcons";
 import AdminHeader from "@/components/admin/AdminHeader";
 import BarChart from "@/components/admin/charts/BarChart";
 import {

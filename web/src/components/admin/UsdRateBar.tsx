@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { TrendingUp, TrendingDown, DollarSign, Check } from "lucide-react";
+import { TrendingUp, TrendingDown, DollarSign, Check } from "@/components/admin/WorkspaceIcons";
 import { USD_RATE } from "@/lib/adminData";
 
 export default function UsdRateBar({

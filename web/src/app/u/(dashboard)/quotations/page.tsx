@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Search, Check, X as XIcon, MessageSquare, MoreHorizontal, Trash2, Eye } from "lucide-react";
+import { Search, Check, X as XIcon, MessageSquare, MoreHorizontal, Trash2, Eye } from "@/components/admin/WorkspaceIcons";
 import { fetchQuotations, updateQuotation, deleteQuotation, type Quotation, type QuotationStatus } from "@/lib/quotations";
 import { logAudit } from "@/lib/auditLog";
 import { useAuth } from "@/components/AuthProvider";

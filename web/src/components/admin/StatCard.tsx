@@ -1,4 +1,4 @@
-import { TrendingUp, TrendingDown } from "lucide-react";
+import { TrendingUp, TrendingDown } from "@/components/admin/WorkspaceIcons";
 import type { Stat } from "@/lib/adminData";
 import Sparkline from "./Sparkline";
 

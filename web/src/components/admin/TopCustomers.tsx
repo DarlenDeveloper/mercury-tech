@@ -1,4 +1,4 @@
-import { BadgeCheck } from "lucide-react";
+import { BadgeCheck } from "@/components/admin/WorkspaceIcons";
 import { TOP_CUSTOMERS } from "@/lib/adminData";
 
 function initials(name: string) {

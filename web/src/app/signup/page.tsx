@@ -36,7 +36,7 @@ export default function SignUpPage() {
     try {
       const signUpEmail = phoneMode ? phoneEmail : email.trim();
       await signUp(signUpEmail, password, name.trim());
-      router.push("/");
+      router.push("/select-role");
     } catch (err: any) {
       const code = err?.code ?? "";
       if (code === "auth/email-already-in-use") {

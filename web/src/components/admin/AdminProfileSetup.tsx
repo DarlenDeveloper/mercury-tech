@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { User, MapPin, Phone, X } from "lucide-react";
+import { User, MapPin, Phone, X } from "@/components/admin/WorkspaceIcons";
 import { doc, setDoc, serverTimestamp } from "firebase/firestore";
 import { updateProfile } from "firebase/auth";
 import { db } from "@/lib/firestore";
