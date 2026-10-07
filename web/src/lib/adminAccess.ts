@@ -16,8 +16,8 @@
  *
  * Page slugs match sidebar hrefs without /u/ prefix:
  *   "analytics", "orders", "products", "categories", "customers",
- *   "repairs", "assignments",
-  "payments", "user-tracking", "finance", "website", "users",
+ *   "repairs", "assignments", "reminders",
+ *   "payments", "user-tracking", "finance", "website", "users",
  *   "notifications", "audit-logs", "settings", "help"
  *
  * The dashboard ("/u") is always accessible to any admin.
@@ -43,6 +43,7 @@ export const ALL_PAGES = [
   "customers",
   "repairs",
   "assignments",
+  "reminders",
   "payments",
   "user-tracking",
   "finance",

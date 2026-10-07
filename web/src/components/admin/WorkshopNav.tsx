@@ -4,15 +4,17 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { collection, onSnapshot, query, where } from "firebase/firestore";
-import { Setting2, People, Headphone, ReceiptText, ArrowSwapHorizontal, Home2, ShieldCheck, Wallet, ClipboardList } from "@/components/admin/WorkspaceIcons";
+import { Setting2, People, Headphone, ReceiptText, ArrowSwapHorizontal, Home2, ShieldCheck, Wallet, ClipboardList, Mail } from "@/components/admin/WorkspaceIcons";
 import { useAdminAccess } from "./AdminGuard";
 import { useAuth } from "@/components/AuthProvider";
 import { hasPageAccess } from "@/lib/adminAccess";
 import { db } from "@/lib/firestore";
+import { fetchCustomerReminderSummary } from "@/lib/reminders";
 export const workshopLinks = [
   { slug: "", label: "Overview", icon: Home2 },
   { slug: "assignments", label: "My assignments", icon: ClipboardList },
   { slug: "repairs", label: "Repairs & services", icon: Setting2 },
+  { slug: "reminders", label: "Customer reminders", icon: Mail },
   { slug: "customers", label: "Customers", icon: People },
   { slug: "customer-care", label: "Customer service", icon: Headphone },
   { slug: "quotations", label: "Quotations", icon: ReceiptText },
@@ -63,6 +65,21 @@ export default function WorkshopNav() {
    unsubs.push(onSnapshot(openSupport, snapshot => {
     setBadges(previous => ({ ...previous, "customer-care": snapshot.size }));
    }, () => {}));
+  }
+
+  if (hasPageAccess(adminEntry, "reminders")) {
+   let active = true;
+   const loadReminderBadge = async () => {
+    try {
+     const summary = await fetchCustomerReminderSummary();
+     if (active) setBadges(previous => ({ ...previous, reminders: summary.failed }));
+    } catch {
+     // Keep the rest of the navigation usable if reminder monitoring is unavailable.
+    }
+   };
+   loadReminderBadge();
+   const interval = window.setInterval(loadReminderBadge, 60_000);
+   unsubs.push(() => { active = false; window.clearInterval(interval); });
   }
 
   return () => unsubs.forEach(unsubscribe => unsubscribe());

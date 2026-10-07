@@ -7,7 +7,7 @@ import { SALES_PAGES, WORKSHOP_PAGES } from "@/lib/workspaces";
 import { useAdminAccess } from "./AdminGuard";
 import { hasPageAccess } from "@/lib/adminAccess";
 import Link from "next/link";
-import { Search, Bell, ChevronDown, X, Package, LayoutGrid, ClipboardList, Users, Settings, Sparkles, LogOut } from "@/components/admin/WorkspaceIcons";
+import { Search, Bell, ChevronDown, X, Package, LayoutGrid, ClipboardList, Users, Settings, Sparkles, LogOut, Mail } from "@/components/admin/WorkspaceIcons";
 import { collection, doc, getDocs, limit, onSnapshot, orderBy, query, Timestamp, updateDoc } from "firebase/firestore";
 import { useAuth } from "@/components/AuthProvider";
 import { db } from "@/lib/firestore";
@@ -39,6 +39,7 @@ const SEARCH_ITEMS: SearchItem[] = [
   { label: "API Keys", href: "/u/api-keys", icon: <Sparkles size={16} />, category: "Pages" },
   { label: "Repairs & Services", href: "/u/repairs", icon: <Sparkles size={16} />, category: "Pages" },
   { label: "My Assignments", href: "/u/assignments", icon: <ClipboardList size={16} />, category: "Pages" },
+  { label: "Customer Reminders", href: "/u/reminders", icon: <Mail size={16} />, category: "Pages" },
   { label: "Website", href: "/u/website", icon: <Sparkles size={16} />, category: "Pages" },
   { label: "Customer Care", href: "/u/customer-care", icon: <Sparkles size={16} />, category: "Pages" },
   { label: "AI", href: "/u/ai", icon: <Sparkles size={16} />, category: "Pages" },

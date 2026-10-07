@@ -128,5 +128,11 @@ service cloud.firestore {
     match /repair_payment_refs/{referenceId} {
       allow read, write: if false;
     }
+
+    // Customer reminder delivery logs may contain phone numbers and provider
+    // failure details. Staff read them through a page-gated Cloud Function.
+    match /repair_whatsapp_notifications/{notificationId} {
+      allow read, write: if false;
+    }
   }
 }

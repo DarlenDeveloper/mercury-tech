@@ -45,6 +45,7 @@ const PAGE_LABELS: Record<string, string> = {
   customers: "Customers",
   repairs: "Repairs & Services",
   assignments: "My Assignments",
+  reminders: "Customer Reminders",
   payments: "Payments",
   quotations: "Quotations",
   "customer-care": "Customer Service",

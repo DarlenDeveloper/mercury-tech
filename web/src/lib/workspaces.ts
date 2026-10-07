@@ -22,7 +22,7 @@ export const SALES_ONLY_PAGES = [
   "help",
 ];
 
-export const WORKSHOP_ONLY_PAGES = ["repairs", "assignments"];
+export const WORKSHOP_ONLY_PAGES = ["repairs", "assignments", "reminders"];
 
 export const SALES_PAGES = [...SHARED_WORKSPACE_PAGES, ...SALES_ONLY_PAGES];
 export const WORKSHOP_PAGES = [...SHARED_WORKSPACE_PAGES, ...WORKSHOP_ONLY_PAGES];

@@ -179,3 +179,6 @@ async function sendPushNotification(title, body, audience, notifId) {
 
 // Payment-gated repair workflow and public status lookup.
 export { manageRepair, listRepairPayments, lookupRepairStatus } from "./repair-admin.js";
+
+// Staff-only customer WhatsApp reminder history and failure monitoring.
+export { listRepairReminders } from "./reminders-admin.js";
