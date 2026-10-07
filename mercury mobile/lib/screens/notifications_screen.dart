@@ -127,6 +127,7 @@ class _NotificationTile extends StatelessWidget {
       case 'quotation':
         return IconsaxPlusLinear.receipt_text;
       case 'repair':
+      case 'repair_assignment':
         return IconsaxPlusLinear.setting_4;
       case 'promo':
         return IconsaxPlusLinear.discount_shape;

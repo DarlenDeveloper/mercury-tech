@@ -59,6 +59,8 @@ test("competing payments cannot exceed the outstanding balance", async () => {
 test("coordinator before payment, multiple validated technicians after payment", async () => {
   const db = database();
   await handleRepairRequest(request("update", { status: "received", coordinatorEmail: "sales@example.com", technicianEmails: [], notes: "Private" }), db);
+  assert.equal(db.docs.get("repair_tickets/ticket-1").assignedBy, "sales@example.com");
+  assert.equal(db.docs.get("repair_tickets/ticket-1").assignedByEmail, "sales@example.com");
   await assert.rejects(handleRepairRequest(request("update", { status: "in_progress", technicianEmails: ["tech@example.com"] }), db), /workflow|Full payment/);
   await billed(db); await handleRepairRequest(receipt(100000), db);
   await handleRepairRequest(request("update", { status: "in_progress", technicianEmails: ["tech@example.com", "tech2@example.com"], coordinatorEmail: "sales@example.com" }), db);

@@ -46,3 +46,36 @@ export function phoneMatches(stored, supplied) {
     && suppliedDigits.length >= 9
     && storedDigits.slice(-9) === suppliedDigits.slice(-9);
 }
+
+function normalizedEmail(value) {
+  return typeof value === "string" ? value.trim().toLowerCase() : "";
+}
+
+function normalizedEmailList(values) {
+  return Array.isArray(values)
+    ? [...new Set(values.map(normalizedEmail).filter(Boolean))]
+    : [];
+}
+
+/** Return only people newly added to a repair assignment. */
+export function newRepairAssignments(before = {}, after = {}) {
+  const assignments = [];
+  const seen = new Set();
+  const previousCoordinator = normalizedEmail(before.coordinatorEmail);
+  const coordinator = normalizedEmail(after.coordinatorEmail);
+
+  if (coordinator && coordinator !== previousCoordinator) {
+    assignments.push({ email: coordinator, role: "Sales / Support" });
+    seen.add(coordinator);
+  }
+
+  const previousTechnicians = new Set(normalizedEmailList(before.technicianEmails));
+  for (const email of normalizedEmailList(after.technicianEmails)) {
+    if (!previousTechnicians.has(email) && !seen.has(email)) {
+      assignments.push({ email, role: "Technician" });
+      seen.add(email);
+    }
+  }
+
+  return assignments;
+}

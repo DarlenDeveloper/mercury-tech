@@ -72,10 +72,22 @@ export async function handleRepairRequest(request, db) {
       });
       const coordinatorEmail = text(input.coordinatorEmail).toLowerCase();
       if (coordinatorEmail && !entries.some(item => item.email?.toLowerCase() === coordinatorEmail && ["Sales", "Support"].includes(item.jobRole))) fail("Choose a current Sales or Support coordinator.");
+      const previousTechnicians = [...new Set((ticket.technicianEmails || []).map(value => text(value).toLowerCase()).filter(Boolean))].sort();
+      const nextTechnicians = technicians.map(item => item.email).sort();
+      const assignmentsChanged = text(ticket.coordinatorEmail).toLowerCase() !== coordinatorEmail
+        || previousTechnicians.join("|") !== nextTechnicians.join("|");
       // Legacy tickets may keep their old status/names while notes are edited.
       const unchangedLegacy = !ticket.workflowVersion && !technicians.length && input.status === ticket.status;
       if (!unchangedLegacy) { try { validateWork(ticket, input.status, technicians); } catch (error) { fail(error.message); } }
       Object.assign(patch, { status: input.status, coordinatorEmail, technicianEmails: technicians.map(item => item.email), notes: text(input.notes, 10000) });
+      if (assignmentsChanged) {
+        const hasAssignees = !!coordinatorEmail || technicians.length > 0;
+        Object.assign(patch, {
+          assignedBy: hasAssignees ? text(request.auth.token.name, 150) || email : "",
+          assignedByEmail: hasAssignees ? email : "",
+          assignedAt: hasAssignees ? now : null,
+        });
+      }
       if (technicians.length || ticket.workflowVersion) Object.assign(patch, {
         technician: technicians.length === 1 ? "Technician assigned" : technicians.length > 1 ? `${technicians.length} technicians assigned` : "",
         assigneeEmail: "",

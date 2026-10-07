@@ -31,6 +31,7 @@ export {
   onOrderStatusChanged,
   onQuotationStatusChanged,
   onRepairStatusChanged,
+  onRepairAssignmentsChanged,
   onOrderCreatedNotifyAdmins,
   onRepairCreatedNotifyAdmins,
   onQuotationCreatedNotifyAdmins,

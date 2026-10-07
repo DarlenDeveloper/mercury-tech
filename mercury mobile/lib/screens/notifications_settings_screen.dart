@@ -22,6 +22,7 @@ class _NotificationsSettingsScreenState extends State<NotificationsSettingsScree
     ('orderUpdates', 'Order Updates', 'Status of your orders and deliveries'),
     ('promotions', 'Promotions & Offers', 'Deals, discounts and new arrivals'),
     ('repairUpdates', 'Repair Updates', 'Progress on your repair tickets'),
+    ('repairAssignments', 'Service Assignments', 'When a repair or service job is assigned to you'),
     ('quoteReplies', 'Quotation Replies', 'When we respond to your quote requests'),
     ('supportMessages', 'Support Messages', 'Replies from customer care'),
   ];

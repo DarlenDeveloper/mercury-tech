@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { paidInFull, paymentTotal, phoneMatches, validateWork, publicRepairStatus } from "../repair-workflow.js";
+import { newRepairAssignments, paidInFull, paymentTotal, phoneMatches, validateWork, publicRepairStatus } from "../repair-workflow.js";
 const ticket = { billingType: "quotation", billingReference: "Q-1", amountDue: 100000, totalPaid: 0, status: "awaiting_payment" };
 test("requires a document and accepts partial payments without unlocking work", () => {
   assert.throws(() => paymentTotal({ ...ticket, billingReference: "" }, 50000));
@@ -48,4 +48,17 @@ test("public phone verification handles Uganda formats without accepting short s
   assert.equal(phoneMatches("+256704823800", "0704823800"), true);
   assert.equal(phoneMatches("+256704823800", "823800"), false);
   assert.equal(phoneMatches("+256704823800", "+256704823801"), false);
+});
+test("assignment notifications include only newly assigned staff", () => {
+  assert.deepEqual(newRepairAssignments(
+    { coordinatorEmail: "old-sales@example.com", technicianEmails: ["existing@example.com"] },
+    { coordinatorEmail: "new-sales@example.com", technicianEmails: ["existing@example.com", "NEW-TECH@example.com", "new-tech@example.com"] },
+  ), [
+    { email: "new-sales@example.com", role: "Sales / Support" },
+    { email: "new-tech@example.com", role: "Technician" },
+  ]);
+  assert.deepEqual(newRepairAssignments(
+    { coordinatorEmail: "sales@example.com", technicianEmails: ["tech@example.com"] },
+    { coordinatorEmail: "SALES@example.com", technicianEmails: ["TECH@example.com"] },
+  ), []);
 });

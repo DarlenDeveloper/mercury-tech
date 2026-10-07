@@ -1,6 +1,8 @@
 import { onDocumentUpdated, onDocumentCreated } from "firebase-functions/v2/firestore";
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
 import { getMessaging } from "firebase-admin/messaging";
+import { getAuth } from "firebase-admin/auth";
+import { newRepairAssignments } from "./repair-workflow.js";
 
 /**
  * Transactional (per-user) notifications for order, quotation and repair
@@ -175,6 +177,39 @@ export const onRepairStatusChanged = onDocumentUpdated("repair_tickets/{ticketId
     prefKey: "repairUpdates",
     data: { ticketId: event.params.ticketId, status: after.status },
   });
+});
+
+export const onRepairAssignmentsChanged = onDocumentUpdated("repair_tickets/{ticketId}", async (event) => {
+  const before = event.data?.before.data();
+  const after = event.data?.after.data();
+  if (!before || !after) return;
+
+  const assignments = newRepairAssignments(before, after);
+  if (!assignments.length) return;
+
+  const serviceId = after.trackingReference || event.params.ticketId;
+  const assignedBy = after.assignedBy || after.assignedByEmail || "Mercury Computers";
+
+  await Promise.all(assignments.map(async assignment => {
+    try {
+      const account = await getAuth().getUserByEmail(assignment.email);
+      await notifyUser(account.uid, {
+        title: "New service assignment",
+        body: `${serviceId} has been assigned to you.`,
+        type: "repair_assignment",
+        prefKey: "repairAssignments",
+        data: {
+          ticketId: event.params.ticketId,
+          serviceId,
+          role: assignment.role,
+          assignedBy,
+          href: "/workshop/repairs",
+        },
+      });
+    } catch (error) {
+      console.error(`Repair assignment notification failed for ${assignment.email}`, error?.message || error);
+    }
+  }));
 });
 
 // ─── Admin alerts: new order / new repair / new quotation ────────────────────

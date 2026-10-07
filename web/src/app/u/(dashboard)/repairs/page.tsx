@@ -193,7 +193,11 @@ export default function RepairsPage() {
                     </td>
                     <td className="py-3 text-ink">{t.device}</td>
                     <td className="py-3 text-muted max-w-[180px] truncate">{t.issue}</td>
-                    <td className="py-3 text-muted">{t.technicianEmails?.join(", ") || t.coordinatorEmail || t.technician || "Unassigned"}{t.assigneeRole && <p className="mt-1 text-[11px] text-mercury">{t.assigneeRole}</p>}</td>
+                    <td className="py-3 text-muted">
+                      <p>{t.technicianEmails?.join(", ") || t.coordinatorEmail || t.technician || "Unassigned"}</p>
+                      {t.assigneeRole && <p className="mt-1 text-[11px] text-mercury">{t.assigneeRole}</p>}
+                      {t.assignedBy && <p className="mt-1.5 inline-flex rounded-full bg-mercury/10 px-2 py-0.5 text-[10px] font-semibold text-mercury">Assigned by {t.assignedBy}</p>}
+                    </td>
                     <td className="py-3 text-xs text-muted">{paymentLabel(t)}</td>
                     <td className="py-3">
                       <span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${STATUS_STYLES[t.status]}`}>
@@ -230,6 +234,7 @@ export default function RepairsPage() {
               <Row label="Issue" value={selected.issue} />
               <Row label="Urgency" value={(selected as any).urgency || "Normal"} />
               <Row label="Quantity" value={String((selected as any).quantity || 1)} />
+              {selected.assignedBy && <Row label="Assigned by" value={selected.assignedBy} />}
               <Row label="Submitted" value={selected.createdAt.toLocaleString("en-UG")} />
             </div>
 

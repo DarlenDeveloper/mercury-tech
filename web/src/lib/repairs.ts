@@ -36,6 +36,9 @@ export type RepairTicket = {
   totalPaid?: number;
   coordinatorEmail?: string;
   technicianEmails?: string[];
+  assignedBy?: string;
+  assignedByEmail?: string;
+  assignedAt?: Date | null;
   statusHistory?: { status: RepairStatus; at: Date }[];
   workflowVersion?: number;
   notes: string;
@@ -110,6 +113,9 @@ export async function fetchRepairTickets(): Promise<RepairTicket[]> {
       totalPaid: data.totalPaid || 0,
       coordinatorEmail: data.coordinatorEmail || "",
       technicianEmails: data.technicianEmails || [],
+      assignedBy: data.assignedBy || "",
+      assignedByEmail: data.assignedByEmail || "",
+      assignedAt: data.assignedAt instanceof Timestamp ? data.assignedAt.toDate() : null,
       workflowVersion: data.workflowVersion,
       statusHistory: (data.statusHistory || [{ status: data.status || "received", at: data.createdAt }]).map((event: { status: RepairStatus; at?: Timestamp }) => ({ status: event.status, at: event.at instanceof Timestamp ? event.at.toDate() : new Date() })),
       notes: data.notes || "",
@@ -145,6 +151,9 @@ export async function fetchMyRepairTickets(userId: string): Promise<RepairTicket
       totalPaid: data.totalPaid || 0,
       coordinatorEmail: data.coordinatorEmail || "",
       technicianEmails: data.technicianEmails || [],
+      assignedBy: data.assignedBy || "",
+      assignedByEmail: data.assignedByEmail || "",
+      assignedAt: data.assignedAt instanceof Timestamp ? data.assignedAt.toDate() : null,
       workflowVersion: data.workflowVersion,
       statusHistory: (data.statusHistory || [{ status: data.status || "received", at: data.createdAt }]).map((event: { status: RepairStatus; at?: Timestamp }) => ({ status: event.status, at: event.at instanceof Timestamp ? event.at.toDate() : new Date() })),
       notes: data.notes || "",

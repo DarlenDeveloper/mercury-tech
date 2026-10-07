@@ -8,7 +8,7 @@ import { useAdminAccess } from "./AdminGuard";
 import { hasPageAccess } from "@/lib/adminAccess";
 import Link from "next/link";
 import { Search, Bell, ChevronDown, X, Package, LayoutGrid, ClipboardList, Users, Settings, Sparkles, LogOut } from "@/components/admin/WorkspaceIcons";
-import { collection, getDocs, query, orderBy, limit, Timestamp } from "firebase/firestore";
+import { collection, doc, getDocs, limit, onSnapshot, orderBy, query, Timestamp, updateDoc } from "firebase/firestore";
 import { useAuth } from "@/components/AuthProvider";
 import { db } from "@/lib/firestore";
 import { signOut } from "@/lib/auth";
@@ -51,6 +51,9 @@ type Notification = {
   body: string;
   read: boolean;
   timestamp: Date;
+  source: "personal" | "broadcast";
+  href?: string;
+  assignedBy?: string;
 };
 
 // ─── Component ───────────────────────────────────────────────────────────────
@@ -104,30 +107,70 @@ export default function AdminHeader({
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  // Load notifications
+  // Load broadcasts and listen for private staff assignment notifications.
   useEffect(() => {
-    const loadNotifs = async () => {
+    let active = true;
+    let broadcasts: Notification[] = [];
+    let personal: Notification[] = [];
+    const publish = () => {
+      if (!active) return;
+      setNotifications(
+        [...personal, ...broadcasts]
+          .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
+          .slice(0, 10)
+      );
+    };
+
+    const loadBroadcasts = async () => {
       try {
-        const q = query(collection(db, "notifications"), orderBy("timestamp", "desc"), limit(10));
+        const q = query(collection(db, "notifications"), orderBy("createdAt", "desc"), limit(10));
         const snap = await getDocs(q);
-        setNotifications(
-          snap.docs.map((d) => {
-            const data = d.data();
-            return {
-              id: d.id,
-              title: data.title || "",
-              body: data.body || "",
-              read: data.read ?? false,
-              timestamp: data.timestamp instanceof Timestamp ? data.timestamp.toDate() : new Date(),
-            };
-          })
-        );
+        broadcasts = snap.docs.map((d) => {
+          const data = d.data();
+          return {
+            id: d.id,
+            title: data.title || "",
+            body: data.body || data.message || "",
+            read: true,
+            timestamp: data.createdAt instanceof Timestamp ? data.createdAt.toDate() : new Date(),
+            source: "broadcast" as const,
+          };
+        });
+        publish();
       } catch {
         // silent fail
       }
     };
-    loadNotifs();
-  }, []);
+    loadBroadcasts();
+
+    if (!user?.uid) return () => { active = false; };
+    const personalQuery = query(
+      collection(db, "users", user.uid, "notifications"),
+      orderBy("createdAt", "desc"),
+      limit(10)
+    );
+    const unsubscribe = onSnapshot(personalQuery, (snap) => {
+      personal = snap.docs.map((d) => {
+        const data = d.data();
+        return {
+          id: d.id,
+          title: data.title || "",
+          body: data.body || "",
+          read: data.read ?? false,
+          timestamp: data.createdAt instanceof Timestamp ? data.createdAt.toDate() : new Date(),
+          source: "personal" as const,
+          href: typeof data.data?.href === "string" ? data.data.href : undefined,
+          assignedBy: typeof data.data?.assignedBy === "string" ? data.data.assignedBy : undefined,
+        };
+      });
+      publish();
+    }, () => {});
+
+    return () => {
+      active = false;
+      unsubscribe();
+    };
+  }, [user?.uid]);
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
@@ -142,6 +185,23 @@ export default function AdminHeader({
     setShowSearch(false);
     setSearchQuery("");
     router.push(href);
+  };
+
+  const handleNotificationSelect = async (notification: Notification) => {
+    setShowNotifs(false);
+    if (notification.source === "personal" && user?.uid && !notification.read) {
+      setNotifications(current => current.map(item =>
+        item.source === notification.source && item.id === notification.id
+          ? { ...item, read: true }
+          : item
+      ));
+      try {
+        await updateDoc(doc(db, "users", user.uid, "notifications", notification.id), { read: true });
+      } catch {
+        // Keep navigation responsive if the read receipt cannot be saved.
+      }
+    }
+    if (notification.href) router.push(notification.href);
   };
 
   // Keyboard shortcut (Cmd+K)
@@ -210,18 +270,21 @@ export default function AdminHeader({
                     </p>
                   ) : (
                     notifications.map((n) => (
-                      <div
-                        key={n.id}
+                      <button
+                        type="button"
+                        key={`${n.source}-${n.id}`}
+                        onClick={() => handleNotificationSelect(n)}
                         className={`border-b border-line/50 px-4 py-3 last:border-0 ${
                           !n.read ? "bg-blue-50/40" : ""
-                        }`}
+                        } block w-full text-left transition hover:bg-surface-soft`}
                       >
                         <p className="text-[13px] font-medium text-ink">{n.title}</p>
                         <p className="mt-0.5 text-[12px] text-muted line-clamp-2">{n.body}</p>
+                        {n.assignedBy && <p className="mt-1.5 inline-flex rounded-full bg-mercury/10 px-2 py-0.5 text-[10px] font-semibold text-mercury">Assigned by {n.assignedBy}</p>}
                         <p className="mt-1 text-[11px] text-muted">
                           {formatNotifTime(n.timestamp)}
                         </p>
-                      </div>
+                      </button>
                     ))
                   )}
                 </div>
