@@ -31,6 +31,7 @@ export {
   onOrderStatusChanged,
   onQuotationStatusChanged,
   onRepairStatusChanged,
+  onRepairCreatedWhatsApp,
   onRepairAssignmentsChanged,
   onOrderCreatedNotifyAdmins,
   onRepairCreatedNotifyAdmins,
@@ -176,5 +177,5 @@ async function sendPushNotification(title, body, audience, notifId) {
   }
 }
 
-// Payment-gated repair workflow and public status lookup. SMS is added separately.
+// Payment-gated repair workflow and public status lookup.
 export { manageRepair, listRepairPayments, lookupRepairStatus } from "./repair-admin.js";

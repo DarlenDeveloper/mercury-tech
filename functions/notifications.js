@@ -3,6 +3,16 @@ import { getFirestore, FieldValue } from "firebase-admin/firestore";
 import { getMessaging } from "firebase-admin/messaging";
 import { getAuth } from "firebase-admin/auth";
 import { newRepairAssignments } from "./repair-workflow.js";
+import {
+  KACYBER_API_KEY,
+  KACYBER_APP_ID,
+  KacyberWhatsAppError,
+  buildRepairWhatsAppMessage,
+  normalizeWhatsAppMsisdn,
+  repairWhatsAppCopy,
+  repairWhatsAppIdempotencyKey,
+  sendKacyberWhatsApp,
+} from "./kacyber-whatsapp.js";
 
 /**
  * Transactional (per-user) notifications for order, quotation and repair
@@ -150,24 +160,94 @@ export const onQuotationStatusChanged = onDocumentUpdated("quotations/{quoteId}"
 
 // ─── Repair tickets ──────────────────────────────────────────────────────────
 
-const REPAIR_STATUS_COPY = {
-  awaiting_payment: { title: "Repair awaiting payment", body: "Your repair quotation or LPO is ready. Please contact our team to arrange payment." },
-  ready_for_assignment: { title: "Repair payment received", body: "Your repair is paid and ready for technician assignment." },
-  collected: { title: "Device collected", body: "Your repaired device has been collected. Thank you for choosing Mercury." },
-  received: { title: "Repair received", body: "We have received your device and logged your repair ticket." },
-  in_progress: { title: "Repair in progress", body: "Our technicians have started working on your device." },
-  awaiting_parts: { title: "Repair on hold", body: "Your repair is awaiting parts. We will resume shortly." },
-  completed: { title: "Repair completed", body: "Your device repair is complete and ready for collection." },
-};
+async function notifyRepairOnWhatsApp(ticketId, ticket, copy, eventId) {
+  const db = getFirestore();
+  const idempotencyKey = repairWhatsAppIdempotencyKey(eventId, ticketId, ticket.status);
+  const logRef = db.collection("repair_whatsapp_notifications").doc(idempotencyKey);
+  const previous = await logRef.get();
+  if (["accepted", "sent", "delivered", "read"].includes(previous.data()?.providerStatus)) return;
 
-export const onRepairStatusChanged = onDocumentUpdated("repair_tickets/{ticketId}", async (event) => {
+  const recipient = normalizeWhatsAppMsisdn(ticket.userPhone);
+  if (!recipient) {
+    await logRef.set({
+      ticketId,
+      repairStatus: ticket.status,
+      providerStatus: "skipped",
+      failureReason: "invalid_or_missing_phone",
+      eventId,
+      updatedAt: FieldValue.serverTimestamp(),
+    }, { merge: true });
+    console.warn(`Repair WhatsApp skipped for ${ticketId}: invalid or missing phone number.`);
+    return;
+  }
+
+  const message = buildRepairWhatsAppMessage(ticketId, ticket, copy);
+  try {
+    const result = await sendKacyberWhatsApp({
+      appId: KACYBER_APP_ID.value(),
+      apiKey: KACYBER_API_KEY.value(),
+      to: recipient,
+      text: message,
+      idempotencyKey,
+    });
+    await logRef.set({
+      ticketId,
+      repairStatus: ticket.status,
+      recipient,
+      provider: "kacyberpay",
+      providerStatus: result.status || "accepted",
+      messageId: result.messageId || "",
+      kacyberReference: result.kacyberReference || "",
+      fee: result.fee ?? null,
+      currency: result.currency || "",
+      eventId,
+      acceptedAt: FieldValue.serverTimestamp(),
+      updatedAt: FieldValue.serverTimestamp(),
+    }, { merge: true });
+  } catch (error) {
+    const providerError = error instanceof KacyberWhatsAppError ? error : null;
+    const retryable = providerError ? providerError.retryable : true;
+    await logRef.set({
+      ticketId,
+      repairStatus: ticket.status,
+      recipient,
+      provider: "kacyberpay",
+      providerStatus: "failed",
+      httpStatus: providerError?.status || 0,
+      retryable,
+      failureReason: String(providerError?.details || error?.message || error).slice(0, 500),
+      eventId,
+      updatedAt: FieldValue.serverTimestamp(),
+    }, { merge: true });
+    console.error(`Repair WhatsApp failed for ${ticketId}`, error?.message || error);
+    if (retryable) throw error;
+  }
+}
+
+export const onRepairCreatedWhatsApp = onDocumentCreated({
+  document: "repair_tickets/{ticketId}",
+  secrets: [KACYBER_APP_ID, KACYBER_API_KEY],
+  retry: true,
+}, async (event) => {
+  const ticket = event.data?.data();
+  if (!ticket) return;
+  const copy = repairWhatsAppCopy({ ...ticket, status: ticket.status || "received" });
+  if (!copy) return;
+  await notifyRepairOnWhatsApp(event.params.ticketId, ticket, copy, event.id);
+});
+
+export const onRepairStatusChanged = onDocumentUpdated({
+  document: "repair_tickets/{ticketId}",
+  secrets: [KACYBER_APP_ID, KACYBER_API_KEY],
+  retry: true,
+}, async (event) => {
   const before = event.data?.before.data();
   const after = event.data?.after.data();
   if (!before || !after) return;
-  if (before.status === after.status) return;
-
-  const copy = REPAIR_STATUS_COPY[after.status];
+  const copy = repairWhatsAppCopy(after, before);
   if (!copy) return;
+
+  await notifyRepairOnWhatsApp(event.params.ticketId, after, copy, event.id);
 
   const device = after.device ? ` (${after.device})` : "";
   await notifyUser(after.userId, {
