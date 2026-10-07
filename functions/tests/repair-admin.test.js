@@ -86,3 +86,29 @@ test("walk-in intake starts unpaid and returns the tracking reference", async ()
   const ticket = db.docs.get("repair_tickets/walk-in-1");
   assert.equal(ticket.totalPaid, 0); assert.equal(ticket.trackingReference, "walk-in-1"); assert.equal(ticket.status, "received");
 });
+test("only an assigned technician can start and complete a paid job", async () => {
+  const db = database();
+  await billed(db); await handleRepairRequest(receipt(100000), db);
+  await handleRepairRequest(request("update", { status: "ready_for_assignment", coordinatorEmail: "sales@example.com", technicianEmails: ["tech@example.com"], notes: "" }), db);
+
+  await assert.rejects(
+    handleRepairRequest(request("technician_update", { jobAction: "start" }, "tech2@example.com"), db),
+    /not assigned/,
+  );
+  await assert.rejects(
+    handleRepairRequest(request("technician_update", { jobAction: "start" }, "sales@example.com"), db),
+    /Only assigned technicians/,
+  );
+
+  await handleRepairRequest(request("technician_update", { jobAction: "start" }, "tech@example.com"), db);
+  let ticket = db.docs.get("repair_tickets/ticket-1");
+  assert.equal(ticket.status, "in_progress");
+  assert.equal(ticket.startedByEmail, "tech@example.com");
+
+  await handleRepairRequest(request("technician_update", { jobAction: "complete", notes: "Replaced the damaged display." }, "tech@example.com"), db);
+  ticket = db.docs.get("repair_tickets/ticket-1");
+  assert.equal(ticket.status, "completed");
+  assert.equal(ticket.completionNotes, "Replaced the damaged display.");
+  assert.equal(ticket.completedByEmail, "tech@example.com");
+  assert.deepEqual(ticket.statusHistory.map(event => event.status), ["received", "awaiting_payment", "ready_for_assignment", "in_progress", "completed"]);
+});

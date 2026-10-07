@@ -38,6 +38,7 @@ const SEARCH_ITEMS: SearchItem[] = [
   { label: "Audit Logs", href: "/u/audit-logs", icon: <ClipboardList size={16} />, category: "Pages" },
   { label: "API Keys", href: "/u/api-keys", icon: <Sparkles size={16} />, category: "Pages" },
   { label: "Repairs & Services", href: "/u/repairs", icon: <Sparkles size={16} />, category: "Pages" },
+  { label: "My Assignments", href: "/u/assignments", icon: <ClipboardList size={16} />, category: "Pages" },
   { label: "Website", href: "/u/website", icon: <Sparkles size={16} />, category: "Pages" },
   { label: "Customer Care", href: "/u/customer-care", icon: <Sparkles size={16} />, category: "Pages" },
   { label: "AI", href: "/u/ai", icon: <Sparkles size={16} />, category: "Pages" },

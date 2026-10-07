@@ -9,6 +9,7 @@ import {
   where,
   serverTimestamp,
   Timestamp,
+  type DocumentData,
 } from "firebase/firestore";
 import { db } from "./firestore";
 import { getFunctions, httpsCallable } from "firebase/functions";
@@ -39,6 +40,13 @@ export type RepairTicket = {
   assignedBy?: string;
   assignedByEmail?: string;
   assignedAt?: Date | null;
+  startedBy?: string;
+  startedByEmail?: string;
+  startedAt?: Date | null;
+  completionNotes?: string;
+  completedBy?: string;
+  completedByEmail?: string;
+  completedAt?: Date | null;
   statusHistory?: { status: RepairStatus; at: Date }[];
   workflowVersion?: number;
   notes: string;
@@ -47,6 +55,45 @@ export type RepairTicket = {
 };
 
 const COL = "repair_tickets";
+
+function toRepairTicket(id: string, data: DocumentData): RepairTicket {
+  return {
+    id,
+    userId: data.userId || "",
+    userName: data.userName || "",
+    userEmail: data.userEmail || "",
+    userPhone: data.userPhone || "",
+    device: data.device || "",
+    issue: data.issue || "",
+    service: data.service || "Repair",
+    status: data.status || "received",
+    technician: data.technician || "",
+    assigneeEmail: data.assigneeEmail || "",
+    assigneeRole: data.assigneeRole || "",
+    trackingReference: data.trackingReference || id,
+    billingType: data.billingType,
+    billingReference: data.billingReference || "",
+    amountDue: data.amountDue || 0,
+    totalPaid: data.totalPaid || 0,
+    coordinatorEmail: data.coordinatorEmail || "",
+    technicianEmails: data.technicianEmails || [],
+    assignedBy: data.assignedBy || "",
+    assignedByEmail: data.assignedByEmail || "",
+    assignedAt: data.assignedAt instanceof Timestamp ? data.assignedAt.toDate() : null,
+    startedBy: data.startedBy || "",
+    startedByEmail: data.startedByEmail || "",
+    startedAt: data.startedAt instanceof Timestamp ? data.startedAt.toDate() : null,
+    completionNotes: data.completionNotes || "",
+    completedBy: data.completedBy || "",
+    completedByEmail: data.completedByEmail || "",
+    completedAt: data.completedAt instanceof Timestamp ? data.completedAt.toDate() : null,
+    workflowVersion: data.workflowVersion,
+    statusHistory: (data.statusHistory || [{ status: data.status || "received", at: data.createdAt }]).map((event: { status: RepairStatus; at?: Timestamp }) => ({ status: event.status, at: event.at instanceof Timestamp ? event.at.toDate() : new Date() })),
+    notes: data.notes || "",
+    createdAt: data.createdAt instanceof Timestamp ? data.createdAt.toDate() : new Date(),
+    updatedAt: data.updatedAt instanceof Timestamp ? data.updatedAt.toDate() : new Date(),
+  };
+}
 
 /** Customer submits a repair request. */
 export async function submitRepairRequest({
@@ -91,76 +138,25 @@ export async function submitRepairRequest({
 export async function fetchRepairTickets(): Promise<RepairTicket[]> {
   const q = query(collection(db, COL), orderBy("createdAt", "desc"));
   const snap = await getDocs(q);
-  return snap.docs.map((d) => {
-    const data = d.data();
-    return {
-      id: d.id,
-      userId: data.userId || "",
-      userName: data.userName || "",
-      userEmail: data.userEmail || "",
-      userPhone: data.userPhone || "",
-      device: data.device || "",
-      issue: data.issue || "",
-      service: data.service || "Repair",
-      status: data.status || "received",
-      technician: data.technician || "",
-      assigneeEmail: data.assigneeEmail || "",
-      assigneeRole: data.assigneeRole || "",
-      trackingReference: data.trackingReference || d.id,
-      billingType: data.billingType,
-      billingReference: data.billingReference || "",
-      amountDue: data.amountDue || 0,
-      totalPaid: data.totalPaid || 0,
-      coordinatorEmail: data.coordinatorEmail || "",
-      technicianEmails: data.technicianEmails || [],
-      assignedBy: data.assignedBy || "",
-      assignedByEmail: data.assignedByEmail || "",
-      assignedAt: data.assignedAt instanceof Timestamp ? data.assignedAt.toDate() : null,
-      workflowVersion: data.workflowVersion,
-      statusHistory: (data.statusHistory || [{ status: data.status || "received", at: data.createdAt }]).map((event: { status: RepairStatus; at?: Timestamp }) => ({ status: event.status, at: event.at instanceof Timestamp ? event.at.toDate() : new Date() })),
-      notes: data.notes || "",
-      createdAt: data.createdAt instanceof Timestamp ? data.createdAt.toDate() : new Date(),
-      updatedAt: data.updatedAt instanceof Timestamp ? data.updatedAt.toDate() : new Date(),
-    };
-  });
+  return snap.docs.map((d) => toRepairTicket(d.id, d.data()));
 }
 
 /** Fetch tickets for a specific user. */
 export async function fetchMyRepairTickets(userId: string): Promise<RepairTicket[]> {
   const q = query(collection(db, COL), where("userId", "==", userId), orderBy("createdAt", "desc"));
   const snap = await getDocs(q);
-  return snap.docs.map((d) => {
-    const data = d.data();
-    return {
-      id: d.id,
-      userId: data.userId || "",
-      userName: data.userName || "",
-      userEmail: data.userEmail || "",
-      userPhone: data.userPhone || "",
-      device: data.device || "",
-      issue: data.issue || "",
-      service: data.service || "Repair",
-      status: data.status || "received",
-      technician: data.technician || "",
-      assigneeEmail: data.assigneeEmail || "",
-      assigneeRole: data.assigneeRole || "",
-      trackingReference: data.trackingReference || d.id,
-      billingType: data.billingType,
-      billingReference: data.billingReference || "",
-      amountDue: data.amountDue || 0,
-      totalPaid: data.totalPaid || 0,
-      coordinatorEmail: data.coordinatorEmail || "",
-      technicianEmails: data.technicianEmails || [],
-      assignedBy: data.assignedBy || "",
-      assignedByEmail: data.assignedByEmail || "",
-      assignedAt: data.assignedAt instanceof Timestamp ? data.assignedAt.toDate() : null,
-      workflowVersion: data.workflowVersion,
-      statusHistory: (data.statusHistory || [{ status: data.status || "received", at: data.createdAt }]).map((event: { status: RepairStatus; at?: Timestamp }) => ({ status: event.status, at: event.at instanceof Timestamp ? event.at.toDate() : new Date() })),
-      notes: data.notes || "",
-      createdAt: data.createdAt instanceof Timestamp ? data.createdAt.toDate() : new Date(),
-      updatedAt: data.updatedAt instanceof Timestamp ? data.updatedAt.toDate() : new Date(),
-    };
-  });
+  return snap.docs.map((d) => toRepairTicket(d.id, d.data()));
+}
+
+/** Fetch only repair jobs assigned to one technician. */
+export async function fetchTechnicianAssignments(email: string): Promise<RepairTicket[]> {
+  const normalizedEmail = email.trim().toLowerCase();
+  if (!normalizedEmail) return [];
+  const q = query(collection(db, COL), where("technicianEmails", "array-contains", normalizedEmail));
+  const snap = await getDocs(q);
+  return snap.docs
+    .map((d) => toRepairTicket(d.id, d.data()))
+    .sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
 }
 
 export const REPAIR_STATUS_LABELS: Record<RepairStatus, string> = {
@@ -188,6 +184,9 @@ export async function manageRepair(id: string, action: string, fields: Record<st
 }
 export async function updateRepairTicket(id: string, fields: { status: RepairStatus; notes: string; coordinatorEmail: string; technicianEmails: string[] }) {
   await manageRepair(id, "update", fields);
+}
+export async function updateAssignedJob(id: string, jobAction: "start" | "complete", notes = "") {
+  await manageRepair(id, "technician_update", { jobAction, notes });
 }
 export type RepairPayment = { id: string; ticketId: string; amount: number; method: string; reference: string; recordedBy: string; recordedAt: Date };
 export async function fetchRepairPayments(ticketId: string): Promise<RepairPayment[]> {

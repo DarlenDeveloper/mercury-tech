@@ -16,7 +16,7 @@
  *
  * Page slugs match sidebar hrefs without /u/ prefix:
  *   "analytics", "orders", "products", "categories", "customers",
- *   "repairs",
+ *   "repairs", "assignments",
   "payments", "user-tracking", "finance", "website", "users",
  *   "notifications", "audit-logs", "settings", "help"
  *
@@ -42,6 +42,7 @@ export const ALL_PAGES = [
   "categories",
   "customers",
   "repairs",
+  "assignments",
   "payments",
   "user-tracking",
   "finance",
@@ -61,6 +62,7 @@ export const ALL_PAGES = [
 export function hasPageAccess(entry: AdminEntry | null, pageSlug: string): boolean {
   if (!entry) return false;
   if (entry.access === "super_admin") return true;
+  if (pageSlug === "assignments" && entry.jobRole === "Technician") return true;
   if (entry.pages.includes("*")) return true;
   return entry.pages.includes(pageSlug);
 }

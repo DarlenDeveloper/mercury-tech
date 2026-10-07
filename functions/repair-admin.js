@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { getFirestore, FieldValue, Timestamp } from "firebase-admin/firestore";
-import { paymentTotal, phoneMatches, publicRepairStatus, validateWork } from "./repair-workflow.js";
+import { paidInFull, paymentTotal, phoneMatches, publicRepairStatus, validateWork } from "./repair-workflow.js";
 
 function text(value, max = 300) { return typeof value === "string" ? value.trim().slice(0, max) : ""; }
 function fail(message) { throw new HttpsError("failed-precondition", message); }
@@ -12,7 +12,7 @@ export async function handleRepairRequest(request, db) {
   const id = text(input.id, 150);
   if (!id || id.includes("/")) throw new HttpsError("invalid-argument", "A repair reference is required.");
   const action = input.action;
-  if (!["create", "billing", "payment", "update"].includes(action)) throw new HttpsError("invalid-argument", "Unknown action.");
+  if (!["create", "billing", "payment", "update", "technician_update"].includes(action)) throw new HttpsError("invalid-argument", "Unknown action.");
   const email = text(request.auth.token.email).toLowerCase();
   const ref = db.collection("repair_tickets").doc(id);
   return db.runTransaction(async tx => {
@@ -22,7 +22,11 @@ export async function handleRepairRequest(request, db) {
     const admin = entries.find(entry => entry.email?.toLowerCase() === email);
     const legacy = !admin && (config.emails || []).some(item => item.toLowerCase() === email);
     const page = ["create", "update"].includes(action) ? "repairs" : "payments";
-    if (!legacy && (!admin || (admin.access !== "super_admin" && !admin.pages?.some(p => p === "*" || p === page)))) throw new HttpsError("permission-denied", `You need ${page} access.`);
+    if (action === "technician_update") {
+      if (!admin || admin.jobRole !== "Technician") throw new HttpsError("permission-denied", "Only assigned technicians can update this job.");
+    } else if (!legacy && (!admin || (admin.access !== "super_admin" && !admin.pages?.some(p => p === "*" || p === page)))) {
+      throw new HttpsError("permission-denied", `You need ${page} access.`);
+    }
     if (action === "create") {
       if (ticketSnap.exists) return { ok: true, duplicate: true };
       if (!text(input.userName) || !text(input.userPhone) || !text(input.device) || !text(input.issue, 3000)) fail("Enter the customer name, phone, device and issue.");
@@ -95,11 +99,44 @@ export async function handleRepairRequest(request, db) {
       });
       if (unchangedLegacy) delete patch.workflowVersion;
     }
+    if (action === "technician_update") {
+      const assignedTechnicians = (ticket.technicianEmails || []).map(value => text(value).toLowerCase());
+      if (!assignedTechnicians.includes(email)) throw new HttpsError("permission-denied", "This job is not assigned to you.");
+      if (!paidInFull(ticket)) fail("Full payment is required before repair work can begin.");
+      const jobAction = input.jobAction;
+      const actorName = text(request.auth.token.name, 150) || email;
+      if (jobAction === "start") {
+        if (ticket.status !== "ready_for_assignment") fail("This job is not ready to start.");
+        Object.assign(patch, {
+          status: "in_progress",
+          startedBy: actorName,
+          startedByEmail: email,
+          startedAt: now,
+        });
+      } else if (jobAction === "complete") {
+        if (!["in_progress", "awaiting_parts"].includes(ticket.status)) fail("Start this job before completing it.");
+        Object.assign(patch, {
+          status: "completed",
+          completionNotes: text(input.notes, 3000),
+          completedBy: actorName,
+          completedByEmail: email,
+          completedAt: now,
+        });
+      } else {
+        throw new HttpsError("invalid-argument", "Choose start or complete.");
+      }
+    }
     if (patch.status !== ticket.status) {
       patch.statusHistory = [...(ticket.statusHistory || [{ status: ticket.status || "received", at: ticket.createdAt || now }]), { status: patch.status, at: now }];
     }
     tx.update(ref, patch);
-    tx.create(db.collection("audit_logs").doc(), { actor: email, actorId: request.auth.uid, action: "repair_updated", target: `Repair ${id}`, details: action === "payment" ? `Recorded UGX ${input.amount} (${text(input.reference)})` : action, timestamp: now });
+    const auditAction = action === "technician_update" ? `repair_job_${input.jobAction}` : "repair_updated";
+    const auditDetails = action === "payment"
+      ? `Recorded UGX ${input.amount} (${text(input.reference)})`
+      : action === "technician_update" && input.jobAction === "complete"
+        ? text(input.notes, 3000) ? "Completed job with a note" : "Completed job"
+        : action;
+    tx.create(db.collection("audit_logs").doc(), { actor: email, actorId: request.auth.uid, action: auditAction, target: `Repair ${id}`, details: auditDetails, timestamp: now });
     return { ok: true };
   });
 }

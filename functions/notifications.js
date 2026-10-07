@@ -203,7 +203,7 @@ export const onRepairAssignmentsChanged = onDocumentUpdated("repair_tickets/{tic
           serviceId,
           role: assignment.role,
           assignedBy,
-          href: "/workshop/repairs",
+          href: assignment.role === "Technician" ? "/workshop/assignments" : "/workshop/repairs",
         },
       });
     } catch (error) {

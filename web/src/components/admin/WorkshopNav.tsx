@@ -2,11 +2,12 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { Setting2, People, Headphone, ReceiptText, ArrowSwapHorizontal, Home2, ShieldCheck, Wallet } from "@/components/admin/WorkspaceIcons";
+import { Setting2, People, Headphone, ReceiptText, ArrowSwapHorizontal, Home2, ShieldCheck, Wallet, ClipboardList } from "@/components/admin/WorkspaceIcons";
 import { useAdminAccess } from "./AdminGuard";
 import { hasPageAccess } from "@/lib/adminAccess";
 export const workshopLinks = [
   { slug: "", label: "Overview", icon: Home2 },
+  { slug: "assignments", label: "My assignments", icon: ClipboardList },
   { slug: "repairs", label: "Repairs & services", icon: Setting2 },
   { slug: "customers", label: "Customers", icon: People },
   { slug: "customer-care", label: "Customer service", icon: Headphone },
