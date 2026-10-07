@@ -4,10 +4,185 @@ import { useState } from "react";
 import Link from "next/link";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import { Clock, Search, ShieldCheck, Wrench } from "@/components/admin/WorkspaceIcons";
-import { lookupRepairStatus, REPAIR_STATUS_LABELS, type PublicRepairStatus } from "@/lib/repairs";
+import {
+  Check,
+  ClipboardList,
+  Package,
+  Search,
+  ShieldCheck,
+  Wallet,
+  Wrench,
+  type WorkspaceIcon,
+} from "@/components/admin/WorkspaceIcons";
+import {
+  lookupRepairStatus,
+  REPAIR_STATUS_LABELS,
+  type PublicRepairStatus,
+  type RepairStatus,
+} from "@/lib/repairs";
 
 const inputClass = "mt-2 h-12 w-full rounded-xl border border-line bg-white px-4 text-sm text-ink outline-none transition focus:border-mercury focus:ring-2 focus:ring-mercury/10";
+
+type JourneyStep = {
+  statuses: RepairStatus[];
+  label: string;
+  description: string;
+  icon: WorkspaceIcon;
+};
+
+const JOURNEY_STEPS: JourneyStep[] = [
+  {
+    statuses: ["received"],
+    label: "Repair received",
+    description: "Your device has been checked in and the repair order is open.",
+    icon: ClipboardList,
+  },
+  {
+    statuses: ["awaiting_payment"],
+    label: "Quotation & payment",
+    description: "The quotation or LPO is prepared and payment is confirmed.",
+    icon: Wallet,
+  },
+  {
+    statuses: ["ready_for_assignment"],
+    label: "Ready for workshop",
+    description: "Your device is cleared and ready for a technician.",
+    icon: ShieldCheck,
+  },
+  {
+    statuses: ["in_progress", "awaiting_parts"],
+    label: "Repair in progress",
+    description: "A technician is working on your device.",
+    icon: Wrench,
+  },
+  {
+    statuses: ["completed"],
+    label: "Ready for collection",
+    description: "The repair is complete and your device is ready for you.",
+    icon: Check,
+  },
+  {
+    statuses: ["collected"],
+    label: "Collected",
+    description: "Your device has been handed over successfully.",
+    icon: Package,
+  },
+];
+
+const STATUS_DESCRIPTION: Partial<Record<RepairStatus, string>> = {
+  awaiting_parts: "Work is paused while the required parts are being arranged.",
+};
+
+function formatStatusDate(value: string | null | undefined) {
+  if (!value) return null;
+  return new Date(value).toLocaleString("en-UG", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+function RepairJourney({ result }: { result: PublicRepairStatus }) {
+  const currentStep = JOURNEY_STEPS.findIndex(step => step.statuses.includes(result.status));
+  const latestUpdate = formatStatusDate(result.updatedAt);
+
+  return (
+    <section
+      aria-live="polite"
+      aria-labelledby="repair-journey-title"
+      className="mt-7 overflow-hidden rounded-[2rem] border border-[#dfe5ee] bg-white shadow-[0_24px_70px_rgba(22,34,51,0.10)]"
+    >
+      <div className="relative overflow-hidden border-b border-[#e4e9f0] bg-[linear-gradient(135deg,#f8fbff_0%,#eef5ff_55%,#f8fcfb_100%)] px-6 py-7 sm:px-9 sm:py-8">
+        <div aria-hidden="true" className="absolute -right-14 -top-20 h-48 w-48 rounded-full bg-[#cce8ff]/45 blur-3xl" />
+        <div aria-hidden="true" className="absolute -bottom-24 left-1/3 h-44 w-44 rounded-full bg-[#d8f3e6]/50 blur-3xl" />
+        <div className="relative flex flex-wrap items-start justify-between gap-5">
+          <div>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-mercury">Repair journey</p>
+            <h2 id="repair-journey-title" className="mt-2 text-2xl font-semibold tracking-tight text-ink sm:text-[1.75rem]">{result.device}</h2>
+            <p className="mt-2 text-xs text-muted">{result.service} · {result.reference}</p>
+          </div>
+          <div className="rounded-2xl border border-white/80 bg-white/85 px-4 py-3 shadow-[0_8px_24px_rgba(30,64,175,0.08)] backdrop-blur">
+            <p className="flex items-center gap-2 text-sm font-semibold text-mercury">
+              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-mercury text-white">
+                <Check size={14} variant="Bold" />
+              </span>
+              {REPAIR_STATUS_LABELS[result.status]}
+            </p>
+            {latestUpdate && <p className="mt-1.5 pl-8 text-[10px] text-muted">Updated {latestUpdate}</p>}
+          </div>
+        </div>
+
+        <div className="relative mt-7 grid grid-cols-6 gap-1.5" aria-hidden="true">
+          {JOURNEY_STEPS.map((step, index) => (
+            <span
+              key={step.label}
+              className={`h-1.5 rounded-full transition-colors ${index <= currentStep ? "bg-mercury" : "bg-[#dfe6ee]"}`}
+            />
+          ))}
+        </div>
+      </div>
+
+      <ol className="px-6 py-7 sm:px-9 sm:py-9">
+        {JOURNEY_STEPS.map((step, index) => {
+          const event = [...result.history].reverse().find(item => step.statuses.includes(item.status));
+          const isComplete = index < currentStep;
+          const isCurrent = index === currentStep;
+          const isReached = isComplete || isCurrent;
+          const Icon = step.icon;
+          const eventDate = formatStatusDate(event?.at || (isCurrent ? result.updatedAt : null));
+          const label = isCurrent && result.status === "awaiting_parts" ? REPAIR_STATUS_LABELS.awaiting_parts : step.label;
+          const description = isCurrent ? STATUS_DESCRIPTION[result.status] || step.description : step.description;
+
+          return (
+            <li
+              key={step.label}
+              aria-current={isCurrent ? "step" : undefined}
+              className="relative grid grid-cols-[48px_1fr] gap-4 pb-7 last:pb-0 sm:grid-cols-[52px_1fr_auto] sm:gap-5"
+            >
+              {index < JOURNEY_STEPS.length - 1 && (
+                <span
+                  aria-hidden="true"
+                  className={`absolute left-[23px] top-11 h-[calc(100%-28px)] w-px sm:left-[25px] ${index < currentStep ? "bg-mercury/55" : "bg-[#dfe5ec]"}`}
+                />
+              )}
+              <span
+                className={`relative z-10 flex h-12 w-12 items-center justify-center rounded-2xl border transition sm:h-[52px] sm:w-[52px] ${
+                  isCurrent
+                    ? "border-mercury/20 bg-[#eaf2ff] text-mercury shadow-[0_8px_24px_rgba(31,62,151,0.16)] ring-4 ring-[#f2f6ff]"
+                    : isComplete
+                      ? "border-mercury bg-mercury text-white shadow-[0_8px_20px_rgba(31,62,151,0.14)]"
+                      : "border-[#e2e7ed] bg-[#f8f9fb] text-[#a6afbc]"
+                }`}
+              >
+                <Icon size={22} variant={isReached ? "Bold" : "Linear"} />
+              </span>
+
+              <div className={`min-w-0 pt-0.5 ${!isReached ? "opacity-55" : ""}`}>
+                <div className="flex flex-wrap items-center gap-2">
+                  <h3 className="text-[15px] font-semibold text-ink">{label}</h3>
+                  {isCurrent && <span className="rounded-full bg-[#dff2ff] px-2.5 py-1 text-[9px] font-semibold uppercase tracking-[0.14em] text-[#1676a3]">Current</span>}
+                </div>
+                <p className="mt-1.5 max-w-md text-xs leading-5 text-muted">{description}</p>
+                <p className="mt-2 text-[10px] font-medium text-muted sm:hidden">{eventDate || (isComplete ? "Completed" : isCurrent ? "Current update" : "Pending")}</p>
+              </div>
+
+              <p className={`hidden pt-1 text-right text-[11px] font-medium sm:block ${isReached ? "text-muted" : "text-[#a6afbc]"}`}>
+                {eventDate || (isComplete ? "Completed" : isCurrent ? "Current update" : "Pending")}
+              </p>
+            </li>
+          );
+        })}
+      </ol>
+
+      <div className="mx-6 mb-6 flex items-start gap-3 rounded-2xl border border-[#dfe8f4] bg-[#f7faff] px-4 py-3.5 sm:mx-9 sm:mb-9">
+        <ShieldCheck size={20} variant="Bulk" className="mt-0.5 text-mercury" />
+        <p className="text-xs leading-5 text-muted">We update this timeline whenever your repair moves to the next stage. Keep your reference private and check back anytime.</p>
+      </div>
+    </section>
+  );
+}
 
 export default function RepairStatusPage() {
   const [reference, setReference] = useState("");
@@ -63,19 +238,7 @@ export default function RepairStatusPage() {
           {error && <p role="alert" className="rounded-xl bg-red-50 p-3 text-center text-sm text-red-700 sm:col-span-2">{error}</p>}
         </form>
 
-        {result && <section aria-live="polite" className="mt-6 rounded-3xl border border-line bg-white p-6 sm:p-8">
-          <div className="flex flex-wrap items-start justify-between gap-4 border-b border-line pb-6">
-            <div><p className="text-xs text-muted">{result.service} · {result.reference}</p><h2 className="mt-2 text-xl font-semibold text-ink">{result.device}</h2></div>
-            <span className="rounded-full bg-[#eaf1fc] px-4 py-2 text-xs font-semibold text-mercury">{REPAIR_STATUS_LABELS[result.status]}</span>
-          </div>
-          <div className="mt-6 space-y-0">
-            {result.history.map((event, index) => <div key={`${event.status}-${index}`} className="relative flex gap-4 pb-7 last:pb-0">
-              {index < result.history.length - 1 && <span aria-hidden="true" className="absolute left-[11px] top-6 h-[calc(100%-16px)] w-px bg-line" />}
-              <span className="relative z-10 mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-mercury text-white"><Clock size={13} variant="Bold" /></span>
-              <div><p className="text-sm font-semibold text-ink">{REPAIR_STATUS_LABELS[event.status]}</p><p className="mt-1 text-xs text-muted">{event.at ? new Date(event.at).toLocaleString("en-UG", { dateStyle: "medium", timeStyle: "short" }) : "Update time unavailable"}</p></div>
-            </div>)}
-          </div>
-        </section>}
+        {result && <RepairJourney result={result} />}
 
         <section aria-labelledby="tracking-help" className="mt-12 border-t border-line pt-10">
           <div className="text-center">
