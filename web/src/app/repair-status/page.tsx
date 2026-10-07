@@ -92,20 +92,18 @@ function RepairJourney({ result }: { result: PublicRepairStatus }) {
     <section
       aria-live="polite"
       aria-labelledby="repair-journey-title"
-      className="mt-7 overflow-hidden rounded-[2rem] border border-[#dfe5ee] bg-white shadow-[0_24px_70px_rgba(22,34,51,0.10)]"
+      className="mt-7 overflow-hidden rounded-[2rem] border border-[#dfe5e1] bg-white shadow-sm"
     >
-      <div className="relative overflow-hidden border-b border-[#e4e9f0] bg-[linear-gradient(135deg,#f8fbff_0%,#eef5ff_55%,#f8fcfb_100%)] px-6 py-7 sm:px-9 sm:py-8">
-        <div aria-hidden="true" className="absolute -right-14 -top-20 h-48 w-48 rounded-full bg-[#cce8ff]/45 blur-3xl" />
-        <div aria-hidden="true" className="absolute -bottom-24 left-1/3 h-44 w-44 rounded-full bg-[#d8f3e6]/50 blur-3xl" />
+      <div className="relative overflow-hidden border-b border-[#e2e8e4] bg-[#f8faf9] px-6 py-7 sm:px-9 sm:py-8">
         <div className="relative flex flex-wrap items-start justify-between gap-5">
           <div>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-mercury">Repair journey</p>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#3f785c]">Repair journey</p>
             <h2 id="repair-journey-title" className="mt-2 text-2xl font-semibold tracking-tight text-ink sm:text-[1.75rem]">{result.device}</h2>
             <p className="mt-2 text-xs text-muted">{result.service} · {result.reference}</p>
           </div>
-          <div className="rounded-2xl border border-white/80 bg-white/85 px-4 py-3 shadow-[0_8px_24px_rgba(30,64,175,0.08)] backdrop-blur">
-            <p className="flex items-center gap-2 text-sm font-semibold text-mercury">
-              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-mercury text-white">
+          <div className="rounded-2xl border border-[#d6e4db] bg-white px-4 py-3">
+            <p className="flex items-center gap-2 text-sm font-semibold text-[#3f785c]">
+              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#4f8769] text-white">
                 <Check size={14} variant="Bold" />
               </span>
               {REPAIR_STATUS_LABELS[result.status]}
@@ -118,7 +116,7 @@ function RepairJourney({ result }: { result: PublicRepairStatus }) {
           {JOURNEY_STEPS.map((step, index) => (
             <span
               key={step.label}
-              className={`h-1.5 rounded-full transition-colors ${index <= currentStep ? "bg-mercury" : "bg-[#dfe6ee]"}`}
+              className={`h-1.5 rounded-full transition-colors ${index <= currentStep ? "bg-[#5a8f72]" : "bg-[#e2caca]"}`}
             />
           ))}
         </div>
@@ -144,25 +142,25 @@ function RepairJourney({ result }: { result: PublicRepairStatus }) {
               {index < JOURNEY_STEPS.length - 1 && (
                 <span
                   aria-hidden="true"
-                  className={`absolute left-[23px] top-11 h-[calc(100%-28px)] w-px sm:left-[25px] ${index < currentStep ? "bg-mercury/55" : "bg-[#dfe5ec]"}`}
+                  className={`absolute left-[23px] top-11 h-[calc(100%-28px)] w-px sm:left-[25px] ${index < currentStep ? "bg-[#91b8a2]" : "bg-[#e4cece]"}`}
                 />
               )}
               <span
                 className={`relative z-10 flex h-12 w-12 items-center justify-center rounded-2xl border transition sm:h-[52px] sm:w-[52px] ${
                   isCurrent
-                    ? "border-mercury/20 bg-[#eaf2ff] text-mercury shadow-[0_8px_24px_rgba(31,62,151,0.16)] ring-4 ring-[#f2f6ff]"
+                    ? "border-[#9dc4ad] bg-[#eef6f1] text-[#3f785c]"
                     : isComplete
-                      ? "border-mercury bg-mercury text-white shadow-[0_8px_20px_rgba(31,62,151,0.14)]"
-                      : "border-[#e2e7ed] bg-[#f8f9fb] text-[#a6afbc]"
+                      ? "border-[#5a8f72] bg-[#5a8f72] text-white"
+                      : "border-[#e3cece] bg-[#fbf4f4] text-[#ad8585]"
                 }`}
               >
                 <Icon size={22} variant={isReached ? "Bold" : "Linear"} />
               </span>
 
-              <div className={`min-w-0 pt-0.5 ${!isReached ? "opacity-55" : ""}`}>
+              <div className={`min-w-0 pt-0.5 ${!isReached ? "opacity-65" : ""}`}>
                 <div className="flex flex-wrap items-center gap-2">
                   <h3 className="text-[15px] font-semibold text-ink">{label}</h3>
-                  {isCurrent && <span className="rounded-full bg-[#dff2ff] px-2.5 py-1 text-[9px] font-semibold uppercase tracking-[0.14em] text-[#1676a3]">Current</span>}
+                  {isCurrent && <span className="rounded-full bg-[#e6f2eb] px-2.5 py-1 text-[9px] font-semibold uppercase tracking-[0.14em] text-[#3f785c]">Current</span>}
                 </div>
                 <p className="mt-1.5 max-w-md text-xs leading-5 text-muted">{description}</p>
                 <p className="mt-2 text-[10px] font-medium text-muted sm:hidden">{eventDate || (isComplete ? "Completed" : isCurrent ? "Current update" : "Pending")}</p>
@@ -176,8 +174,8 @@ function RepairJourney({ result }: { result: PublicRepairStatus }) {
         })}
       </ol>
 
-      <div className="mx-6 mb-6 flex items-start gap-3 rounded-2xl border border-[#dfe8f4] bg-[#f7faff] px-4 py-3.5 sm:mx-9 sm:mb-9">
-        <ShieldCheck size={20} variant="Bulk" className="mt-0.5 text-mercury" />
+      <div className="mx-6 mb-6 flex items-start gap-3 rounded-2xl border border-[#dce8e0] bg-[#f7faf8] px-4 py-3.5 sm:mx-9 sm:mb-9">
+        <ShieldCheck size={20} variant="Bulk" className="mt-0.5 text-[#4f8769]" />
         <p className="text-xs leading-5 text-muted">We update this timeline whenever your repair moves to the next stage. Keep your reference private and check back anytime.</p>
       </div>
     </section>
