@@ -4,21 +4,25 @@ import { useEffect, useState } from "react";
 import {
   doc,
   getDoc,
-  updateDoc,
 } from "firebase/firestore";
-import { Search, Plus, ShieldCheck, X, Trash2, Lock } from "@/components/admin/WorkspaceIcons";
+import { Search, Plus, X, Trash2, Lock, Shop, Setting2 } from "@/components/admin/WorkspaceIcons";
 import AdminHeader from "@/components/admin/AdminHeader";
 import { db } from "@/lib/firestore";
 import { fetchAdminProfiles, type AdminProfile } from "@/lib/adminProfiles";
 import { useAdminAccess } from "@/components/admin/AdminGuard";
 import {
   isSuperAdmin,
+  dashboardsFor,
+  hasDashboardAccess,
   ALL_PAGES,
   type AdminEntry,
   type AccessLevel,
+  type DashboardAccess,
   STAFF_ROLES,
   type StaffRole,
 } from "@/lib/adminAccess";
+import { removeAdminAccess, saveAdminAccess } from "@/lib/adminDirectory";
+import { SALES_PAGES, WORKSHOP_PAGES } from "@/lib/workspaces";
 
 type AdminUser = AdminProfile;
 
@@ -49,6 +53,7 @@ const PAGE_LABELS: Record<string, string> = {
   payments: "Payments",
   quotations: "Quotations",
   "customer-care": "Customer Service",
+  ai: "AI",
   "user-tracking": "User Tracking",
   finance: "Financial Reports",
   website: "Website",
@@ -56,8 +61,25 @@ const PAGE_LABELS: Record<string, string> = {
   notifications: "Notifications",
   "audit-logs": "Audit Logs",
   settings: "Settings",
+  "api-keys": "API Keys",
   help: "Help",
 };
+
+const DASHBOARD_LABELS: Record<DashboardAccess, string> = {
+  sales: "Sales",
+  workshop: "Workshop",
+};
+
+function pagesForDashboards(dashboards: DashboardAccess[]) {
+  const allowed = new Set(dashboards.flatMap(dashboard => dashboard === "sales" ? SALES_PAGES : WORKSHOP_PAGES));
+  return ALL_PAGES.filter(page => allowed.has(page));
+}
+
+function toggleDashboardSelection(current: DashboardAccess[], dashboard: DashboardAccess) {
+  return current.includes(dashboard)
+    ? current.filter(item => item !== dashboard)
+    : [...current, dashboard];
+}
 
 export default function UsersRolesPage() {
   const { adminEntry } = useAdminAccess();
@@ -69,6 +91,7 @@ export default function UsersRolesPage() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingAccess, setEditingAccess] = useState<AdminEntry | null>(null);
   const [search, setSearch] = useState("");
+  const [pageError, setPageError] = useState("");
 
   useEffect(() => {
     fetchData();
@@ -102,15 +125,15 @@ export default function UsersRolesPage() {
 
   const removeAdmin = async (email: string) => {
     if (!confirm(`Remove ${email} from admin access?`)) return;
-    const updated = adminEntries.filter(
-      (e) => e.email.toLowerCase() !== email.toLowerCase()
-    );
-    await updateDoc(doc(db, "config", "admins"), {
-      admins: updated,
-      emails: updated.map((e) => e.email),
-    });
-    setAdminEntries(updated);
-    setAdmins((prev) => prev.filter((a) => a.email.toLowerCase() !== email.toLowerCase()));
+    setPageError("");
+    try {
+      await removeAdminAccess(email);
+      const updated = adminEntries.filter((e) => e.email.toLowerCase() !== email.toLowerCase());
+      setAdminEntries(updated);
+      setAdmins((prev) => prev.filter((a) => a.email.toLowerCase() !== email.toLowerCase()));
+    } catch (cause) {
+      setPageError(cause instanceof Error ? cause.message : "Could not remove this staff member.");
+    }
   };
 
   const getEntryForEmail = (email: string) =>
@@ -127,7 +150,7 @@ export default function UsersRolesPage() {
     <div className="px-5 py-6 lg:px-8 lg:py-7">
       <AdminHeader
         title="Users & Roles"
-        subtitle="Manage admin access and permissions"
+        subtitle="Manage dashboard and page permissions"
         action={
           isSuper ? (
             <button
@@ -142,7 +165,7 @@ export default function UsersRolesPage() {
       />
 
       {/* Summary */}
-      <div className="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-3">
+      <div className="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
         <div className="rounded-2xl p-5" style={{ backgroundColor: "#eaf1fc" }}>
           <p className="text-[12px] text-muted">Total Admins</p>
           <p className="text-xl font-extrabold text-ink">{adminEntries.length}</p>
@@ -153,9 +176,13 @@ export default function UsersRolesPage() {
             {adminEntries.filter((e) => e.access === "super_admin").length}
           </p>
         </div>
-        <div className="rounded-2xl p-5" style={{ backgroundColor: "#f3e8ff" }}>
-          <p className="text-[12px] text-muted">With Profiles</p>
-          <p className="text-xl font-extrabold text-ink">{admins.length}</p>
+        <div className="rounded-2xl p-5" style={{ backgroundColor: "#eef3fb" }}>
+          <p className="text-[12px] text-muted">Sales Access</p>
+          <p className="text-xl font-extrabold text-ink">{adminEntries.filter(entry => hasDashboardAccess(entry, "sales")).length}</p>
+        </div>
+        <div className="rounded-2xl p-5" style={{ backgroundColor: "#eaf6f2" }}>
+          <p className="text-[12px] text-muted">Workshop Access</p>
+          <p className="text-xl font-extrabold text-ink">{adminEntries.filter(entry => hasDashboardAccess(entry, "workshop")).length}</p>
         </div>
       </div>
 
@@ -170,6 +197,8 @@ export default function UsersRolesPage() {
         />
       </div>
 
+      {pageError && <p role="alert" className="mt-4 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">{pageError}</p>}
+
       {/* Admin table */}
       <section className="mt-5 rounded-2xl bg-white p-5">
         {loading ? (
@@ -182,13 +211,14 @@ export default function UsersRolesPage() {
           </p>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[750px] border-collapse text-left">
+            <table className="w-full min-w-[900px] border-collapse text-left">
               <thead>
                 <tr className="border-b border-line text-[12px] font-medium text-muted">
                   <th className="pb-3 pl-1 font-medium">User</th>
                   <th className="pb-3 font-medium">Email</th>
                   <th className="pb-3 font-medium">Job role</th>
                   <th className="pb-3 font-medium">Access</th>
+                  <th className="pb-3 font-medium">Dashboards</th>
                   <th className="pb-3 font-medium">Pages</th>
                   <th className="pb-3 font-medium">Joined</th>
                   {isSuper && <th className="pb-3 font-medium"></th>}
@@ -227,9 +257,18 @@ export default function UsersRolesPage() {
                           {entry?.access === "super_admin" ? "Super Admin" : "Admin"}
                         </span>
                       </td>
+                      <td className="py-3">
+                        <div className="flex flex-wrap gap-1.5">
+                          {dashboardsFor(entry || null).map(dashboard => (
+                            <span key={dashboard} className={`rounded-full px-2.5 py-1 text-[10px] font-semibold ${dashboard === "sales" ? "bg-[#eaf1fc] text-mercury" : "bg-[#e9f6ef] text-[#24796d]"}`}>
+                              {DASHBOARD_LABELS[dashboard]}
+                            </span>
+                          ))}
+                        </div>
+                      </td>
                       <td className="py-3 text-xs text-muted">
                         {entry?.pages.includes("*")
-                          ? "All pages"
+                          ? "All assigned pages"
                           : `${entry?.pages.length ?? 0} pages`}
                       </td>
                       <td className="py-3 text-muted text-xs">
@@ -285,6 +324,7 @@ export default function UsersRolesPage() {
                   </div>
                   {isSuper && <button onClick={() => setEditingAccess(entry)} className="ml-auto mr-4 text-xs font-medium text-mercury hover:underline">Edit role & access</button>}
                   {entry.jobRole && <span className="mr-4 text-xs text-muted">{entry.jobRole}</span>}
+                  <span className="mr-4 text-xs text-muted">{dashboardsFor(entry).map(dashboard => DASHBOARD_LABELS[dashboard]).join(" + ")}</span>
                   {isSuper && (
                     <button
                       onClick={() => removeAdmin(entry.email)}
@@ -314,7 +354,6 @@ export default function UsersRolesPage() {
           entry={editingAccess}
           onClose={() => setEditingAccess(null)}
           onSaved={() => { setEditingAccess(null); fetchData(); }}
-          allEntries={adminEntries}
         />
       )}
     </div>
@@ -335,6 +374,7 @@ function AddAdminModal({
   const [email, setEmail] = useState("");
   const [access, setAccess] = useState<AccessLevel>("admin");
   const [jobRole, setJobRole] = useState<StaffRole | "">("");
+  const [selectedDashboards, setSelectedDashboards] = useState<DashboardAccess[]>([]);
   const [error, setError] = useState("");
   const [selectedPages, setSelectedPages] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
@@ -343,6 +383,13 @@ function AddAdminModal({
     setSelectedPages((prev) =>
       prev.includes(slug) ? prev.filter((p) => p !== slug) : [...prev, slug]
     );
+  };
+  const availablePages = pagesForDashboards(selectedDashboards);
+  const toggleDashboard = (dashboard: DashboardAccess) => {
+    const next = toggleDashboardSelection(selectedDashboards, dashboard);
+    const allowed = new Set(pagesForDashboards(next));
+    setSelectedDashboards(next);
+    setSelectedPages(current => current.filter(page => allowed.has(page)));
   };
 
   const handleAdd = async () => {
@@ -355,17 +402,14 @@ function AddAdminModal({
         email: email.trim().toLowerCase(),
         access,
         jobRole,
+        dashboards: selectedDashboards,
         pages: access === "super_admin" ? ["*"] : selectedPages,
       };
-      const updated = [...existingEntries, newEntry];
-      await updateDoc(doc(db, "config", "admins"), {
-        admins: updated,
-        emails: updated.map((e) => e.email),
-      });
+      await saveAdminAccess(newEntry);
       onAdded();
     } catch (e) {
       console.error(e);
-      setError("Could not save changes. Please try again.");
+      setError(e instanceof Error ? e.message : "Could not save changes. Please try again.");
     } finally {
       setBusy(false);
     }
@@ -397,6 +441,7 @@ function AddAdminModal({
         </div>
 
         <JobRoleField value={jobRole} onChange={setJobRole} />
+        <DashboardAccessField value={selectedDashboards} onToggle={toggleDashboard} />
         {error && <p role="alert" className="mt-3 text-sm text-red-600">{error}</p>}
 
         {/* Access level */}
@@ -413,7 +458,7 @@ function AddAdminModal({
               }`}
             >
               Super Admin
-              <span className="mt-0.5 block text-[11px] font-normal opacity-70">Full access to all pages</span>
+              <span className="mt-0.5 block text-[11px] font-normal opacity-70">All pages in assigned dashboards</span>
             </button>
             <button
               type="button"
@@ -437,7 +482,7 @@ function AddAdminModal({
               Page Access ({selectedPages.length} selected)
             </label>
             <div className="grid grid-cols-2 gap-2">
-              {ALL_PAGES.map((slug) => (
+              {availablePages.map((slug) => (
                 <label
                   key={slug}
                   className={`flex cursor-pointer items-center gap-2 rounded-xl border px-3 py-2.5 text-sm transition ${
@@ -469,7 +514,7 @@ function AddAdminModal({
           </button>
           <button
             onClick={handleAdd}
-            disabled={!email.trim() || busy || (access === "admin" && selectedPages.length === 0)}
+            disabled={!email.trim() || busy || selectedDashboards.length === 0 || (access === "admin" && selectedPages.length === 0)}
             className="rounded-full bg-ink px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-black disabled:opacity-40"
           >
             {busy ? "Adding..." : "Add Admin"}
@@ -486,18 +531,20 @@ function EditAccessModal({
   entry,
   onClose,
   onSaved,
-  allEntries,
 }: {
   entry: AdminEntry;
   onClose: () => void;
   onSaved: () => void;
-  allEntries: AdminEntry[];
 }) {
+  const initialDashboards = dashboardsFor(entry);
   const [access, setAccess] = useState<AccessLevel>(entry.access);
   const [jobRole, setJobRole] = useState<StaffRole | "">(entry.jobRole || "");
+  const [selectedDashboards, setSelectedDashboards] = useState<DashboardAccess[]>(initialDashboards);
   const [error, setError] = useState("");
   const [selectedPages, setSelectedPages] = useState<string[]>(
-    entry.pages.includes("*") ? [...ALL_PAGES] : entry.pages
+    entry.pages.includes("*")
+      ? pagesForDashboards(initialDashboards)
+      : entry.pages.filter(page => pagesForDashboards(initialDashboards).includes(page))
   );
   const [busy, setBusy] = useState(false);
 
@@ -505,6 +552,13 @@ function EditAccessModal({
     setSelectedPages((prev) =>
       prev.includes(slug) ? prev.filter((p) => p !== slug) : [...prev, slug]
     );
+  };
+  const availablePages = pagesForDashboards(selectedDashboards);
+  const toggleDashboard = (dashboard: DashboardAccess) => {
+    const next = toggleDashboardSelection(selectedDashboards, dashboard);
+    const allowed = new Set(pagesForDashboards(next));
+    setSelectedDashboards(next);
+    setSelectedPages(current => current.filter(page => allowed.has(page)));
   };
 
   const handleSave = async () => {
@@ -516,19 +570,14 @@ function EditAccessModal({
         email: entry.email,
         access,
         jobRole,
+        dashboards: selectedDashboards,
         pages: access === "super_admin" ? ["*"] : selectedPages,
       };
-      const updated = allEntries.map((e) =>
-        e.email.toLowerCase() === entry.email.toLowerCase() ? updatedEntry : e
-      );
-      await updateDoc(doc(db, "config", "admins"), {
-        admins: updated,
-        emails: updated.map((e) => e.email),
-      });
+      await saveAdminAccess(updatedEntry);
       onSaved();
     } catch (e) {
       console.error(e);
-      setError("Could not save changes. Please try again.");
+      setError(e instanceof Error ? e.message : "Could not save changes. Please try again.");
     } finally {
       setBusy(false);
     }
@@ -548,6 +597,7 @@ function EditAccessModal({
         </p>
 
         <JobRoleField value={jobRole} onChange={setJobRole} />
+        <DashboardAccessField value={selectedDashboards} onToggle={toggleDashboard} />
         {error && <p role="alert" className="mt-3 text-sm text-red-600">{error}</p>}
 
         {/* Access level */}
@@ -564,7 +614,7 @@ function EditAccessModal({
               }`}
             >
               Super Admin
-              <span className="mt-0.5 block text-[11px] font-normal opacity-70">Full access</span>
+              <span className="mt-0.5 block text-[11px] font-normal opacity-70">All assigned dashboard pages</span>
             </button>
             <button
               type="button"
@@ -588,7 +638,7 @@ function EditAccessModal({
               Page Access ({selectedPages.length} selected)
             </label>
             <div className="grid grid-cols-2 gap-2">
-              {ALL_PAGES.map((slug) => (
+              {availablePages.map((slug) => (
                 <label
                   key={slug}
                   className={`flex cursor-pointer items-center gap-2 rounded-xl border px-3 py-2.5 text-sm transition ${
@@ -620,7 +670,7 @@ function EditAccessModal({
           </button>
           <button
             onClick={handleSave}
-            disabled={busy || (access === "admin" && selectedPages.length === 0)}
+            disabled={busy || selectedDashboards.length === 0 || (access === "admin" && selectedPages.length === 0)}
             className="rounded-full bg-ink px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-black disabled:opacity-40"
           >
             {busy ? "Saving..." : "Save Access"}
@@ -628,6 +678,37 @@ function EditAccessModal({
         </div>
       </div>
     </div>
+  );
+}
+
+function DashboardAccessField({ value, onToggle }: { value: DashboardAccess[]; onToggle: (dashboard: DashboardAccess) => void }) {
+  const options = [
+    { id: "sales" as const, label: "Sales dashboard", detail: "Store, orders and reporting", icon: Shop, active: "border-mercury bg-[#eaf1fc] text-mercury" },
+    { id: "workshop" as const, label: "Workshop dashboard", detail: "Repairs and service workflow", icon: Setting2, active: "border-[#24796d] bg-[#e9f6ef] text-[#24796d]" },
+  ];
+  return (
+    <fieldset className="mt-5">
+      <legend className="mb-2 block text-xs font-semibold text-ink">Dashboard access</legend>
+      <div className="grid gap-2 sm:grid-cols-2">
+        {options.map(({ id, label, detail, icon: Icon, active }) => {
+          const selected = value.includes(id);
+          return (
+            <button
+              key={id}
+              type="button"
+              aria-pressed={selected}
+              onClick={() => onToggle(id)}
+              className={`rounded-xl border p-3 text-left transition ${selected ? active : "border-line bg-white text-muted hover:border-ink hover:text-ink"}`}
+            >
+              <Icon size={21} variant="Bulk" />
+              <span className="mt-2 block text-sm font-semibold">{label}</span>
+              <span className="mt-0.5 block text-[11px] opacity-70">{detail}</span>
+            </button>
+          );
+        })}
+      </div>
+      <p className="mt-2 text-xs leading-5 text-muted">Choose one or both dashboards. This controls which workspace cards and routes the person can open.</p>
+    </fieldset>
   );
 }
 

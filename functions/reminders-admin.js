@@ -1,5 +1,6 @@
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { getFirestore } from "firebase-admin/firestore";
+import { adminHasDashboard, adminHasPage } from "./admin-access.js";
 
 export const COMPLETED_REMINDER_STATUSES = ["accepted", "sent", "delivered", "read"];
 export const FAILED_REMINDER_STATUSES = ["failed", "skipped"];
@@ -52,7 +53,7 @@ async function requirePage(request, page) {
   const config = snap.data() || {};
   const admin = (config.admins || []).find(entry => entry.email?.toLowerCase() === email);
   const legacy = !admin && (config.emails || []).some(item => item.toLowerCase() === email);
-  if (!legacy && (!admin || (admin.access !== "super_admin" && !admin.pages?.some(value => value === "*" || value === page)))) {
+  if (!legacy && (!admin || !adminHasPage(admin, page) || !adminHasDashboard(admin, "workshop"))) {
     throw new HttpsError("permission-denied", `You need ${page} access.`);
   }
 }

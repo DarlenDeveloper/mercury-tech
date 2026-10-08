@@ -101,7 +101,7 @@ export async function authenticateRequest(req, db, requiredScope) {
  * Verify that a callable request is made by a configured admin.
  * Mirrors the app's config/admins structure (admins[].email + legacy emails[]).
  */
-export async function requireAdmin(db, request) {
+export async function requireAdmin(db, request, requirements = {}) {
   const auth = request.auth;
   if (!auth) return { ok: false, error: "You must be signed in." };
 
@@ -115,10 +115,17 @@ export async function requireAdmin(db, request) {
   const admins = Array.isArray(data.admins) ? data.admins : [];
   const legacy = Array.isArray(data.emails) ? data.emails : [];
 
-  const isAdmin =
-    admins.some((a) => (a.email || "").toLowerCase() === email) ||
-    legacy.some((e) => (e || "").toLowerCase() === email);
+  const entry = admins.find((admin) => (admin.email || "").toLowerCase() === email);
+  const isLegacy = !entry && legacy.some((value) => (value || "").toLowerCase() === email);
+  const isAdmin = !!entry || isLegacy;
 
   if (!isAdmin) return { ok: false, error: "Admin access required." };
-  return { ok: true, email, uid: auth.uid };
+  if (!isLegacy && requirements.dashboard) {
+    const dashboards = Array.isArray(entry.dashboards) ? entry.dashboards : ["sales", "workshop"];
+    if (!dashboards.includes(requirements.dashboard)) return { ok: false, error: `${requirements.dashboard === "sales" ? "Sales" : "Workshop"} dashboard access required.` };
+  }
+  if (!isLegacy && requirements.page && entry.access !== "super_admin" && !entry.pages?.some(page => page === "*" || page === requirements.page)) {
+    return { ok: false, error: `${requirements.page} access required.` };
+  }
+  return { ok: true, email, uid: auth.uid, entry };
 }

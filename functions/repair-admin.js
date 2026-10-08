@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { getFirestore, FieldValue, Timestamp } from "firebase-admin/firestore";
 import { paidInFull, paymentTotal, phoneMatches, publicRepairStatus, validateWork } from "./repair-workflow.js";
+import { adminHasAnyDashboard, adminHasDashboard, adminHasPage } from "./admin-access.js";
 
 function text(value, max = 300) { return typeof value === "string" ? value.trim().slice(0, max) : ""; }
 function fail(message) { throw new HttpsError("failed-precondition", message); }
@@ -23,8 +24,8 @@ export async function handleRepairRequest(request, db) {
     const legacy = !admin && (config.emails || []).some(item => item.toLowerCase() === email);
     const page = ["create", "update"].includes(action) ? "repairs" : "payments";
     if (action === "technician_update") {
-      if (!admin || admin.jobRole !== "Technician") throw new HttpsError("permission-denied", "Only assigned technicians can update this job.");
-    } else if (!legacy && (!admin || (admin.access !== "super_admin" && !admin.pages?.some(p => p === "*" || p === page)))) {
+      if (!admin || admin.jobRole !== "Technician" || !adminHasDashboard(admin, "workshop")) throw new HttpsError("permission-denied", "Only assigned technicians with Workshop access can update this job.");
+    } else if (!legacy && (!admin || !adminHasPage(admin, page) || (["create", "update"].includes(action) ? !adminHasDashboard(admin, "workshop") : !adminHasAnyDashboard(admin)))) {
       throw new HttpsError("permission-denied", `You need ${page} access.`);
     }
     if (action === "create") {
@@ -150,7 +151,7 @@ async function requirePage(request, page) {
   const config = snap.data() || {};
   const admin = (config.admins || []).find(entry => entry.email?.toLowerCase() === email);
   const legacy = !admin && (config.emails || []).some(item => item.toLowerCase() === email);
-  if (!legacy && (!admin || (admin.access !== "super_admin" && !admin.pages?.some(value => value === "*" || value === page)))) {
+  if (!legacy && (!admin || !adminHasPage(admin, page) || !adminHasAnyDashboard(admin))) {
     throw new HttpsError("permission-denied", `You need ${page} access.`);
   }
 }

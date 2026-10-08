@@ -182,3 +182,6 @@ export { manageRepair, listRepairPayments, lookupRepairStatus } from "./repair-a
 
 // Staff-only customer WhatsApp reminder history and failure monitoring.
 export { listRepairReminders } from "./reminders-admin.js";
+
+// Super-admin-only staff dashboard and page access management.
+export { manageAdminAccess } from "./admin-access.js";

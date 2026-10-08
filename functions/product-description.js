@@ -54,7 +54,7 @@ export function parseGeneratedContent(raw) {
 export const enhanceProductDescription = onCall(
   { secrets: [GEMINI_API_KEY], cors: true },
   async (request) => {
-    const admin = await requireAdmin(getFirestore(), request);
+    const admin = await requireAdmin(getFirestore(), request, { dashboard: "sales", page: "products" });
     if (!admin.ok) throw new HttpsError("permission-denied", admin.error);
 
     const name = clean(request.data?.name, 200);

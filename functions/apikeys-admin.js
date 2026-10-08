@@ -29,7 +29,7 @@ function validateScopes(scopes) {
 
 export const createApiKey = onCall(async (request) => {
   const db = getFirestore();
-  const admin = await requireAdmin(db, request);
+  const admin = await requireAdmin(db, request, { dashboard: "sales", page: "api-keys" });
   if (!admin.ok) throw new HttpsError("permission-denied", admin.error);
 
   const label = String(request.data?.label || "").trim();
@@ -64,7 +64,7 @@ export const createApiKey = onCall(async (request) => {
 
 export const listApiKeys = onCall(async (request) => {
   const db = getFirestore();
-  const admin = await requireAdmin(db, request);
+  const admin = await requireAdmin(db, request, { dashboard: "sales", page: "api-keys" });
   if (!admin.ok) throw new HttpsError("permission-denied", admin.error);
 
   const snap = await db.collection("apiKeys").orderBy("createdAt", "desc").get();
@@ -87,7 +87,7 @@ export const listApiKeys = onCall(async (request) => {
 
 export const revokeApiKey = onCall(async (request) => {
   const db = getFirestore();
-  const admin = await requireAdmin(db, request);
+  const admin = await requireAdmin(db, request, { dashboard: "sales", page: "api-keys" });
   if (!admin.ok) throw new HttpsError("permission-denied", admin.error);
 
   const id = String(request.data?.id || "").trim();
@@ -107,7 +107,7 @@ export const revokeApiKey = onCall(async (request) => {
  */
 export const getApiActivity = onCall(async (request) => {
   const db = getFirestore();
-  const admin = await requireAdmin(db, request);
+  const admin = await requireAdmin(db, request, { dashboard: "sales", page: "api-keys" });
   if (!admin.ok) throw new HttpsError("permission-denied", admin.error);
 
   const days = Math.min(Math.max(parseInt(request.data?.days, 10) || 14, 1), 90);
@@ -172,7 +172,7 @@ export const getApiActivity = onCall(async (request) => {
 
 export const deleteApiKey = onCall(async (request) => {
   const db = getFirestore();
-  const admin = await requireAdmin(db, request);
+  const admin = await requireAdmin(db, request, { dashboard: "sales", page: "api-keys" });
   if (!admin.ok) throw new HttpsError("permission-denied", admin.error);
 
   const id = String(request.data?.id || "").trim();

@@ -2,11 +2,11 @@
 
 import { createContext, useContext, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { doc, getDoc } from "firebase/firestore";
+import { doc, getDoc, onSnapshot } from "firebase/firestore";
 import { useAuth } from "@/components/AuthProvider";
 import { db } from "@/lib/firestore";
 import AdminProfileSetup from "@/components/admin/AdminProfileSetup";
-import type { AdminEntry } from "@/lib/adminAccess";
+import { resolveAdminEntry, type AdminEntry } from "@/lib/adminAccess";
 
 export const ADMIN_AUTH_KEY = "mercury_admin_authed";
 
@@ -27,7 +27,7 @@ export function useAdminAccess() {
 /**
  * Auth gate for admin. Checks Firebase Auth + admin whitelist stored
  * in Firestore at config/admins. Shows profile setup if no profile exists.
- * Exposes the user's AdminEntry (access level + pages) via context.
+ * Exposes the user's AdminEntry (dashboard, access level and pages) via context.
  */
 export default function AdminGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -43,60 +43,38 @@ export default function AdminGuard({ children }: { children: React.ReactNode }) 
       router.replace("/u/login");
       return;
     }
-
-    const checkAdmin = async () => {
+    let active = true;
+    let initialized = false;
+    setReady(false);
+    const unsubscribe = onSnapshot(doc(db, "config", "admins"), async adminSnap => {
+      if (!active) return;
+      const entry = adminSnap.exists() ? resolveAdminEntry(adminSnap.data(), user.email ?? "") : null;
+      if (!entry) {
+        window.localStorage.removeItem(ADMIN_AUTH_KEY);
+        setAdminEntry(null);
+        setReady(false);
+        router.replace("/u/login");
+        return;
+      }
+      setAdminEntry(entry);
+      if (initialized) return;
+      initialized = true;
       try {
-        // Get admin config
-        const adminRef = doc(db, "config", "admins");
-        const adminSnap = await getDoc(adminRef);
-
-        if (!adminSnap.exists()) {
-          router.replace("/u/login");
-          return;
-        }
-
-        const data = adminSnap.data();
-        const userEmail = user.email ?? "";
-
-        // Try new access-based system first
-        const admins: AdminEntry[] = data?.admins ?? [];
-        let entry = admins.find(
-          (a) => a.email.toLowerCase() === userEmail.toLowerCase()
-        ) ?? null;
-
-        // Fallback to legacy emails array
-        if (!entry) {
-          const legacyEmails: string[] = data?.emails ?? [];
-          if (legacyEmails.includes(userEmail)) {
-            // Legacy admin gets full access (treated as super_admin for migration)
-            entry = { email: userEmail, access: "super_admin", pages: ["*"] };
-          }
-        }
-
-        if (!entry) {
-          window.localStorage.removeItem(ADMIN_AUTH_KEY);
-          router.replace("/u/login");
-          return;
-        }
-
-        setAdminEntry(entry);
-
-        // Check if user has a profile
-        const profileRef = doc(db, "users", user.uid);
-        const profileSnap = await getDoc(profileRef);
-
-        if (!profileSnap.exists() || !profileSnap.data()?.name) {
-          setNeedsProfile(true);
-        }
-
+        const profileSnap = await getDoc(doc(db, "users", user.uid));
+        if (!active) return;
+        if (!profileSnap.exists() || !profileSnap.data()?.name) setNeedsProfile(true);
         window.localStorage.setItem(ADMIN_AUTH_KEY, "1");
         setReady(true);
       } catch {
-        router.replace("/u/login");
+        if (active) router.replace("/u/login");
       }
+    }, () => {
+      if (active) router.replace("/u/login");
+    });
+    return () => {
+      active = false;
+      unsubscribe();
     };
-
-    checkAdmin();
   }, [user, loading, router]);
 
   if (loading || !ready) {
