@@ -29,9 +29,8 @@ export const getCategoriesFromFirestore = cache(async (): Promise<Category[]> =>
         slug: child.slug,
       }));
 
-      // All-in-One PCs is a virtual storefront category. Products are selected
-      // from desktop-tagged names at render time, so no Firestore migration is
-      // required. Keep the live category list authoritative for everything else.
+      // Virtual storefront categories combine several narrower live taxonomy
+      // buckets without rewriting product records.
       if (slug === "desktops" && !children.some((child) => child.slug === "all-in-one-pcs")) {
         children.unshift({ name: "All-in-One PCs", slug: "all-in-one-pcs" });
       }
@@ -44,6 +43,9 @@ export const getCategoriesFromFirestore = cache(async (): Promise<Category[]> =>
       if (preferredChildSlug) {
         const preferredIndex = children.findIndex((child) => child.slug === preferredChildSlug);
         if (preferredIndex > 0) children.unshift(...children.splice(preferredIndex, 1));
+      }
+      if (slug === "printers-office" && !children.some((child) => child.slug === "laser-printers")) {
+        children.splice(1, 0, { name: "Laser Printers", slug: "laser-printers" });
       }
 
       return {
@@ -81,7 +83,7 @@ export const CATEGORIES: Category[] = [
       { name: "Printers", slug: "printers" },
       { name: "All-in-One Printers", slug: "multifunction-all-in-one-printers" },
       { name: "Ink Tank Printers", slug: "ink-tank-printers" },
-      { name: "Laser Printers", slug: "a4-black-white-laser-printers" },
+      { name: "Laser Printers", slug: "laser-printers" },
       { name: "HP Toner Cartridges", slug: "hp-toner-cartridges" },
       { name: "Scanners", slug: "hp-scanners" },
     ],

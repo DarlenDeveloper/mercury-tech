@@ -37,7 +37,7 @@ export const DEPARTMENTS: Department[] = [
     children: [
       { name: "Printers", href: "/category/printers-office/printers" },
       { name: "Ink Tank Printers", href: "/category/printers-office/ink-tank-printers" },
-      { name: "Laser Printers", href: "/category/printers-office/a4-black-white-laser-printers" },
+      { name: "Laser Printers", href: "/category/printers-office/laser-printers" },
       { name: "HP Toner Cartridges", href: "/category/printers-office/hp-toner-cartridges" },
       { name: "Scanners", href: "/category/printers-office/scanners" },
     ],

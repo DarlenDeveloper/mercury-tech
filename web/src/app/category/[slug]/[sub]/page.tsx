@@ -7,6 +7,7 @@ import Footer from "@/components/Footer";
 import FilteredProductGrid from "@/components/FilteredProductGrid";
 import { getCategoriesFromFirestore } from "@/lib/categories";
 import { getProductsFromFirestore } from "@/lib/getProducts";
+import { isLaserPrinterProduct, LASER_PRINTERS_SLUG } from "@/lib/productTaxonomy";
 
 export const revalidate = 300;
 
@@ -48,6 +49,10 @@ export default async function SubCategoryPage({
 
   const allProducts = await getProductsFromFirestore();
   const products = allProducts.filter((p) => {
+    if (slug === "printers-office" && sub === LASER_PRINTERS_SLUG) {
+      return isLaserPrinterProduct(p);
+    }
+
     if (slug === "desktops" && sub === "all-in-one-pcs") {
       if (p.categoryId === "desktops" && p.subcategorySlugs?.includes(sub)) {
         return true;
