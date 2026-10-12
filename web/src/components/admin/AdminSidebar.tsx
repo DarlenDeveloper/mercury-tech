@@ -174,7 +174,7 @@ export default function AdminSidebar() {
 
       <p className="mt-4 px-3 text-[10px] font-semibold uppercase tracking-[0.2em] text-muted">Sales workspace</p>
       {/* Scrollable nav */}
-      <div className="no-scrollbar mt-6 flex-1 overflow-y-auto">
+      <div className="admin-scrollbar mt-6 min-h-0 flex-1 overflow-y-auto overscroll-contain pr-1">
         {GROUPS.map((group, i) => {
           const visibleItems = group.items.filter(canAccess);
           if (visibleItems.length === 0) return null;
