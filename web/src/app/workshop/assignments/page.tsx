@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import AdminHeader from "@/components/admin/AdminHeader";
-import { Check, Clock, FileText, Wrench, X } from "@/components/admin/WorkspaceIcons";
+import { Bell, Check, Clock, FileText, Wrench, X } from "@/components/admin/WorkspaceIcons";
 import { useAuth } from "@/components/AuthProvider";
 import {
   fetchTechnicianAssignments,
@@ -108,6 +108,11 @@ export default function AssignmentsPage() {
         <Stat label="Ready to start" value={counts.ready} tone="teal" />
         <Stat label="In progress" value={counts.active} tone="blue" />
         <Stat label="Completed" value={counts.completed} tone="green" />
+      </div>
+
+      <div className="mt-4 flex items-start gap-3 rounded-2xl border border-mercury/10 bg-[#f6f8fd] px-4 py-3 text-sm text-muted">
+        <Bell size={19} className="mt-0.5 text-mercury" />
+        <p><span className="font-semibold text-ink">Daily job reminders are active.</span> At 8:00 AM, technicians receive a reminder for assigned jobs that are ready, in progress, or awaiting parts.</p>
       </div>
 
       <div className="mt-6 flex flex-wrap items-center gap-2">

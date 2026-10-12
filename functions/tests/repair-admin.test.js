@@ -111,4 +111,21 @@ test("only an assigned technician can start and complete a paid job", async () =
   assert.equal(ticket.completionNotes, "Replaced the damaged display.");
   assert.equal(ticket.completedByEmail, "tech@example.com");
   assert.deepEqual(ticket.statusHistory.map(event => event.status), ["received", "awaiting_payment", "ready_for_assignment", "in_progress", "completed"]);
+
+  await assert.rejects(
+    handleRepairRequest(request("update", { status: "collected", coordinatorEmail: "sales@example.com", technicianEmails: ["tech@example.com"], notes: "" }), db),
+    /collection proof/i,
+  );
+  await assert.rejects(handleRepairRequest(request("collect"), db), /job card.*name and telephone/i);
+  await handleRepairRequest(request("collect", { collectorName: "Pat Customer", collectorPhone: "0700 000 000", collectionNotes: "ID checked", notes: "" }), db);
+  ticket = db.docs.get("repair_tickets/ticket-1");
+  assert.equal(ticket.status, "collected");
+  assert.equal(ticket.collectorName, "Pat Customer");
+  assert.equal(ticket.collectorPhone, "0700 000 000");
+  assert.equal(ticket.collectionNotes, "ID checked");
+  assert.equal(ticket.collectionRecordedByEmail, "sales@example.com");
+  assert.deepEqual(ticket.statusHistory.map(event => event.status), ["received", "awaiting_payment", "ready_for_assignment", "in_progress", "completed", "collected"]);
+
+  const retry = await handleRepairRequest(request("collect", { collectorName: "Pat Customer", collectorPhone: "0700 000 000", collectionNotes: "ID checked", notes: "" }), db);
+  assert.equal(retry.duplicate, true);
 });

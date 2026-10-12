@@ -60,3 +60,26 @@ export function uploadProductImageWithProgress(
     );
   });
 }
+
+const COLLECTION_PROOF_TYPES: Record<string, string> = {
+  "image/jpeg": "jpg",
+  "image/png": "png",
+  "image/webp": "webp",
+};
+
+/** Upload immutable collection evidence for a completed repair. */
+export async function uploadRepairCollectionProof(
+  file: File,
+  ticketId: string
+): Promise<{ path: string; url: string }> {
+  const extension = COLLECTION_PROOF_TYPES[file.type];
+  if (!extension) throw new Error("Use a JPG, PNG or WebP image for the job card.");
+  if (file.size > 8 * 1024 * 1024) throw new Error("The job-card photo must be 8 MB or smaller.");
+  const unique = typeof crypto !== "undefined" && "randomUUID" in crypto
+    ? crypto.randomUUID()
+    : `${Date.now()}-${Math.random().toString(36).slice(2, 12)}`;
+  const path = `repair-collection-proofs/${ticketId}/${unique}.${extension}`;
+  const storageRef = ref(storage, path);
+  await uploadBytes(storageRef, file, { contentType: file.type });
+  return { path, url: await getDownloadURL(storageRef) };
+}

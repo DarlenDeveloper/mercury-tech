@@ -1,7 +1,8 @@
 import { createHash } from "node:crypto";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { getFirestore, FieldValue, Timestamp } from "firebase-admin/firestore";
-import { paidInFull, paymentTotal, phoneMatches, publicRepairStatus, validateWork } from "./repair-workflow.js";
+import { getStorage } from "firebase-admin/storage";
+import { paidInFull, paymentTotal, phoneMatches, publicRepairStatus, validateCollectionProof, validateWork } from "./repair-workflow.js";
 import { adminHasAnyDashboard, adminHasDashboard, adminHasPage } from "./admin-access.js";
 
 function text(value, max = 300) { return typeof value === "string" ? value.trim().slice(0, max) : ""; }
@@ -13,7 +14,7 @@ export async function handleRepairRequest(request, db) {
   const id = text(input.id, 150);
   if (!id || id.includes("/")) throw new HttpsError("invalid-argument", "A repair reference is required.");
   const action = input.action;
-  if (!["create", "billing", "payment", "update", "technician_update"].includes(action)) throw new HttpsError("invalid-argument", "Unknown action.");
+  if (!["create", "billing", "payment", "update", "technician_update", "collect"].includes(action)) throw new HttpsError("invalid-argument", "Unknown action.");
   const email = text(request.auth.token.email).toLowerCase();
   const ref = db.collection("repair_tickets").doc(id);
   return db.runTransaction(async tx => {
@@ -22,10 +23,11 @@ export async function handleRepairRequest(request, db) {
     const entries = config.admins || [];
     const admin = entries.find(entry => entry.email?.toLowerCase() === email);
     const legacy = !admin && (config.emails || []).some(item => item.toLowerCase() === email);
-    const page = ["create", "update"].includes(action) ? "repairs" : "payments";
+    const repairAction = ["create", "update", "collect"].includes(action);
+    const page = repairAction ? "repairs" : "payments";
     if (action === "technician_update") {
       if (!admin || admin.jobRole !== "Technician" || !adminHasDashboard(admin, "workshop")) throw new HttpsError("permission-denied", "Only assigned technicians with Workshop access can update this job.");
-    } else if (!legacy && (!admin || !adminHasPage(admin, page) || (["create", "update"].includes(action) ? !adminHasDashboard(admin, "workshop") : !adminHasAnyDashboard(admin)))) {
+    } else if (!legacy && (!admin || !adminHasPage(admin, page) || (repairAction ? !adminHasDashboard(admin, "workshop") : !adminHasAnyDashboard(admin)))) {
       throw new HttpsError("permission-denied", `You need ${page} access.`);
     }
     if (action === "create") {
@@ -81,6 +83,9 @@ export async function handleRepairRequest(request, db) {
       const nextTechnicians = technicians.map(item => item.email).sort();
       const assignmentsChanged = text(ticket.coordinatorEmail).toLowerCase() !== coordinatorEmail
         || previousTechnicians.join("|") !== nextTechnicians.join("|");
+      if (input.status === "collected" && ticket.status !== "collected") {
+        fail("Record collection proof before marking this repair as collected.");
+      }
       // Legacy tickets may keep their old status/names while notes are edited.
       const unchangedLegacy = !ticket.workflowVersion && !technicians.length && input.status === ticket.status;
       if (!unchangedLegacy) { try { validateWork(ticket, input.status, technicians); } catch (error) { fail(error.message); } }
@@ -99,6 +104,32 @@ export async function handleRepairRequest(request, db) {
         assigneeRole: technicians.length ? "Technician" : "",
       });
       if (unchangedLegacy) delete patch.workflowVersion;
+    }
+    if (action === "collect") {
+      let proof;
+      try { proof = validateCollectionProof(id, input); } catch (error) { fail(error.message); }
+      if (ticket.status === "collected") {
+        const sameEvidence = (ticket.collectionProofPath || "") === proof.proofPath
+          && (ticket.collectorName || "") === proof.collectorName
+          && (ticket.collectorPhone || "") === proof.collectorPhone;
+        if (sameEvidence) return { ok: true, duplicate: true };
+        fail("This repair has already been collected.");
+      }
+      if (ticket.status !== "completed") fail("Only a completed repair can be marked as collected.");
+      const technicianEmails = (ticket.technicianEmails || []).map(value => text(value).toLowerCase()).filter(Boolean);
+      try { validateWork(ticket, "collected", technicianEmails.map(email => ({ email }))); } catch (error) { fail(error.message); }
+      Object.assign(patch, {
+        status: "collected",
+        notes: text(input.notes, 10000),
+        collectionProofPath: proof.proofPath,
+        collectionProofUrl: proof.proofUrl,
+        collectorName: proof.collectorName,
+        collectorPhone: proof.collectorPhone,
+        collectionNotes: text(input.collectionNotes, 3000),
+        collectionRecordedBy: text(request.auth.token.name, 150) || email,
+        collectionRecordedByEmail: email,
+        collectedAt: now,
+      });
     }
     if (action === "technician_update") {
       const assignedTechnicians = (ticket.technicianEmails || []).map(value => text(value).toLowerCase());
@@ -131,18 +162,29 @@ export async function handleRepairRequest(request, db) {
       patch.statusHistory = [...(ticket.statusHistory || [{ status: ticket.status || "received", at: ticket.createdAt || now }]), { status: patch.status, at: now }];
     }
     tx.update(ref, patch);
-    const auditAction = action === "technician_update" ? `repair_job_${input.jobAction}` : "repair_updated";
+    const auditAction = action === "technician_update" ? `repair_job_${input.jobAction}` : action === "collect" ? "repair_collected" : "repair_updated";
     const auditDetails = action === "payment"
       ? `Recorded UGX ${input.amount} (${text(input.reference)})`
       : action === "technician_update" && input.jobAction === "complete"
         ? text(input.notes, 3000) ? "Completed job with a note" : "Completed job"
-        : action;
+        : action === "collect"
+          ? input.collectionProofPath ? "Released with job-card photo" : `Released to ${text(input.collectorName, 150)}`
+          : action;
     tx.create(db.collection("audit_logs").doc(), { actor: email, actorId: request.auth.uid, action: auditAction, target: `Repair ${id}`, details: auditDetails, timestamp: now });
     return { ok: true };
   });
 }
 
-export const manageRepair = onCall(request => handleRepairRequest(request, getFirestore()));
+export const manageRepair = onCall(async request => {
+  if (request.data?.action === "collect" && request.data?.collectionProofPath) {
+    const id = text(request.data?.id, 150);
+    let proof;
+    try { proof = validateCollectionProof(id, request.data); } catch (error) { fail(error.message); }
+    const [exists] = await getStorage().bucket().file(proof.proofPath).exists();
+    if (!exists) fail("The job-card photo could not be found. Upload it again.");
+  }
+  return handleRepairRequest(request, getFirestore());
+});
 
 async function requirePage(request, page) {
   if (!request.auth) throw new HttpsError("unauthenticated", "Sign in first.");

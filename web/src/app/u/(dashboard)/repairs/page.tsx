@@ -3,12 +3,13 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Search, X, Wrench } from "@/components/admin/WorkspaceIcons";
+import { Camera, Phone, Search, User, X, Wrench } from "@/components/admin/WorkspaceIcons";
 import RepairIntake from "@/components/admin/RepairIntake";
 import AdminHeader from "@/components/admin/AdminHeader";
-import { allowedRepairStatuses, fetchRepairTickets, updateRepairTicket, type RepairTicket, type RepairStatus, REPAIR_STATUS_LABELS, repairPaid, paymentLabel } from "@/lib/repairs";
+import { allowedRepairStatuses, collectRepairTicket, fetchRepairTickets, updateRepairTicket, type RepairTicket, type RepairStatus, REPAIR_STATUS_LABELS, repairPaid, paymentLabel } from "@/lib/repairs";
 import { fetchRepairStaff } from "@/lib/repairStaff";
 import { type RepairAssignee } from "@/lib/repairAssignment";
+import { uploadRepairCollectionProof } from "@/lib/storage";
 
 import { logAudit } from "@/lib/auditLog";
 import { useAuth } from "@/components/AuthProvider";
@@ -42,9 +43,16 @@ export default function RepairsPage() {
   const [staffError, setStaffError] = useState("");
   const [error, setError] = useState("");
   const [editNotes, setEditNotes] = useState("");
+  const [collectorName, setCollectorName] = useState("");
+  const [collectorPhone, setCollectorPhone] = useState("");
+  const [collectionNotes, setCollectionNotes] = useState("");
+  const [proofFile, setProofFile] = useState<File | null>(null);
+  const [proofPreview, setProofPreview] = useState("");
+  const [uploadedProof, setUploadedProof] = useState<{ path: string; url: string } | null>(null);
   const [busy, setBusy] = useState(false);
 
   useEffect(() => { load(); }, []);
+  useEffect(() => () => { if (proofPreview) URL.revokeObjectURL(proofPreview); }, [proofPreview]);
 
   const load = async () => {
     setLoading(true);
@@ -62,6 +70,30 @@ export default function RepairsPage() {
     setStaffLoading(true);
     fetchRepairStaff().then(setStaff).catch(() => setStaffError("Could not load team members. Close and reopen this ticket to retry.")).finally(() => setStaffLoading(false));
     setEditNotes(t.notes);
+    setCollectorName(t.collectorName || "");
+    setCollectorPhone(t.collectorPhone || "");
+    setCollectionNotes(t.collectionNotes || "");
+    setProofFile(null);
+    setProofPreview("");
+    setUploadedProof(null);
+  };
+
+  const chooseProof = (file?: File) => {
+    setError("");
+    setUploadedProof(null);
+    setProofFile(null);
+    setProofPreview("");
+    if (!file) return;
+    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
+      setError("Use a JPG, PNG or WebP image for the job card.");
+      return;
+    }
+    if (file.size > 8 * 1024 * 1024) {
+      setError("The job-card photo must be 8 MB or smaller.");
+      return;
+    }
+    setProofFile(file);
+    setProofPreview(URL.createObjectURL(file));
   };
 
   const handleUpdate = async () => {
@@ -69,23 +101,53 @@ export default function RepairsPage() {
     setError("");
     setBusy(true);
     try {
-      await updateRepairTicket(selected.id, {
-        status: editStatus,
-        coordinatorEmail: editAssignee,
-        technicianEmails: editTechnicians,
-        notes: editNotes.trim(),
-      });
+      const collecting = selected.status === "completed" && editStatus === "collected";
+      if (collecting) {
+        const phoneDigits = collectorPhone.replace(/\D/g, "");
+        const hasCollectorIdentity = !!collectorName.trim() && phoneDigits.length >= 9 && phoneDigits.length <= 15;
+        if (!proofFile && !uploadedProof && !hasCollectorIdentity) {
+          throw new Error("Attach the job card, or enter the collector's name and telephone number.");
+        }
+        if (collectorPhone.trim() && (phoneDigits.length < 9 || phoneDigits.length > 15)) {
+          throw new Error("Enter a valid collector telephone number.");
+        }
+        let proof = uploadedProof;
+        if (!proof && proofFile) {
+          proof = await uploadRepairCollectionProof(proofFile, selected.id);
+          setUploadedProof(proof);
+        }
+        await collectRepairTicket(selected.id, {
+          notes: editNotes.trim(),
+          collectionProofPath: proof?.path || "",
+          collectionProofUrl: proof?.url || "",
+          collectorName: collectorName.trim(),
+          collectorPhone: collectorPhone.trim(),
+          collectionNotes: collectionNotes.trim(),
+        });
+      } else {
+        await updateRepairTicket(selected.id, {
+          status: editStatus,
+          coordinatorEmail: editAssignee,
+          technicianEmails: editTechnicians,
+          notes: editNotes.trim(),
+        });
+      }
       logAudit({
         actor: user?.displayName || user?.email || "Unknown",
         actorId: user?.uid || "",
         action: "settings_updated",
         target: `Repair ${selected.id} → ${STATUS_LABELS[editStatus]}`,
-        details: `Coordinator: ${editAssignee || "Unassigned"}; technicians: ${editTechnicians.join(", ") || "Unassigned"}`,
+        details: editStatus === "collected" ? "Collection evidence recorded" : `Coordinator: ${editAssignee || "Unassigned"}; technicians: ${editTechnicians.join(", ") || "Unassigned"}`,
       });
       setSelected(null);
       load();
     } catch (error) { setError(error instanceof Error ? error.message : "Could not update the ticket."); } finally { setBusy(false); }
   };
+
+  const collecting = selected?.status === "completed" && editStatus === "collected";
+  const collectorPhoneDigits = collectorPhone.replace(/\D/g, "");
+  const collectorIdentityValid = !!collectorName.trim() && collectorPhoneDigits.length >= 9 && collectorPhoneDigits.length <= 15;
+  const collectionReady = !!proofFile || !!uploadedProof || collectorIdentityValid;
 
   const filtered = tickets.filter((t) => {
     const matchTab = tab === "all" || t.status === tab;
@@ -249,15 +311,64 @@ export default function RepairsPage() {
                   {Object.entries(STATUS_LABELS).map(([value, label]) => <option key={value} value={value} disabled={!allowedRepairStatuses(selected.status).includes(value as RepairStatus)}>{label}</option>)}
                 </select>
               </div>
+              {collecting && (
+                <section className="rounded-2xl border border-mercury/20 bg-[#f6f8fd] p-4">
+                  <div className="flex items-start gap-3">
+                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-mercury shadow-sm"><Camera size={20} /></span>
+                    <div>
+                      <p className="text-sm font-semibold text-ink">Collection evidence</p>
+                      <p className="mt-1 text-xs leading-5 text-muted">Attach a photo of the job card. If no card is presented, record the name and telephone number of the person collecting.</p>
+                    </div>
+                  </div>
+
+                  <label className="mt-4 block cursor-pointer rounded-2xl border border-dashed border-mercury/35 bg-white p-3 transition hover:border-mercury">
+                    <input type="file" accept="image/jpeg,image/png,image/webp" capture="environment" className="sr-only" onChange={event => chooseProof(event.target.files?.[0])} />
+                    {proofPreview ? (
+                      <div className="flex items-center gap-3">
+                        <img src={proofPreview} alt="Selected job card" className="h-20 w-24 rounded-xl object-cover" />
+                        <div className="min-w-0"><p className="truncate text-sm font-semibold text-ink">{proofFile?.name}</p><p className="mt-1 text-xs text-muted">Tap to replace · maximum 8 MB</p></div>
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-center gap-2 py-5 text-sm font-semibold text-mercury"><Camera size={19} />Take or choose job-card photo</div>
+                    )}
+                  </label>
+
+                  <div className="my-4 flex items-center gap-3"><span className="h-px flex-1 bg-line" /><span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted">If there is no card</span><span className="h-px flex-1 bg-line" /></div>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <label className="block text-xs font-semibold text-ink">Collector name
+                      <span className="mt-1.5 flex h-11 items-center gap-2 rounded-xl border border-line bg-white px-3 focus-within:border-mercury"><User size={17} className="text-muted" /><input value={collectorName} maxLength={150} onChange={event => setCollectorName(event.target.value)} placeholder="Full name" className="min-w-0 flex-1 bg-transparent text-sm font-normal outline-none" /></span>
+                    </label>
+                    <label className="block text-xs font-semibold text-ink">Telephone number
+                      <span className="mt-1.5 flex h-11 items-center gap-2 rounded-xl border border-line bg-white px-3 focus-within:border-mercury"><Phone size={17} className="text-muted" /><input type="tel" value={collectorPhone} maxLength={40} onChange={event => setCollectorPhone(event.target.value)} placeholder="0700 000 000" className="min-w-0 flex-1 bg-transparent text-sm font-normal outline-none" /></span>
+                    </label>
+                  </div>
+                  <label className="mt-3 block text-xs font-semibold text-ink">Collection note <span className="font-normal text-muted">(optional)</span>
+                    <textarea value={collectionNotes} maxLength={3000} rows={2} onChange={event => setCollectionNotes(event.target.value)} placeholder="Condition at handover or any useful detail" className="mt-1.5 w-full resize-none rounded-xl border border-line bg-white px-3 py-2.5 text-sm font-normal outline-none focus:border-mercury" />
+                  </label>
+                </section>
+              )}
+              {selected.status === "collected" && (
+                <section className="rounded-2xl border border-emerald-100 bg-emerald-50/60 p-4">
+                  <p className="text-sm font-semibold text-emerald-900">Collection recorded</p>
+                  <div className="mt-3 space-y-2 text-xs text-emerald-950">
+                    {selected.collectionProofUrl && <a href={selected.collectionProofUrl} target="_blank" rel="noreferrer" className="block overflow-hidden rounded-xl border border-emerald-100 bg-white"><img src={selected.collectionProofUrl} alt="Job-card collection proof" className="h-40 w-full object-cover" /><span className="block px-3 py-2 font-semibold text-mercury">Open job-card photo</span></a>}
+                    {selected.collectorName && <p><span className="font-semibold">Collected by:</span> {selected.collectorName}</p>}
+                    {selected.collectorPhone && <p><span className="font-semibold">Telephone:</span> {selected.collectorPhone}</p>}
+                    {selected.collectionNotes && <p><span className="font-semibold">Note:</span> {selected.collectionNotes}</p>}
+                    {selected.collectionRecordedBy && <p><span className="font-semibold">Recorded by:</span> {selected.collectionRecordedBy}</p>}
+                    {selected.collectedAt && <p><span className="font-semibold">Time:</span> {selected.collectedAt.toLocaleString("en-UG")}</p>}
+                  </div>
+                </section>
+              )}
               <div>
                 <label htmlFor="repair-assignee" className="mb-1 block text-xs font-semibold text-ink">Sales / Support coordinator</label>
-                <select id="repair-assignee" value={editAssignee} onChange={e => setEditAssignee(e.target.value)} disabled={staffLoading || !!staffError || busy} className="h-11 w-full rounded-xl border border-line bg-[#FAFBFC] px-4 text-sm text-ink">
+                <select id="repair-assignee" value={editAssignee} onChange={e => setEditAssignee(e.target.value)} disabled={staffLoading || !!staffError || busy || collecting} className="h-11 w-full rounded-xl border border-line bg-[#FAFBFC] px-4 text-sm text-ink disabled:opacity-60">
                   <option value="">Unassigned</option>
                   {editAssignee && !staff.some(person => person.email === editAssignee) && <option value={editAssignee}>{editAssignee} (existing)</option>}
                   {staff.filter(person => ["Sales", "Support"].includes(person.role)).map(person => <option key={person.email} value={person.email}>{person.name} — {person.role}</option>)}
                 </select>
               </div>
-              <fieldset disabled={!repairPaid(selected) || staffLoading || !!staffError || busy}>
+              <fieldset disabled={!repairPaid(selected) || staffLoading || !!staffError || busy || collecting}>
                 <legend className="mb-2 text-xs font-semibold text-ink">Technicians</legend>
                 {!repairPaid(selected) && <p className="mb-3 text-xs leading-5 text-amber-700">Record full payment in Payments before assigning technicians.</p>}
                 <div className="max-h-40 space-y-2 overflow-y-auto rounded-xl border border-line p-3">
@@ -284,10 +395,10 @@ export default function RepairsPage() {
             {error && <p role="alert" className="mt-4 text-sm text-red-600">{error}</p>}
             <button
               onClick={handleUpdate}
-              disabled={busy}
+              disabled={busy || (collecting && !collectionReady)}
               className="mt-5 w-full rounded-full bg-ink py-3 text-sm font-semibold text-white transition hover:bg-black disabled:opacity-50"
             >
-              {busy ? "Updating..." : "Update Ticket"}
+              {busy ? (collecting ? "Recording collection…" : "Updating…") : collecting ? "Record collection & release" : "Update Ticket"}
             </button>
           </div>
         </div>

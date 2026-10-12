@@ -2,6 +2,12 @@ rules_version = '2';
 
 service firebase.storage {
   match /b/{bucket}/o {
+    function isAdmin() {
+      return request.auth != null
+        && request.auth.token.email != null
+        && request.auth.token.email in firestore.get(/databases/(default)/documents/config/admins).data.emails;
+    }
+
     // Product images are part of the public storefront catalog.
     match /products/{productId}/{fileName} {
       allow read: if true;
@@ -14,6 +20,16 @@ service firebase.storage {
         && request.resource.contentType.matches('image/.*');
 
       allow delete: if request.auth != null;
+    }
+
+    // Collection evidence is private to authenticated staff. Files are
+    // image-only, size-limited and immutable once uploaded for audit history.
+    match /repair-collection-proofs/{ticketId}/{fileName} {
+      allow read: if isAdmin();
+      allow create: if isAdmin()
+        && request.resource.size <= 8 * 1024 * 1024
+        && request.resource.contentType.matches('image/(jpeg|png|webp)');
+      allow update, delete: if false;
     }
 
     // Deny access to every path that has not been explicitly allowed above.

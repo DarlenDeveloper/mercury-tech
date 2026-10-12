@@ -28,6 +28,49 @@ export function validateWork(ticket, status, technicians) {
   if (status === "awaiting_payment" && (!ticket.amountDue || paidInFull(ticket))) throw new Error("Only unpaid quotations or LPOs can await payment.");
 }
 
+function firebaseDownloadMatchesPath(url, path) {
+  try {
+    const parsed = new URL(url);
+    if (parsed.protocol !== "https:" || parsed.hostname !== "firebasestorage.googleapis.com") return false;
+    const marker = "/o/";
+    const markerIndex = parsed.pathname.indexOf(marker);
+    if (markerIndex < 0) return false;
+    return decodeURIComponent(parsed.pathname.slice(markerIndex + marker.length)) === path;
+  } catch {
+    return false;
+  }
+}
+
+/** Validate the evidence required before a completed repair is released. */
+export function validateCollectionProof(ticketId, input = {}) {
+  const proofPath = typeof input.collectionProofPath === "string" ? input.collectionProofPath.trim() : "";
+  const proofUrl = typeof input.collectionProofUrl === "string" ? input.collectionProofUrl.trim() : "";
+  const collectorName = typeof input.collectorName === "string" ? input.collectorName.trim().slice(0, 150) : "";
+  const collectorPhone = typeof input.collectorPhone === "string" ? input.collectorPhone.trim().slice(0, 40) : "";
+  const phoneDigits = collectorPhone.replace(/\D/g, "");
+  const hasPhoto = !!proofPath || !!proofUrl;
+
+  if (hasPhoto) {
+    const prefix = `repair-collection-proofs/${ticketId}/`;
+    const fileName = proofPath.startsWith(prefix) ? proofPath.slice(prefix.length) : "";
+    if (!proofPath || !proofUrl || !fileName || fileName.includes("/") || !/^[a-zA-Z0-9._-]{1,180}$/.test(fileName)) {
+      throw new Error("Upload a valid job-card photo for this repair.");
+    }
+    if (!firebaseDownloadMatchesPath(proofUrl, proofPath)) {
+      throw new Error("The job-card photo does not match this repair.");
+    }
+  }
+
+  if (!hasPhoto && (!collectorName || phoneDigits.length < 9 || phoneDigits.length > 15)) {
+    throw new Error("Attach the job card, or enter the collector's name and telephone number.");
+  }
+  if (collectorPhone && (phoneDigits.length < 9 || phoneDigits.length > 15)) {
+    throw new Error("Enter a valid collector telephone number.");
+  }
+
+  return { proofPath, proofUrl, collectorName, collectorPhone };
+}
+
 // Only this allowlisted projection should be returned by a future public lookup.
 // Do not expose raw ticket documents, internal notes, payments or staff identities.
 export function publicRepairStatus(id, ticket) {

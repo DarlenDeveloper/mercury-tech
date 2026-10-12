@@ -47,6 +47,14 @@ export type RepairTicket = {
   completedBy?: string;
   completedByEmail?: string;
   completedAt?: Date | null;
+  collectionProofUrl?: string;
+  collectionProofPath?: string;
+  collectorName?: string;
+  collectorPhone?: string;
+  collectionNotes?: string;
+  collectionRecordedBy?: string;
+  collectionRecordedByEmail?: string;
+  collectedAt?: Date | null;
   statusHistory?: { status: RepairStatus; at: Date }[];
   workflowVersion?: number;
   notes: string;
@@ -87,6 +95,14 @@ function toRepairTicket(id: string, data: DocumentData): RepairTicket {
     completedBy: data.completedBy || "",
     completedByEmail: data.completedByEmail || "",
     completedAt: data.completedAt instanceof Timestamp ? data.completedAt.toDate() : null,
+    collectionProofUrl: data.collectionProofUrl || "",
+    collectionProofPath: data.collectionProofPath || "",
+    collectorName: data.collectorName || "",
+    collectorPhone: data.collectorPhone || "",
+    collectionNotes: data.collectionNotes || "",
+    collectionRecordedBy: data.collectionRecordedBy || "",
+    collectionRecordedByEmail: data.collectionRecordedByEmail || "",
+    collectedAt: data.collectedAt instanceof Timestamp ? data.collectedAt.toDate() : null,
     workflowVersion: data.workflowVersion,
     statusHistory: (data.statusHistory || [{ status: data.status || "received", at: data.createdAt }]).map((event: { status: RepairStatus; at?: Timestamp }) => ({ status: event.status, at: event.at instanceof Timestamp ? event.at.toDate() : new Date() })),
     notes: data.notes || "",
@@ -184,6 +200,16 @@ export async function manageRepair(id: string, action: string, fields: Record<st
 }
 export async function updateRepairTicket(id: string, fields: { status: RepairStatus; notes: string; coordinatorEmail: string; technicianEmails: string[] }) {
   await manageRepair(id, "update", fields);
+}
+export async function collectRepairTicket(id: string, fields: {
+  notes: string;
+  collectionProofPath: string;
+  collectionProofUrl: string;
+  collectorName: string;
+  collectorPhone: string;
+  collectionNotes: string;
+}) {
+  await manageRepair(id, "collect", fields);
 }
 export async function updateAssignedJob(id: string, jobAction: "start" | "complete", notes = "") {
   await manageRepair(id, "technician_update", { jobAction, notes });

@@ -15,6 +15,7 @@ import {
   Box as SaxBox,
   Call as SaxCall,
   Card as SaxCard,
+  Camera as SaxCamera,
   Category as SaxCategory,
   Chart as SaxChart,
   ClipboardText as SaxClipboardText,
@@ -98,6 +99,7 @@ export const ClipboardList = createIcon(SaxClipboardText, "ClipboardList");
 export const Clock = createIcon(SaxClock, "Clock");
 export const Copy = createIcon(SaxCopy, "Copy");
 export const CreditCard = createIcon(SaxCard, "CreditCard");
+export const Camera = createIcon(SaxCamera, "Camera");
 export const DollarSign = createIcon(SaxDollarCircle, "DollarSign");
 export const Download = createIcon(SaxDocumentDownload, "Download");
 export const Eye = createIcon(SaxEye, "Eye");

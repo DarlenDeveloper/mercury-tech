@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { newRepairAssignments, paidInFull, paymentTotal, phoneMatches, validateWork, publicRepairStatus } from "../repair-workflow.js";
+import { newRepairAssignments, paidInFull, paymentTotal, phoneMatches, validateCollectionProof, validateWork, publicRepairStatus } from "../repair-workflow.js";
 const ticket = { billingType: "quotation", billingReference: "Q-1", amountDue: 100000, totalPaid: 0, status: "awaiting_payment" };
 test("requires a document and accepts partial payments without unlocking work", () => {
   assert.throws(() => paymentTotal({ ...ticket, billingReference: "" }, 50000));
@@ -37,6 +37,19 @@ test("status transitions follow the repair workflow", () => {
   assert.doesNotThrow(() => validateWork({ ...paid, status: "in_progress" }, "awaiting_parts", [{}]));
   assert.doesNotThrow(() => validateWork({ ...paid, status: "awaiting_parts" }, "completed", [{}]));
   assert.doesNotThrow(() => validateWork({ ...paid, status: "completed" }, "collected", [{}]));
+});
+test("collection requires a matching job-card photo or collector identity", () => {
+  assert.throws(() => validateCollectionProof("ticket-1", {}), /job card.*name and telephone/i);
+  assert.throws(() => validateCollectionProof("ticket-1", { collectorName: "Pat", collectorPhone: "123" }), /job card.*name and telephone/i);
+  assert.deepEqual(validateCollectionProof("ticket-1", { collectorName: "Pat Customer", collectorPhone: "0700 000 000" }), {
+    proofPath: "", proofUrl: "", collectorName: "Pat Customer", collectorPhone: "0700 000 000",
+  });
+  const collectionProofPath = "repair-collection-proofs/ticket-1/card.jpg";
+  const collectionProofUrl = `https://firebasestorage.googleapis.com/v0/b/example.appspot.com/o/${encodeURIComponent(collectionProofPath)}?alt=media&token=test`;
+  assert.deepEqual(validateCollectionProof("ticket-1", { collectionProofPath, collectionProofUrl }), {
+    proofPath: collectionProofPath, proofUrl: collectionProofUrl, collectorName: "", collectorPhone: "",
+  });
+  assert.throws(() => validateCollectionProof("ticket-2", { collectionProofPath, collectionProofUrl }), /valid job-card photo/i);
 });
 test("future public status excludes private customer, financial and staff data", () => {
   assert.deepEqual(publicRepairStatus("random-reference", { ...ticket, userPhone: "private", userEmail: "private", notes: "private", technicianEmails: ["private"], statusHistory: [{ status: "received", at: 123, actor: "private" }] }), {
