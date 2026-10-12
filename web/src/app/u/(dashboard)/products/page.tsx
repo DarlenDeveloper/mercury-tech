@@ -518,8 +518,8 @@ function ProductForm({
 
       setDescriptionSuccess(
         generatedEntries.length > 0
-          ? `Generated the description and ${generatedEntries.length} specification${generatedEntries.length === 1 ? "" : "s"}. Review them before saving.`
-          : "Generated the description. No explicit specifications were found in the supplied product details."
+          ? `Generated the description, How to Use, Tips & Care, and ${generatedEntries.length} specification${generatedEntries.length === 1 ? "" : "s"}. Review them before saving.`
+          : "Generated the description, How to Use, and Tips & Care. No explicit specifications were found in the supplied product details."
       );
     } catch (error: any) {
       setDescriptionError(
@@ -1015,7 +1015,7 @@ function ProductForm({
                     className="mt-1.5 w-full resize-none rounded-2xl border border-line bg-[#F8F9FB] px-4 py-3 text-sm text-ink outline-none placeholder:text-muted focus:border-violet-400"
                   />
                   <p className="mt-1.5 text-[11px] text-muted">
-                    AI uses the product name, text above, current description, and existing specs to generate both the description and specification rows. Nothing is saved until you save the product.
+                    AI uses the product name, text above, current description, and existing specs to generate the description, How to Use steps, Tips & Care, and specification rows. Nothing is saved until you save the product.
                   </p>
                   {descriptionSuccess && (
                     <p className="mt-1.5 text-xs text-green-700">{descriptionSuccess}</p>

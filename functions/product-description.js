@@ -29,6 +29,24 @@ function cleanSpecifications(value) {
   );
 }
 
+function cleanList(value, maxItems = 6) {
+  if (!Array.isArray(value)) return [];
+  return value
+    .slice(0, maxItems)
+    .map(item => clean(String(item ?? ""), 400).replace(/^(?:\d+[.)]|[-•·])\s*/, ""))
+    .filter(item => item.length > 5);
+}
+
+export function formatProductDescription(description, howToUse, tipsAndCare) {
+  return [
+    description,
+    "📖 HOW TO USE",
+    howToUse.map((step, index) => `${index + 1}. ${step}`).join("\n"),
+    "💡 TIPS & CARE",
+    tipsAndCare.map(tip => `• ${tip}`).join("\n"),
+  ].join("\n\n");
+}
+
 /** Parse and constrain Gemini output before returning it to the admin form. */
 export function parseGeneratedContent(raw) {
   const text = clean(raw, 20000)
@@ -42,11 +60,17 @@ export function parseGeneratedContent(raw) {
   }
 
   const parsed = JSON.parse(text.slice(objectStart, objectEnd + 1));
-  const description = clean(parsed?.description, 5000);
-  if (!description) throw new Error("The AI response did not include a description.");
+  const mainDescription = clean(parsed?.description, 5000);
+  const howToUse = cleanList(parsed?.howToUse, 6);
+  const tipsAndCare = cleanList(parsed?.tipsAndCare, 6);
+  if (!mainDescription) throw new Error("The AI response did not include a description.");
+  if (!howToUse.length) throw new Error("The AI response did not include usage instructions.");
+  if (!tipsAndCare.length) throw new Error("The AI response did not include product care tips.");
 
   return {
-    description,
+    description: formatProductDescription(mainDescription, howToUse, tipsAndCare),
+    howToUse,
+    tipsAndCare,
     specifications: cleanSpecifications(parsed?.specifications),
   };
 }
@@ -84,11 +108,14 @@ Current description or supplier text: ${currentDescription || "None"}
 Additional product details from the admin: ${notes || "None"}
 
 Return one JSON object with exactly this shape:
-{"description":"Finished product description","specifications":{"Specification name":"Value"}}
+{"description":"Finished main product description only","howToUse":["Usage step 1","Usage step 2","Usage step 3"],"tipsAndCare":["Care tip 1","Care tip 2","Care tip 3"],"specifications":{"Specification name":"Value"}}
 
 Requirements:
 - Return valid JSON only. Do not use markdown or code fences.
-- Write a concise, polished description in clear British English, normally 70-180 words.
+- Write a concise, polished main description in clear British English, normally 70-180 words. Do not put headings, usage steps, or care tips inside the description field.
+- Always return 3-5 short, practical, ordered steps in howToUse that explain setup or normal first use of this specific kind of product.
+- Always return 3-5 short, practical tipsAndCare items covering safe handling, cleaning, storage, charging, maintenance, or longevity as relevant to the product.
+- Keep usage and care guidance appropriate to the known product type. Do not claim supplied parts, controls, features, software, or capabilities unless the supplied product information supports them.
 - Extract useful specifications that are explicitly present in the product name, supplier text, admin details, or current specifications.
 - Preserve valid current specifications and add newly extracted ones.
 - Use short, customer-friendly specification names such as Processor, Memory, Storage, Display, Connectivity, Colour, or Warranty when those facts are supplied.

@@ -5,6 +5,8 @@ const functions = getFunctions(firebaseApp);
 
 export type GeneratedProductContent = {
   description: string;
+  howToUse: string[];
+  tipsAndCare: string[];
   specifications: Record<string, string>;
 };
 
@@ -32,6 +34,8 @@ export async function enhanceProductDescription(
     }
     return {
       description: result.data.description,
+      howToUse: result.data.howToUse ?? [],
+      tipsAndCare: result.data.tipsAndCare ?? [],
       specifications: result.data.specifications ?? {},
     };
   } catch (error: any) {
