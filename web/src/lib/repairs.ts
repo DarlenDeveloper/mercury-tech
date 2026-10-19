@@ -201,6 +201,10 @@ export async function manageRepair(id: string, action: string, fields: Record<st
 export async function updateRepairTicket(id: string, fields: { status: RepairStatus; notes: string; coordinatorEmail: string; technicianEmails: string[] }) {
   await manageRepair(id, "update", fields);
 }
+/** Super admins permanently remove a repair ticket through the audited workflow. */
+export async function deleteRepairTicket(id: string): Promise<void> {
+  await manageRepair(id, "delete", {});
+}
 export async function collectRepairTicket(id: string, fields: {
   notes: string;
   collectionProofPath: string;

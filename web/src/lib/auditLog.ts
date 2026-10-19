@@ -14,6 +14,7 @@ export type AuditAction =
   | "category_toggled"
   | "rate_updated"
   | "order_updated"
+  | "repair_deleted"
   | "user_role_changed"
   | "settings_updated"
   | "homepage_updated";
@@ -101,6 +102,7 @@ export function actionLabel(action: AuditAction): string {
     category_toggled: "Toggled category visibility",
     rate_updated: "Updated USD rate",
     order_updated: "Updated order",
+    repair_deleted: "Deleted repair",
     user_role_changed: "Changed user role",
     settings_updated: "Updated settings",
     homepage_updated: "Updated homepage",

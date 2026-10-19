@@ -3,16 +3,18 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Camera, Phone, Search, User, X, Wrench } from "@/components/admin/WorkspaceIcons";
+import { Camera, Phone, Search, Trash2, User, X, Wrench } from "@/components/admin/WorkspaceIcons";
 import RepairIntake from "@/components/admin/RepairIntake";
 import AdminHeader from "@/components/admin/AdminHeader";
-import { allowedRepairStatuses, collectRepairTicket, fetchRepairTickets, updateRepairTicket, type RepairTicket, type RepairStatus, REPAIR_STATUS_LABELS, repairPaid, paymentLabel } from "@/lib/repairs";
+import { allowedRepairStatuses, collectRepairTicket, deleteRepairTicket, fetchRepairTickets, updateRepairTicket, type RepairTicket, type RepairStatus, REPAIR_STATUS_LABELS, repairPaid, paymentLabel } from "@/lib/repairs";
 import { fetchRepairStaff } from "@/lib/repairStaff";
 import { type RepairAssignee } from "@/lib/repairAssignment";
 import { uploadRepairCollectionProof } from "@/lib/storage";
 
 import { logAudit } from "@/lib/auditLog";
 import { useAuth } from "@/components/AuthProvider";
+import { useAdminAccess } from "@/components/admin/AdminGuard";
+import { isSuperAdmin } from "@/lib/adminAccess";
 
 const STATUS_STYLES: Record<RepairStatus, string> = {
   received: "bg-surface-soft text-muted",
@@ -29,6 +31,8 @@ const TABS: ("all" | RepairStatus)[] = ["all", ...Object.keys(STATUS_LABELS) as 
 
 export default function RepairsPage() {
   const { user } = useAuth();
+  const { adminEntry } = useAdminAccess();
+  const canDelete = isSuperAdmin(adminEntry);
   const base = usePathname().startsWith("/workshop") ? "/workshop" : "/u";
   const [editTechnicians, setEditTechnicians] = useState<string[]>([]);
   const [tickets, setTickets] = useState<RepairTicket[]>([]);
@@ -50,6 +54,7 @@ export default function RepairsPage() {
   const [proofPreview, setProofPreview] = useState("");
   const [uploadedProof, setUploadedProof] = useState<{ path: string; url: string } | null>(null);
   const [busy, setBusy] = useState(false);
+  const [deletingId, setDeletingId] = useState("");
 
   useEffect(() => { load(); }, []);
   useEffect(() => () => { if (proofPreview) URL.revokeObjectURL(proofPreview); }, [proofPreview]);
@@ -142,6 +147,24 @@ export default function RepairsPage() {
       setSelected(null);
       load();
     } catch (error) { setError(error instanceof Error ? error.message : "Could not update the ticket."); } finally { setBusy(false); }
+  };
+
+  const handleDelete = async (ticket: RepairTicket) => {
+    if (!canDelete || deletingId) return;
+    const reference = ticket.trackingReference || ticket.id;
+    const customer = ticket.userName || ticket.userEmail || "this customer";
+    if (!confirm(`Delete repair ${reference} for ${customer}? This removes the ticket and its public tracking access. This cannot be undone.`)) return;
+    setError("");
+    setDeletingId(ticket.id);
+    try {
+      await deleteRepairTicket(ticket.id);
+      setTickets(previous => previous.filter(item => item.id !== ticket.id));
+      if (selected?.id === ticket.id) setSelected(null);
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Could not delete the repair ticket.");
+    } finally {
+      setDeletingId("");
+    }
   };
 
   const collecting = selected?.status === "completed" && editStatus === "collected";
@@ -239,6 +262,7 @@ export default function RepairsPage() {
                   <th className="pb-3 font-medium">Payment</th>
                   <th className="pb-3 font-medium">Status</th>
                   <th className="pb-3 font-medium">Date</th>
+                  {canDelete && <th className="pb-3 text-right font-medium"><span className="sr-only">Actions</span></th>}
                 </tr>
               </thead>
               <tbody>
@@ -269,6 +293,20 @@ export default function RepairsPage() {
                     <td className="py-3 text-[12px] text-muted">
                       {t.createdAt.toLocaleDateString("en-UG", { month: "short", day: "numeric" })}
                     </td>
+                    {canDelete && (
+                      <td className="py-3 text-right">
+                        <button
+                          type="button"
+                          onClick={(event) => { event.stopPropagation(); void handleDelete(t); }}
+                          disabled={!!deletingId}
+                          aria-label={`Delete repair ${t.trackingReference || t.id}`}
+                          title="Delete repair"
+                          className="inline-flex h-9 w-9 items-center justify-center rounded-xl text-muted transition hover:bg-red-50 hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-40"
+                        >
+                          <Trash2 size={17} />
+                        </button>
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>

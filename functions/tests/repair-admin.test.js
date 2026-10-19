@@ -8,6 +8,7 @@ function database() {
       { email: "sales@example.com", access: "admin", pages: ["repairs", "payments"], jobRole: "Sales" },
       { email: "tech@example.com", access: "admin", pages: ["repairs"], jobRole: "Technician" },
       { email: "tech2@example.com", access: "admin", pages: ["repairs"], jobRole: "Technician" },
+      { email: "owner@example.com", access: "super_admin", pages: ["*"] },
     ], emails: [] }],
     ["repair_tickets/ticket-1", { userName: "Customer", status: "received", totalPaid: 0, workflowVersion: 1, technicianEmails: [] }],
   ]);
@@ -24,6 +25,7 @@ function database() {
           get: async ref => ({ exists: docs.has(ref.path), data: () => docs.get(ref.path) }),
           create: (ref, data) => pending.push(() => { assert.equal(docs.has(ref.path), false); docs.set(ref.path, data); }),
           update: (ref, data) => pending.push(() => docs.set(ref.path, { ...docs.get(ref.path), ...data })),
+          delete: ref => pending.push(() => docs.delete(ref.path)),
         });
         pending.forEach(write => write());
         return result;
@@ -41,6 +43,15 @@ test("payment permission is separate from repair permission", async () => {
   const db = database();
   await assert.rejects(handleRepairRequest(request("billing", { amountDue: 100 }, "tech@example.com"), db), /payments access/);
   await assert.rejects(handleRepairRequest({ data: {} }, db), /Sign in/);
+});
+test("only super admins can delete repair tickets", async () => {
+  const db = database();
+  await assert.rejects(handleRepairRequest(request("delete"), db), /Only super admins/);
+  const result = await handleRepairRequest(request("delete", {}, "owner@example.com"), db);
+  assert.equal(result.deleted, true);
+  assert.equal(db.docs.has("repair_tickets/ticket-1"), false);
+  const audit = [...db.docs.entries()].find(([path, data]) => path.startsWith("audit_logs/") && data.action === "repair_deleted");
+  assert.equal(audit?.[1].target, "Repair ticket-1");
 });
 test("receipt retries are idempotent, including a new request ID with the same receipt", async () => {
   const db = database(); await billed(db);

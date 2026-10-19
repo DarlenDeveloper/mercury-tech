@@ -14,7 +14,7 @@ export async function handleRepairRequest(request, db) {
   const id = text(input.id, 150);
   if (!id || id.includes("/")) throw new HttpsError("invalid-argument", "A repair reference is required.");
   const action = input.action;
-  if (!["create", "billing", "payment", "update", "technician_update", "collect"].includes(action)) throw new HttpsError("invalid-argument", "Unknown action.");
+  if (!["create", "billing", "payment", "update", "technician_update", "collect", "delete"].includes(action)) throw new HttpsError("invalid-argument", "Unknown action.");
   const email = text(request.auth.token.email).toLowerCase();
   const ref = db.collection("repair_tickets").doc(id);
   return db.runTransaction(async tx => {
@@ -23,12 +23,15 @@ export async function handleRepairRequest(request, db) {
     const entries = config.admins || [];
     const admin = entries.find(entry => entry.email?.toLowerCase() === email);
     const legacy = !admin && (config.emails || []).some(item => item.toLowerCase() === email);
-    const repairAction = ["create", "update", "collect"].includes(action);
+    const repairAction = ["create", "update", "collect", "delete"].includes(action);
     const page = repairAction ? "repairs" : "payments";
     if (action === "technician_update") {
       if (!admin || admin.jobRole !== "Technician" || !adminHasDashboard(admin, "workshop")) throw new HttpsError("permission-denied", "Only assigned technicians with Workshop access can update this job.");
     } else if (!legacy && (!admin || !adminHasPage(admin, page) || (repairAction ? !adminHasDashboard(admin, "workshop") : !adminHasAnyDashboard(admin)))) {
       throw new HttpsError("permission-denied", `You need ${page} access.`);
+    }
+    if (action === "delete" && !legacy && admin?.access !== "super_admin") {
+      throw new HttpsError("permission-denied", "Only super admins can delete repair tickets.");
     }
     if (action === "create") {
       if (ticketSnap.exists) return { ok: true, duplicate: true };
@@ -40,8 +43,20 @@ export async function handleRepairRequest(request, db) {
     }
     if (!ticketSnap.exists) throw new HttpsError("not-found", "Repair not found.");
     const ticket = ticketSnap.data();
-    const patch = { updatedAt: FieldValue.serverTimestamp(), trackingReference: ticket.trackingReference || id, workflowVersion: 1 };
     const now = Timestamp.now();
+    if (action === "delete") {
+      tx.delete(ref);
+      tx.create(db.collection("audit_logs").doc(), {
+        actor: email,
+        actorId: request.auth.uid,
+        action: "repair_deleted",
+        target: `Repair ${ticket.trackingReference || id}`,
+        details: `${text(ticket.userName, 150) || text(ticket.userEmail, 320) || "Customer"} · ${text(ticket.device, 300) || "Device"}`,
+        timestamp: now,
+      });
+      return { ok: true, deleted: true };
+    }
+    const patch = { updatedAt: FieldValue.serverTimestamp(), trackingReference: ticket.trackingReference || id, workflowVersion: 1 };
     if (action === "billing") {
       if ((ticket.totalPaid || 0) > 0) fail("The quotation/LPO is locked after the first payment.");
       if (!["received", "awaiting_payment"].includes(ticket.status)) fail("Billing can only be set before repair work begins.");
