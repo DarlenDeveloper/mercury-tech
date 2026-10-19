@@ -6,6 +6,7 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 const GEMINI_API_KEY = defineSecret("GEMINI_API_KEY");
 
 const MODEL = "gemini-3-flash-preview";
+const REPAIRS_URL = "https://www.mercurycomputerslimited.com/repairs";
 
 // ─── Default store knowledge (overridable via Firestore config/ai) ───────────
 const DEFAULT_STORE_INFO = `
@@ -25,6 +26,7 @@ Mercury Computers Limited — Uganda's trusted ICT & electronics retailer.
   Epson, Canon, Microsoft and more.
 - Payments: Secure checkout options available.
 - Warranty: Products come with manufacturer warranty (typically 1 year unless stated).
+- Repairs & Services: Customers can submit a repair or service request at ${REPAIRS_URL}.
 `;
 
 /**
@@ -83,7 +85,7 @@ async function loadRate(db) {
   return 3780;
 }
 
-function buildSystemPrompt(config, catalog) {
+export function buildSystemPrompt(config, catalog) {
   const catalogText = catalog
     .map(
       (p) =>
@@ -112,7 +114,8 @@ ${catalogText}
 6. Stay strictly on topic: Mercury Computers products and services. Politely decline unrelated requests.
 7. Be concise, friendly and helpful. Use Ugandan Shillings (USh) for prices.
 8. If you don't have enough information, say so and suggest contacting customer care.
-9. For contact/phone requests, ALWAYS give 0704823800 first as the primary number (mention 0707749501 only as an alternative). When a customer asks how to reach, follow or find us on social media, share the X, LinkedIn, Instagram and Facebook links from the store information.`;
+9. For contact/phone requests, ALWAYS give 0704823800 first as the primary number (mention 0707749501 only as an alternative). When a customer asks how to reach, follow or find us on social media, share the X, LinkedIn, Instagram and Facebook links from the store information.
+10. When a customer wants to book, create, start or request a repair or service, direct them to ${REPAIRS_URL} and include that exact URL in the reply. Tell them to complete the Repairs & Services form there. Never claim that a repair request was created inside this chat.`;
 }
 
 export const aiAgent = onCall(

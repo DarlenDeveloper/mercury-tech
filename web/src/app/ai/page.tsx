@@ -19,7 +19,7 @@ import {
   type SupportMessage,
 } from "@/lib/support";
 
-const SUGGESTIONS = ["Gaming laptop under USh 3M", "Cheap printer under USh 200K"];
+const SUGGESTIONS = ["Gaming laptop under USh 3M", "Cheap printer under USh 200K", "Book a repair or service"];
 
 let productMapCache: Map<string, Product> | null = null;
 
@@ -418,6 +418,7 @@ function MessageBubble({ message, productMap }: { message: SupportMessage; produ
 
 // Matches likely phone numbers (optional +, then digits with spaces/dashes).
 const PHONE_RE = /(\+?\d[\d\s-]{7,}\d)/g;
+const URL_RE = /(https?:\/\/[^\s]+)/g;
 
 // Normalises a raw phone string to a WhatsApp (E.164, no +) number.
 // Ugandan local numbers (leading 0) are converted to the +256 country code.
@@ -480,6 +481,38 @@ function renderPhoneSegments(text: string, keyPrefix: string, bold: boolean) {
   return nodes;
 }
 
+// Turns assistant URLs into safe, clickable links while preserving phone actions.
+function renderInteractiveSegments(text: string, keyPrefix: string, bold: boolean) {
+  const nodes: React.ReactNode[] = [];
+  const re = new RegExp(URL_RE);
+  let last = 0;
+  let index = 0;
+  let match: RegExpExecArray | null;
+
+  while ((match = re.exec(text)) !== null) {
+    const raw = match[0];
+    const trailing = raw.match(/[),.!?;:]+$/)?.[0] || "";
+    const url = trailing ? raw.slice(0, -trailing.length) : raw;
+    if (match.index > last) nodes.push(...renderPhoneSegments(text.slice(last, match.index), `${keyPrefix}-t${index}`, bold));
+    nodes.push(
+      <a
+        key={`${keyPrefix}-u${index}`}
+        href={url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="font-semibold text-mercury underline decoration-mercury/30 underline-offset-2 transition hover:decoration-mercury"
+      >
+        {url}
+      </a>
+    );
+    if (trailing) nodes.push(...renderPhoneSegments(trailing, `${keyPrefix}-p${index}`, bold));
+    last = match.index + raw.length;
+    index++;
+  }
+  if (last < text.length) nodes.push(...renderPhoneSegments(text.slice(last), `${keyPrefix}-end`, bold));
+  return nodes;
+}
+
 function MarkdownText({ text }: { text: string }) {
   const parts = text.split(/(\*\*[^*]+\*\*)/g);
   return (
@@ -487,7 +520,7 @@ function MarkdownText({ text }: { text: string }) {
       {parts.map((part, i) => {
         const bold = part.startsWith("**") && part.endsWith("**");
         const content = bold ? part.slice(2, -2) : part;
-        return <span key={i}>{renderPhoneSegments(content, `s${i}`, bold)}</span>;
+        return <span key={i}>{renderInteractiveSegments(content, `s${i}`, bold)}</span>;
       })}
     </span>
   );
