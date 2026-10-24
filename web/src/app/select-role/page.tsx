@@ -28,7 +28,14 @@ export default function SelectRolePage() {
     let active = true;
     const unsubscribe = onSnapshot(doc(db, "config", "admins"), snapshot => {
         if (!active) return;
-        setEntry(resolveAdminEntry(snapshot.data() || {}, user.email || ""));
+        const resolvedEntry = resolveAdminEntry(snapshot.data() || {}, user.email || "");
+        if (!resolvedEntry) {
+          setEntry(null);
+          setCheckingAccess(true);
+          router.replace("/");
+          return;
+        }
+        setEntry(resolvedEntry);
         setCheckingAccess(false);
       }, () => {
         if (active) {
@@ -37,7 +44,7 @@ export default function SelectRolePage() {
         }
       });
     return () => { active = false; unsubscribe(); };
-  }, [user?.email]);
+  }, [user?.email, router]);
   if (loading || !user || checkingAccess) return <div className="flex min-h-screen items-center justify-center bg-[#f8f9fb]" role="status">Loading your workspace…</div>;
   const availableRoles = roles.filter(role => hasDashboardAccess(entry, role.id));
   return (

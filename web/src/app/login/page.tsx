@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Mail, Lock, Eye, EyeOff, LogIn } from "lucide-react";
 import { signIn } from "@/lib/auth";
+import { getDefaultAuthenticatedPath } from "@/lib/authRedirect";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -25,12 +26,12 @@ export default function LoginPage() {
     setBusy(true);
     try {
       const loginEmail = phoneMode ? phoneEmail : email.trim();
-      await signIn(loginEmail, password);
+      const cred = await signIn(loginEmail, password);
       const requestedPath = new URLSearchParams(window.location.search).get("redirect");
       const destination =
         requestedPath?.startsWith("/") && !requestedPath.startsWith("//")
           ? requestedPath
-          : "/select-role";
+          : await getDefaultAuthenticatedPath(cred.user.email);
       router.push(destination);
     } catch (err: any) {
       const code = err?.code ?? "";

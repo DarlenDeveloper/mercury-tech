@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Mail, Lock, Eye, EyeOff, LogIn } from "@/components/admin/WorkspaceIcons";
 import { signIn } from "@/lib/auth";
+import { getDefaultAuthenticatedPath } from "@/lib/authRedirect";
 import { logAudit } from "@/lib/auditLog";
 
 export default function AdminLoginPage() {
@@ -28,7 +29,7 @@ export default function AdminLoginPage() {
         action: "login",
         target: "Admin Dashboard",
       });
-      router.push("/select-role");
+      router.push(await getDefaultAuthenticatedPath(cred.user.email));
     } catch (err: any) {
       const code = err?.code ?? "";
       if (code === "auth/invalid-credential" || code === "auth/wrong-password") {

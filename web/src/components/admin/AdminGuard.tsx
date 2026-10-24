@@ -53,7 +53,7 @@ export default function AdminGuard({ children }: { children: React.ReactNode }) 
         window.localStorage.removeItem(ADMIN_AUTH_KEY);
         setAdminEntry(null);
         setReady(false);
-        router.replace("/u/login");
+        router.replace("/");
         return;
       }
       setAdminEntry(entry);

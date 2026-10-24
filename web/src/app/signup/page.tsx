@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Mail, Lock, Eye, EyeOff, User, MapPin } from "lucide-react";
 import { signUp } from "@/lib/auth";
+import { getDefaultAuthenticatedPath } from "@/lib/authRedirect";
 
 export default function SignUpPage() {
   const router = useRouter();
@@ -35,8 +36,8 @@ export default function SignUpPage() {
     setBusy(true);
     try {
       const signUpEmail = phoneMode ? phoneEmail : email.trim();
-      await signUp(signUpEmail, password, name.trim());
-      router.push("/select-role");
+      const cred = await signUp(signUpEmail, password, name.trim());
+      router.push(await getDefaultAuthenticatedPath(cred.user.email));
     } catch (err: any) {
       const code = err?.code ?? "";
       if (code === "auth/email-already-in-use") {
