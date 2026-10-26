@@ -203,9 +203,29 @@ export default function RepairsPage() {
 
   const handleJobCardDownload = async () => {
     if (!selected || busy) return;
+    const hadJobCard = !!selected.jobCardNumber;
     setBusy(true); setError("");
-    try { const result = await downloadRepairJobCard(selected.id); openPdfBase64(result.pdfBase64, result.fileName); }
+    try {
+      const result = await downloadRepairJobCard(selected.id);
+      openPdfBase64(result.pdfBase64, result.fileName);
+      if (!hadJobCard) { setSelected(null); await load(); }
+    }
     catch (error) { setError(error instanceof Error ? error.message : "Could not download the job card."); }
+    finally { setBusy(false); }
+  };
+
+  const handleTicketJobCard = async (ticket: RepairTicket) => {
+    if (busy) return;
+    if (!ticket.jobCardNumber && ["request_submitted", "received"].includes(ticket.status)) {
+      openDetail(ticket);
+      return;
+    }
+    setBusy(true); setError("");
+    try {
+      const result = await downloadRepairJobCard(ticket.id);
+      openPdfBase64(result.pdfBase64, result.fileName);
+      await load();
+    } catch (error) { setError(error instanceof Error ? error.message : "Could not download the job card."); }
     finally { setBusy(false); }
   };
 
@@ -331,7 +351,7 @@ export default function RepairsPage() {
                   <th className="pb-3 font-medium">Payment</th>
                   <th className="pb-3 font-medium">Status</th>
                   <th className="pb-3 font-medium">Date</th>
-                  {canDelete && <th className="pb-3 text-right font-medium"><span className="sr-only">Actions</span></th>}
+                  <th className="pb-3 text-right font-medium">Job card</th>
                 </tr>
               </thead>
               <tbody>
@@ -345,7 +365,7 @@ export default function RepairsPage() {
                       <p className="font-medium text-ink">{t.userName || t.userEmail}</p>
                       <p className="text-[11px] text-muted">{t.userPhone || t.userEmail}</p>
                       <p className="mt-1 text-[10px] text-muted">{t.trackingReference || t.id}</p>
-                      {t.jobCardNumber ? <p className="mt-1 text-[10px] font-semibold text-cyan-700">Job card {t.jobCardNumber}</p> : ["received", "request_submitted"].includes(t.status) && <p className="mt-1 text-[10px] font-semibold text-cyan-700">Open to create job card →</p>}
+                      {t.jobCardNumber ? <p className="mt-1 text-[10px] font-semibold text-cyan-700">Job card {t.jobCardNumber}</p> : <p className="mt-1 text-[10px] font-semibold text-cyan-700">Job card available →</p>}
                     </td>
                     <td className="py-3 text-ink">{t.device}</td>
                     <td className="py-3 text-muted max-w-[180px] truncate">{t.issue}</td>
@@ -363,8 +383,19 @@ export default function RepairsPage() {
                     <td className="py-3 text-[12px] text-muted">
                       {t.createdAt.toLocaleDateString("en-UG", { month: "short", day: "numeric" })}
                     </td>
-                    {canDelete && (
-                      <td className="py-3 text-right">
+                    <td className="py-3 text-right">
+                      <div className="flex items-center justify-end gap-1">
+                        <button
+                          type="button"
+                          onClick={(event) => { event.stopPropagation(); void handleTicketJobCard(t); }}
+                          disabled={busy}
+                          aria-label={`${t.jobCardNumber ? "Download" : "Create"} job card for ${t.trackingReference || t.id}`}
+                          title={t.jobCardNumber ? "Download job card" : "Create job card"}
+                          className="inline-flex h-9 items-center gap-1.5 rounded-xl border border-line bg-white px-3 text-[11px] font-semibold text-mercury transition hover:border-mercury disabled:cursor-not-allowed disabled:opacity-40"
+                        >
+                          <Download size={15} />{t.jobCardNumber ? "Download" : "Create"}
+                        </button>
+                        {canDelete && (
                         <button
                           type="button"
                           onClick={(event) => { event.stopPropagation(); void handleDelete(t); }}
@@ -375,8 +406,9 @@ export default function RepairsPage() {
                         >
                           <Trash2 size={17} />
                         </button>
-                      </td>
-                    )}
+                        )}
+                      </div>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -422,7 +454,7 @@ export default function RepairsPage() {
                   <button disabled={busy} onClick={handlePickup} className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-cyan-700 px-4 py-3 text-sm font-semibold text-white disabled:opacity-50"><Download size={17} />{busy ? "Creating job card…" : "Mark picked up & download job card"}</button>
                 </section>
               )}
-              {selected.jobCardNumber && <section className="flex items-center justify-between gap-3 rounded-2xl border border-line bg-slate-50 p-4"><div><p className="text-xs font-semibold uppercase tracking-[0.13em] text-muted">Job card</p><p className="mt-1 font-mono text-sm font-semibold text-ink">{selected.jobCardNumber}</p></div><button disabled={busy} onClick={handleJobCardDownload} className="flex items-center gap-2 rounded-full border border-line bg-white px-4 py-2 text-xs font-semibold text-mercury disabled:opacity-50"><Download size={15} />Download PDF</button></section>}
+              {(selected.jobCardNumber || !["request_submitted", "received"].includes(selected.status)) && <section className="flex items-center justify-between gap-3 rounded-2xl border border-line bg-slate-50 p-4"><div><p className="text-xs font-semibold uppercase tracking-[0.13em] text-muted">Job card</p><p className="mt-1 font-mono text-sm font-semibold text-ink">{selected.jobCardNumber || "Not generated yet"}</p></div><button disabled={busy} onClick={handleJobCardDownload} className="flex items-center gap-2 rounded-full border border-line bg-white px-4 py-2 text-xs font-semibold text-mercury disabled:opacity-50"><Download size={15} />{selected.jobCardNumber ? "Download PDF" : "Create & download"}</button></section>}
               <div>
                 <div className="mb-1 flex items-center justify-between gap-3"><label className="block text-xs font-semibold text-ink">Workflow status</label>{selected.workflowVersion && selected.workflowVersion >= 2 && <span className="rounded-full bg-cyan-50 px-2.5 py-1 text-[9px] font-semibold uppercase tracking-[0.12em] text-cyan-700">New workflow</span>}</div>
                 <select

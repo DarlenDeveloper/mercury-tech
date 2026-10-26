@@ -261,7 +261,7 @@ export async function pickupRepairTicket(id: string, intake: JobCardIntake) {
   return manageRepair<{ ok: true; jobCardNumber: string; pdfBase64: string }>(id, "pickup", intake);
 }
 export async function downloadRepairJobCard(id: string) {
-  const response = await httpsCallable<{ id: string }, { fileName: string; pdfBase64: string }>(getFunctions(firebaseApp), "downloadRepairJobCard")({ id });
+  const response = await httpsCallable<{ id: string }, { fileName: string; jobCardNumber: string; pdfBase64: string }>(getFunctions(firebaseApp), "downloadRepairJobCard")({ id });
   return response.data;
 }
 export function openPdfBase64(pdfBase64: string, fileName: string) {

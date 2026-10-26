@@ -68,15 +68,32 @@ export const downloadRepairJobCard = onCall(async request => {
   const db = getFirestore();
   await requireRepairAccess(request, db);
   const id = text(request.data?.id, 150);
-  const snap = await db.collection("repair_tickets").doc(id).get();
-  if (!snap.exists || !snap.data().jobCardPath) throw new HttpsError("not-found", "This repair does not have a job card yet.");
-  const ticket = snap.data();
+  if (!id || id.includes("/")) throw new HttpsError("invalid-argument", "A repair reference is required.");
+  const ticketRef = db.collection("repair_tickets").doc(id);
+  const year = kampalaYear();
+  const counterRef = db.doc(`counters/repair_job_cards_${year}`);
+  const ticket = await db.runTransaction(async tx => {
+    const ticketSnap = await tx.get(ticketRef);
+    if (!ticketSnap.exists) throw new HttpsError("not-found", "Repair not found.");
+    const current = ticketSnap.data();
+    let jobCardNumber = text(current.jobCardNumber, 80);
+    if (!jobCardNumber) {
+      const counterSnap = await tx.get(counterRef);
+      const next = Number(counterSnap.data()?.value || 0) + 1;
+      jobCardNumber = `JC-${year}-${String(next).padStart(6, "0")}`;
+      tx.set(counterRef, { value: next, updatedAt: FieldValue.serverTimestamp() }, { merge: true });
+    }
+    const jobCardPath = text(current.jobCardPath, 500) || `repair-job-cards/${id}/${jobCardNumber}.pdf`;
+    tx.update(ticketRef, { jobCardNumber, jobCardPath, jobCardGenerationStatus: "generating", updatedAt: FieldValue.serverTimestamp() });
+    return { ...current, jobCardNumber, jobCardPath };
+  });
   const pdf = await renderJobCard(ticket);
   await getStorage().bucket().file(ticket.jobCardPath).save(pdf, {
     resumable: false,
     contentType: "application/pdf",
     metadata: { cacheControl: "private, no-store", metadata: { ticketId: id, jobCardNumber: ticket.jobCardNumber || id } },
   });
-  return { fileName: `${ticket.jobCardNumber || id}.pdf`, pdfBase64: pdf.toString("base64") };
+  await ticketRef.update({ jobCardGenerationStatus: "ready", jobCardGeneratedAt: FieldValue.serverTimestamp(), updatedAt: FieldValue.serverTimestamp() });
+  return { fileName: `${ticket.jobCardNumber || id}.pdf`, jobCardNumber: ticket.jobCardNumber, pdfBase64: pdf.toString("base64") };
 });
 
