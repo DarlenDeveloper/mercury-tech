@@ -1,12 +1,27 @@
 // Pure workflow validation, shared by the callable and its regression tests.
-export const REPAIR_STATUSES = ["received", "awaiting_payment", "ready_for_assignment", "in_progress", "awaiting_parts", "completed", "collected"];
+export const REPAIR_STATUSES = [
+  "received", "awaiting_payment", "ready_for_assignment", "completed",
+  "request_submitted", "under_diagnosis", "quotation_sent", "approved_for_repair",
+  "in_progress", "awaiting_parts", "completed_awaiting_payment", "ready_for_collection", "collected",
+];
 const STATUS_TRANSITIONS = {
   received: ["received"],
-  awaiting_payment: ["awaiting_payment"],
+  awaiting_payment: ["awaiting_payment", "ready_for_assignment"],
   ready_for_assignment: ["ready_for_assignment", "in_progress"],
   in_progress: ["in_progress", "awaiting_parts", "completed"],
   awaiting_parts: ["awaiting_parts", "in_progress", "completed"],
   completed: ["completed", "in_progress", "collected"],
+  collected: ["collected"],
+};
+const V2_STATUS_TRANSITIONS = {
+  request_submitted: ["request_submitted"],
+  under_diagnosis: ["under_diagnosis", "quotation_sent"],
+  quotation_sent: ["quotation_sent", "approved_for_repair"],
+  approved_for_repair: ["approved_for_repair", "in_progress"],
+  in_progress: ["in_progress", "awaiting_parts", "completed_awaiting_payment"],
+  awaiting_parts: ["awaiting_parts", "in_progress", "completed_awaiting_payment"],
+  completed_awaiting_payment: ["completed_awaiting_payment", "ready_for_collection"],
+  ready_for_collection: ["ready_for_collection", "collected"],
   collected: ["collected"],
 };
 export function paidInFull(ticket) {
@@ -22,10 +37,15 @@ export function paymentTotal(ticket, amount) {
 }
 export function validateWork(ticket, status, technicians) {
   if (!REPAIR_STATUSES.includes(status)) throw new Error("Choose a valid repair status.");
-  if (!(STATUS_TRANSITIONS[ticket.status] || [ticket.status]).includes(status)) throw new Error("That status change does not follow the repair workflow.");
-  if ((technicians.length || ["ready_for_assignment", "in_progress", "awaiting_parts", "completed", "collected"].includes(status)) && !paidInFull(ticket)) throw new Error("Full payment is required before technician assignment or repair work.");
+  const transitions = ticket.workflowVersion >= 2 ? V2_STATUS_TRANSITIONS : STATUS_TRANSITIONS;
+  if (!(transitions[ticket.status] || [ticket.status]).includes(status)) throw new Error("That status change does not follow the repair workflow.");
+  if (ticket.workflowVersion >= 2) {
+    if (["in_progress", "awaiting_parts", "completed_awaiting_payment", "ready_for_collection", "collected"].includes(status) && !technicians.length) throw new Error("Assign at least one technician first.");
+    if (status === "ready_for_collection" && !paidInFull(ticket)) throw new Error("Full payment is required before collection.");
+    return;
+  }
   if (["in_progress", "awaiting_parts", "completed", "collected"].includes(status) && !technicians.length) throw new Error("Assign at least one technician first.");
-  if (status === "awaiting_payment" && (!ticket.amountDue || paidInFull(ticket))) throw new Error("Only unpaid quotations or LPOs can await payment.");
+  if (status === "collected" && !paidInFull(ticket)) throw new Error("Full payment is required before collection.");
 }
 
 function firebaseDownloadMatchesPath(url, path) {
@@ -42,13 +62,20 @@ function firebaseDownloadMatchesPath(url, path) {
 }
 
 /** Validate the evidence required before a completed repair is released. */
-export function validateCollectionProof(ticketId, input = {}) {
+export function validateCollectionProof(ticketId, input = {}, requiredJobCardNumber = "") {
   const proofPath = typeof input.collectionProofPath === "string" ? input.collectionProofPath.trim() : "";
   const proofUrl = typeof input.collectionProofUrl === "string" ? input.collectionProofUrl.trim() : "";
   const collectorName = typeof input.collectorName === "string" ? input.collectorName.trim().slice(0, 150) : "";
   const collectorPhone = typeof input.collectorPhone === "string" ? input.collectorPhone.trim().slice(0, 40) : "";
   const phoneDigits = collectorPhone.replace(/\D/g, "");
   const hasPhoto = !!proofPath || !!proofUrl;
+
+  if (requiredJobCardNumber) {
+    const presentedNumber = typeof input.presentedJobCardNumber === "string" ? input.presentedJobCardNumber.trim().toUpperCase() : "";
+    if (input.jobCardPresented !== true || presentedNumber !== requiredJobCardNumber.trim().toUpperCase()) {
+      throw new Error("Confirm and enter the original job-card number before releasing this device.");
+    }
+  }
 
   if (hasPhoto) {
     const prefix = `repair-collection-proofs/${ticketId}/`;
@@ -75,7 +102,7 @@ export function validateCollectionProof(ticketId, input = {}) {
 // Do not expose raw ticket documents, internal notes, payments or staff identities.
 export function publicRepairStatus(id, ticket) {
   return {
-    reference: ticket.trackingReference || id,
+    reference: ticket.jobCardNumber || ticket.trackingReference || id,
     status: ticket.status || "received",
     history: (ticket.statusHistory || []).map(event => ({ status: event.status, at: event.at })),
     updatedAt: ticket.updatedAt || null,

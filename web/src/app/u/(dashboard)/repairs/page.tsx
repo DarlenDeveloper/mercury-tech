@@ -3,10 +3,10 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Camera, Phone, Search, Trash2, User, X, Wrench } from "@/components/admin/WorkspaceIcons";
+import { Camera, Download, Phone, Search, Trash2, User, X, Wrench } from "@/components/admin/WorkspaceIcons";
 import RepairIntake from "@/components/admin/RepairIntake";
 import AdminHeader from "@/components/admin/AdminHeader";
-import { allowedRepairStatuses, collectRepairTicket, deleteRepairTicket, fetchRepairTickets, updateRepairTicket, type RepairTicket, type RepairStatus, REPAIR_STATUS_LABELS, repairPaid, paymentLabel } from "@/lib/repairs";
+import { allowedRepairStatuses, collectRepairTicket, deleteRepairTicket, downloadRepairJobCard, fetchRepairTickets, openPdfBase64, pickupRepairTicket, updateRepairTicket, type RepairTicket, type RepairStatus, REPAIR_STATUS_LABELS, paymentLabel } from "@/lib/repairs";
 import { fetchRepairStaff } from "@/lib/repairStaff";
 import { type RepairAssignee } from "@/lib/repairAssignment";
 import { uploadRepairCollectionProof } from "@/lib/storage";
@@ -17,6 +17,10 @@ import { useAdminAccess } from "@/components/admin/AdminGuard";
 import { isSuperAdmin } from "@/lib/adminAccess";
 
 const STATUS_STYLES: Record<RepairStatus, string> = {
+  request_submitted: "bg-surface-soft text-muted",
+  under_diagnosis: "bg-cyan-50 text-cyan-700",
+  quotation_sent: "bg-violet-50 text-violet-700",
+  approved_for_repair: "bg-teal-50 text-teal-700",
   received: "bg-surface-soft text-muted",
   awaiting_payment: "bg-amber-50 text-amber-700",
   ready_for_assignment: "bg-teal-50 text-teal-700",
@@ -24,10 +28,37 @@ const STATUS_STYLES: Record<RepairStatus, string> = {
   in_progress: "bg-[#e8eefc] text-mercury",
   awaiting_parts: "bg-[#fff3dc] text-[#b45309]",
   completed: "bg-[#e7f6ee] text-[#16a34a]",
+  completed_awaiting_payment: "bg-amber-50 text-amber-700",
+  ready_for_collection: "bg-[#e7f6ee] text-[#16a34a]",
 };
 
 const STATUS_LABELS = REPAIR_STATUS_LABELS;
-const TABS: ("all" | RepairStatus)[] = ["all", ...Object.keys(STATUS_LABELS) as RepairStatus[]];
+const V2_STATUS_ORDER: RepairStatus[] = ["request_submitted", "under_diagnosis", "quotation_sent", "approved_for_repair", "in_progress", "awaiting_parts", "completed_awaiting_payment", "ready_for_collection", "collected"];
+const LEGACY_STATUS_ORDER: RepairStatus[] = ["received", "awaiting_payment", "ready_for_assignment", "in_progress", "awaiting_parts", "completed", "collected"];
+const TABS: ("all" | RepairStatus)[] = ["all", ...V2_STATUS_ORDER, "received", "awaiting_payment", "ready_for_assignment", "completed"];
+
+function statusOptionsFor(ticket: RepairTicket): RepairStatus[] {
+  if (ticket.workflowVersion && ticket.workflowVersion >= 2) {
+    const transitions: Partial<Record<RepairStatus, RepairStatus[]>> = {
+      in_progress: ["in_progress", "awaiting_parts", "completed_awaiting_payment"],
+      awaiting_parts: ["awaiting_parts", "in_progress", "completed_awaiting_payment"],
+      ready_for_collection: ["ready_for_collection", "collected"],
+    };
+    return transitions[ticket.status] || [ticket.status];
+  }
+  const valid = new Set(allowedRepairStatuses(ticket.status));
+  return LEGACY_STATUS_ORDER.filter(status => valid.has(status));
+}
+
+function statusGuidance(ticket: RepairTicket) {
+  if (["request_submitted", "received"].includes(ticket.status)) return "Use the pickup and job-card action above to begin diagnosis.";
+  if (ticket.status === "under_diagnosis") return "Complete diagnosis and send the quotation from Payments.";
+  if (ticket.status === "quotation_sent") return "Record the customer's approval from Payments.";
+  if (ticket.status === "approved_for_repair") return "Assign a lead technician below. WhatsApp-only technicians start automatically; linked technicians press Start.";
+  if (ticket.status === "completed_awaiting_payment") return "The job is complete. Record payment before collection.";
+  if (ticket.status === "ready_for_collection") return "Payment is complete. Select Collected only after verifying the original job card.";
+  return "Only valid next steps are shown.";
+}
 
 export default function RepairsPage() {
   const { user } = useAuth();
@@ -40,8 +71,9 @@ export default function RepairsPage() {
   const [search, setSearch] = useState("");
   const [tab, setTab] = useState<"all" | RepairStatus>("all");
   const [selected, setSelected] = useState<RepairTicket | null>(null);
-  const [editStatus, setEditStatus] = useState<RepairStatus>("received");
+  const [editStatus, setEditStatus] = useState<RepairStatus>("request_submitted");
   const [editAssignee, setEditAssignee] = useState("");
+  const [leadTechnicianId, setLeadTechnicianId] = useState("");
   const [staff, setStaff] = useState<RepairAssignee[]>([]);
   const [staffLoading, setStaffLoading] = useState(false);
   const [staffError, setStaffError] = useState("");
@@ -50,6 +82,9 @@ export default function RepairsPage() {
   const [collectorName, setCollectorName] = useState("");
   const [collectorPhone, setCollectorPhone] = useState("");
   const [collectionNotes, setCollectionNotes] = useState("");
+  const [jobCardPresented, setJobCardPresented] = useState(false);
+  const [presentedJobCardNumber, setPresentedJobCardNumber] = useState("");
+  const [jobCardIntake, setJobCardIntake] = useState({ serialNumber: "", specification: "", intakeRemarks: "", warrantyType: "", chargeable: null as boolean | null, amc: null as boolean | null, proofOfPurchase: null as boolean | null, accessories: { keyboard: false, battery: false, adapter: false, bag: false, storage: false, other: "" } });
   const [proofFile, setProofFile] = useState<File | null>(null);
   const [proofPreview, setProofPreview] = useState("");
   const [uploadedProof, setUploadedProof] = useState<{ path: string; url: string } | null>(null);
@@ -69,7 +104,8 @@ export default function RepairsPage() {
     setSelected(t);
     setEditStatus(t.status);
     setEditAssignee(t.coordinatorEmail || (["Sales", "Support"].includes(t.assigneeRole || "") ? t.assigneeEmail || "" : ""));
-    setEditTechnicians(t.technicianEmails || []);
+    setEditTechnicians(t.workflowVersion && t.workflowVersion >= 2 ? t.technicianIds || [] : t.technicianEmails || []);
+    setLeadTechnicianId(t.leadTechnicianId || t.technicianIds?.[0] || "");
     setError("");
     setStaffError("");
     setStaffLoading(true);
@@ -78,6 +114,9 @@ export default function RepairsPage() {
     setCollectorName(t.collectorName || "");
     setCollectorPhone(t.collectorPhone || "");
     setCollectionNotes(t.collectionNotes || "");
+    setJobCardPresented(false);
+    setPresentedJobCardNumber("");
+    setJobCardIntake({ serialNumber: "", specification: "", intakeRemarks: "", warrantyType: "", chargeable: null, amc: null, proofOfPurchase: null, accessories: { keyboard: false, battery: false, adapter: false, bag: false, storage: false, other: "" } });
     setProofFile(null);
     setProofPreview("");
     setUploadedProof(null);
@@ -106,7 +145,7 @@ export default function RepairsPage() {
     setError("");
     setBusy(true);
     try {
-      const collecting = selected.status === "completed" && editStatus === "collected";
+      const collecting = ["completed", "ready_for_collection"].includes(selected.status) && editStatus === "collected";
       if (collecting) {
         const phoneDigits = collectorPhone.replace(/\D/g, "");
         const hasCollectorIdentity = !!collectorName.trim() && phoneDigits.length >= 9 && phoneDigits.length <= 15;
@@ -128,12 +167,14 @@ export default function RepairsPage() {
           collectorName: collectorName.trim(),
           collectorPhone: collectorPhone.trim(),
           collectionNotes: collectionNotes.trim(),
+          jobCardPresented,
+          presentedJobCardNumber: presentedJobCardNumber.trim(),
         });
       } else {
         await updateRepairTicket(selected.id, {
           status: editStatus,
           coordinatorEmail: editAssignee,
-          technicianEmails: editTechnicians,
+          ...(selected.workflowVersion && selected.workflowVersion >= 2 ? { technicianIds: editTechnicians, leadTechnicianId } : { technicianEmails: editTechnicians }),
           notes: editNotes.trim(),
         });
       }
@@ -147,6 +188,25 @@ export default function RepairsPage() {
       setSelected(null);
       load();
     } catch (error) { setError(error instanceof Error ? error.message : "Could not update the ticket."); } finally { setBusy(false); }
+  };
+
+  const handlePickup = async () => {
+    if (!selected || busy) return;
+    setBusy(true); setError("");
+    try {
+      const result = await pickupRepairTicket(selected.id, jobCardIntake);
+      openPdfBase64(result.pdfBase64, `${result.jobCardNumber}.pdf`);
+      setSelected(null); await load();
+    } catch (error) { setError(error instanceof Error ? error.message : "Could not create the job card."); }
+    finally { setBusy(false); }
+  };
+
+  const handleJobCardDownload = async () => {
+    if (!selected || busy) return;
+    setBusy(true); setError("");
+    try { const result = await downloadRepairJobCard(selected.id); openPdfBase64(result.pdfBase64, result.fileName); }
+    catch (error) { setError(error instanceof Error ? error.message : "Could not download the job card."); }
+    finally { setBusy(false); }
   };
 
   const handleDelete = async (ticket: RepairTicket) => {
@@ -167,10 +227,13 @@ export default function RepairsPage() {
     }
   };
 
-  const collecting = selected?.status === "completed" && editStatus === "collected";
+  const collecting = !!selected && ["completed", "ready_for_collection"].includes(selected.status) && editStatus === "collected";
   const collectorPhoneDigits = collectorPhone.replace(/\D/g, "");
   const collectorIdentityValid = !!collectorName.trim() && collectorPhoneDigits.length >= 9 && collectorPhoneDigits.length <= 15;
-  const collectionReady = !!proofFile || !!uploadedProof || collectorIdentityValid;
+  const collectionReady = selected?.workflowVersion && selected.workflowVersion >= 2
+    ? jobCardPresented && presentedJobCardNumber.trim().toUpperCase() === selected.jobCardNumber?.toUpperCase() && collectorIdentityValid
+    : !!proofFile || !!uploadedProof || collectorIdentityValid;
+  const statusOptions = selected ? statusOptionsFor(selected) : [];
 
   const filtered = tickets.filter((t) => {
     const matchTab = tab === "all" || t.status === tab;
@@ -185,6 +248,10 @@ export default function RepairsPage() {
   });
 
   const counts = {
+    request_submitted: tickets.filter(t => t.status === "request_submitted").length,
+    under_diagnosis: tickets.filter(t => t.status === "under_diagnosis").length,
+    quotation_sent: tickets.filter(t => t.status === "quotation_sent").length,
+    approved_for_repair: tickets.filter(t => t.status === "approved_for_repair").length,
     awaiting_payment: tickets.filter(t => t.status === "awaiting_payment").length,
     ready_for_assignment: tickets.filter(t => t.status === "ready_for_assignment").length,
     collected: tickets.filter(t => t.status === "collected").length,
@@ -193,6 +260,8 @@ export default function RepairsPage() {
     in_progress: tickets.filter((t) => t.status === "in_progress").length,
     awaiting_parts: tickets.filter((t) => t.status === "awaiting_parts").length,
     completed: tickets.filter((t) => t.status === "completed").length,
+    completed_awaiting_payment: tickets.filter(t => t.status === "completed_awaiting_payment").length,
+    ready_for_collection: tickets.filter(t => t.status === "ready_for_collection").length,
   };
 
   return (
@@ -208,9 +277,9 @@ export default function RepairsPage() {
       {/* Summary */}
       <div className="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
         <StatCard label="Total Tickets" value={counts.all} />
-        <StatCard label="Received" value={counts.received} color="gray" />
+        <StatCard label="Submitted" value={counts.request_submitted + counts.received} color="gray" />
         <StatCard label="In Progress" value={counts.in_progress} color="blue" />
-        <StatCard label="Completed" value={counts.completed} color="green" />
+        <StatCard label="Ready to collect" value={counts.ready_for_collection + counts.completed} color="green" />
       </div>
 
       {/* Tabs + Search */}
@@ -276,11 +345,12 @@ export default function RepairsPage() {
                       <p className="font-medium text-ink">{t.userName || t.userEmail}</p>
                       <p className="text-[11px] text-muted">{t.userPhone || t.userEmail}</p>
                       <p className="mt-1 text-[10px] text-muted">{t.trackingReference || t.id}</p>
+                      {t.jobCardNumber ? <p className="mt-1 text-[10px] font-semibold text-cyan-700">Job card {t.jobCardNumber}</p> : ["received", "request_submitted"].includes(t.status) && <p className="mt-1 text-[10px] font-semibold text-cyan-700">Open to create job card →</p>}
                     </td>
                     <td className="py-3 text-ink">{t.device}</td>
                     <td className="py-3 text-muted max-w-[180px] truncate">{t.issue}</td>
                     <td className="py-3 text-muted">
-                      <p>{t.technicianEmails?.join(", ") || t.coordinatorEmail || t.technician || "Unassigned"}</p>
+                      <p>{t.technicianSnapshots?.map(item => item.name).join(", ") || t.technicianEmails?.join(", ") || t.coordinatorEmail || t.technician || "Unassigned"}</p>
                       {t.assigneeRole && <p className="mt-1 text-[11px] text-mercury">{t.assigneeRole}</p>}
                       {t.assignedBy && <p className="mt-1.5 inline-flex rounded-full bg-mercury/10 px-2 py-0.5 text-[10px] font-semibold text-mercury">Assigned by {t.assignedBy}</p>}
                     </td>
@@ -336,18 +406,34 @@ export default function RepairsPage() {
               <Row label="Quantity" value={String((selected as any).quantity || 1)} />
               {selected.assignedBy && <Row label="Assigned by" value={selected.assignedBy} />}
               <Row label="Submitted" value={selected.createdAt.toLocaleString("en-UG")} />
+              {selected.diagnosisDueAt && <Row label="Diagnosis due" value={`${selected.diagnosisDueAt.toLocaleString("en-UG")}${selected.status === "under_diagnosis" && selected.diagnosisDueAt.getTime() < Date.now() ? " · Overdue" : ""}`} />}
             </div>
 
             <div className="mt-5 flex flex-col gap-3">
+              {["request_submitted", "received"].includes(selected.status) && !selected.jobCardNumber && (
+                <section className="rounded-2xl border border-cyan-100 bg-cyan-50/60 p-4">
+                  <div className="flex items-start justify-between gap-3"><div><p className="text-sm font-semibold text-ink">Device pickup &amp; job card</p><p className="mt-1 text-xs leading-5 text-muted">Confirm the received condition. Creating the card moves this repair into the 24–48 hour diagnosis stage.</p></div><Download size={20} className="shrink-0 text-cyan-700" /></div>
+                  <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                    <label className="text-xs font-semibold">Serial number<input value={jobCardIntake.serialNumber} onChange={event => setJobCardIntake(previous => ({ ...previous, serialNumber: event.target.value }))} className="mt-1.5 h-10 w-full rounded-xl border border-line bg-white px-3 text-sm font-normal outline-none focus:border-mercury" /></label>
+                    <label className="text-xs font-semibold">Specification<input value={jobCardIntake.specification} onChange={event => setJobCardIntake(previous => ({ ...previous, specification: event.target.value }))} className="mt-1.5 h-10 w-full rounded-xl border border-line bg-white px-3 text-sm font-normal outline-none focus:border-mercury" placeholder="RAM, storage, CPU…" /></label>
+                    <label className="text-xs font-semibold sm:col-span-2">Intake remarks<textarea value={jobCardIntake.intakeRemarks} onChange={event => setJobCardIntake(previous => ({ ...previous, intakeRemarks: event.target.value }))} rows={2} className="mt-1.5 w-full resize-none rounded-xl border border-line bg-white px-3 py-2 text-sm font-normal outline-none focus:border-mercury" placeholder="Physical condition or visible damage" /></label>
+                  </div>
+                  <fieldset className="mt-3"><legend className="text-xs font-semibold">Accessories received</legend><div className="mt-2 flex flex-wrap gap-2">{(["keyboard", "battery", "adapter", "bag", "storage"] as const).map(key => <label key={key} className="flex items-center gap-2 rounded-full border border-cyan-100 bg-white px-3 py-2 text-xs capitalize"><input type="checkbox" checked={Boolean(jobCardIntake.accessories[key])} onChange={event => setJobCardIntake(previous => ({ ...previous, accessories: { ...previous.accessories, [key]: event.target.checked } }))} />{key}</label>)}</div></fieldset>
+                  <button disabled={busy} onClick={handlePickup} className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-cyan-700 px-4 py-3 text-sm font-semibold text-white disabled:opacity-50"><Download size={17} />{busy ? "Creating job card…" : "Mark picked up & download job card"}</button>
+                </section>
+              )}
+              {selected.jobCardNumber && <section className="flex items-center justify-between gap-3 rounded-2xl border border-line bg-slate-50 p-4"><div><p className="text-xs font-semibold uppercase tracking-[0.13em] text-muted">Job card</p><p className="mt-1 font-mono text-sm font-semibold text-ink">{selected.jobCardNumber}</p></div><button disabled={busy} onClick={handleJobCardDownload} className="flex items-center gap-2 rounded-full border border-line bg-white px-4 py-2 text-xs font-semibold text-mercury disabled:opacity-50"><Download size={15} />Download PDF</button></section>}
               <div>
-                <label className="mb-1 block text-xs font-semibold text-ink">Status</label>
+                <div className="mb-1 flex items-center justify-between gap-3"><label className="block text-xs font-semibold text-ink">Workflow status</label>{selected.workflowVersion && selected.workflowVersion >= 2 && <span className="rounded-full bg-cyan-50 px-2.5 py-1 text-[9px] font-semibold uppercase tracking-[0.12em] text-cyan-700">New workflow</span>}</div>
                 <select
                   value={editStatus}
                   onChange={(e) => setEditStatus(e.target.value as RepairStatus)}
-                  className="h-11 w-full rounded-xl border border-line bg-[#FAFBFC] px-4 text-sm text-ink outline-none"
+                  disabled={statusOptions.length < 2}
+                  className="h-11 w-full rounded-xl border border-line bg-[#FAFBFC] px-4 text-sm text-ink outline-none disabled:cursor-not-allowed disabled:text-muted"
                 >
-                  {Object.entries(STATUS_LABELS).map(([value, label]) => <option key={value} value={value} disabled={!allowedRepairStatuses(selected.status).includes(value as RepairStatus)}>{label}</option>)}
+                  {statusOptions.map(value => <option key={value} value={value}>{STATUS_LABELS[value]}</option>)}
                 </select>
+                <div className="mt-2 flex items-start justify-between gap-3"><p className="text-[11px] leading-5 text-muted">{statusGuidance(selected)}</p>{["under_diagnosis", "quotation_sent", "completed_awaiting_payment"].includes(selected.status) && <Link href={`${base}/payments`} className="shrink-0 text-[11px] font-semibold text-mercury hover:underline">Open Payments →</Link>}</div>
               </div>
               {collecting && (
                 <section className="rounded-2xl border border-mercury/20 bg-[#f6f8fd] p-4">
@@ -355,9 +441,11 @@ export default function RepairsPage() {
                     <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-mercury shadow-sm"><Camera size={20} /></span>
                     <div>
                       <p className="text-sm font-semibold text-ink">Collection evidence</p>
-                      <p className="mt-1 text-xs leading-5 text-muted">Attach a photo of the job card. If no card is presented, record the name and telephone number of the person collecting.</p>
+                      <p className="mt-1 text-xs leading-5 text-muted">{selected.workflowVersion && selected.workflowVersion >= 2 ? "Verify the original job card and record who is collecting the device." : "Attach a photo of the job card. If no card is presented, record the collector's details."}</p>
                     </div>
                   </div>
+
+                  {selected.workflowVersion && selected.workflowVersion >= 2 && <div className="mt-4 rounded-xl border border-cyan-100 bg-white p-3"><label className="flex items-center gap-3 text-sm font-semibold"><input type="checkbox" checked={jobCardPresented} onChange={event => setJobCardPresented(event.target.checked)} />Original physical job card presented</label><label className="mt-3 block text-xs font-semibold">Job-card number<input value={presentedJobCardNumber} onChange={event => setPresentedJobCardNumber(event.target.value)} placeholder={selected.jobCardNumber} className="mt-1.5 h-10 w-full rounded-xl border border-line px-3 font-mono text-sm font-normal uppercase outline-none focus:border-mercury" /></label></div>}
 
                   <label className="mt-4 block cursor-pointer rounded-2xl border border-dashed border-mercury/35 bg-white p-3 transition hover:border-mercury">
                     <input type="file" accept="image/jpeg,image/png,image/webp" capture="environment" className="sr-only" onChange={event => chooseProof(event.target.files?.[0])} />
@@ -371,7 +459,7 @@ export default function RepairsPage() {
                     )}
                   </label>
 
-                  <div className="my-4 flex items-center gap-3"><span className="h-px flex-1 bg-line" /><span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted">If there is no card</span><span className="h-px flex-1 bg-line" /></div>
+                  <div className="my-4 flex items-center gap-3"><span className="h-px flex-1 bg-line" /><span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted">Collector details</span><span className="h-px flex-1 bg-line" /></div>
                   <div className="grid gap-3 sm:grid-cols-2">
                     <label className="block text-xs font-semibold text-ink">Collector name
                       <span className="mt-1.5 flex h-11 items-center gap-2 rounded-xl border border-line bg-white px-3 focus-within:border-mercury"><User size={17} className="text-muted" /><input value={collectorName} maxLength={150} onChange={event => setCollectorName(event.target.value)} placeholder="Full name" className="min-w-0 flex-1 bg-transparent text-sm font-normal outline-none" /></span>
@@ -406,16 +494,17 @@ export default function RepairsPage() {
                   {staff.filter(person => ["Sales", "Support"].includes(person.role)).map(person => <option key={person.email} value={person.email}>{person.name} — {person.role}</option>)}
                 </select>
               </div>
-              <fieldset disabled={!repairPaid(selected) || staffLoading || !!staffError || busy || collecting}>
+              <fieldset disabled={(selected.workflowVersion && selected.workflowVersion >= 2 ? !["approved_for_repair", "in_progress", "awaiting_parts", "completed_awaiting_payment", "ready_for_collection"].includes(selected.status) : !["awaiting_payment", "ready_for_assignment", "in_progress", "awaiting_parts", "completed"].includes(selected.status)) || staffLoading || !!staffError || busy || collecting}>
                 <legend className="mb-2 text-xs font-semibold text-ink">Technicians</legend>
-                {!repairPaid(selected) && <p className="mb-3 text-xs leading-5 text-amber-700">Record full payment in Payments before assigning technicians.</p>}
+                <p className="mb-3 text-xs leading-5 text-muted">Assign technicians after customer approval. WhatsApp-only lead technicians start approved repair work automatically when assigned.</p>
                 <div className="max-h-40 space-y-2 overflow-y-auto rounded-xl border border-line p-3">
-                  {staff.filter(person => person.role === "Technician").map(person => <label key={person.email} className="flex items-center gap-3 text-sm"><input type="checkbox" checked={editTechnicians.includes(person.email)} onChange={e => setEditTechnicians(previous => e.target.checked ? [...previous, person.email] : previous.filter(email => email !== person.email))} />{person.name}<span className="text-xs text-muted">{person.email}</span></label>)}
-                  {editTechnicians.filter(email => !staff.some(person => person.email === email && person.role === "Technician")).map(email => <label key={email} className="flex items-center gap-3 text-sm"><input type="checkbox" checked onChange={() => setEditTechnicians(previous => previous.filter(value => value !== email))} />{email} (no longer available)</label>)}
-                  {!staffLoading && !staff.some(person => person.role === "Technician") && <p className="text-xs text-muted">Tag team members as Technician in Users & Roles.</p>}
+                  {staff.filter(person => person.role === "Technician").map(person => { const value = selected.workflowVersion && selected.workflowVersion >= 2 ? person.id : person.email; return <label key={`${person.id}-${person.email}`} className="flex items-center gap-3 text-sm"><input type="checkbox" checked={editTechnicians.includes(value)} onChange={e => { setEditTechnicians(previous => e.target.checked ? [...previous, value] : previous.filter(item => item !== value)); if (e.target.checked && !leadTechnicianId) setLeadTechnicianId(value); }} /><span className="min-w-0 flex-1">{person.name}<span className="ml-2 text-xs text-muted">{person.phone || person.email}</span></span>{selected.workflowVersion && selected.workflowVersion >= 2 && <span className={`rounded-full px-2 py-0.5 text-[9px] font-semibold ${person.authUid ? "bg-[#eaf1fc] text-mercury" : "bg-[#fef3e2] text-[#b45309]"}`}>{person.authUid ? "Portal" : "WhatsApp"}</span>}</label>; })}
+                  {editTechnicians.filter(value => !staff.some(person => (selected.workflowVersion && selected.workflowVersion >= 2 ? person.id : person.email) === value && person.role === "Technician")).map(value => <label key={value} className="flex items-center gap-3 text-sm"><input type="checkbox" checked onChange={() => setEditTechnicians(previous => previous.filter(item => item !== value))} />{value} (no longer available)</label>)}
+                  {!staffLoading && !staff.some(person => person.role === "Technician") && <p className="text-xs text-muted">Create a technician from the Technicians page.</p>}
                   {staffLoading && <p className="text-xs text-muted">Loading team…</p>}
                 </div>
               </fieldset>
+              {selected.workflowVersion && selected.workflowVersion >= 2 && editTechnicians.length > 0 && <label className="text-xs font-semibold">Lead technician<select value={leadTechnicianId} onChange={event => setLeadTechnicianId(event.target.value)} className="mt-1.5 h-11 w-full rounded-xl border border-line bg-[#fafbfc] px-3 text-sm font-normal outline-none"><option value="">Choose lead</option>{staff.filter(person => editTechnicians.includes(person.id)).map(person => <option key={person.id} value={person.id}>{person.name} — {person.authUid ? "portal account" : "WhatsApp only"}</option>)}</select></label>}
               {staffError && <p role="alert" className="text-xs text-red-600">{staffError}</p>}
               <div className="border-t border-line pt-3"><p className="mb-2 text-xs font-semibold">Status history</p>{selected.statusHistory?.map((event, index) => <p key={index} className="py-1 text-xs text-muted">{STATUS_LABELS[event.status]} · {event.at.toLocaleString("en-UG")}</p>)}</div>
               <div>

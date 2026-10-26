@@ -2,33 +2,35 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { newRepairAssignments, paidInFull, paymentTotal, phoneMatches, validateCollectionProof, validateWork, publicRepairStatus } from "../repair-workflow.js";
 const ticket = { billingType: "quotation", billingReference: "Q-1", amountDue: 100000, totalPaid: 0, status: "awaiting_payment" };
-test("requires a document and accepts partial payments without unlocking work", () => {
+test("requires a document and accepts valid partial payments", () => {
   assert.throws(() => paymentTotal({ ...ticket, billingReference: "" }, 50000));
   const totalPaid = paymentTotal(ticket, 50000);
   assert.equal(totalPaid, 50000);
   assert.equal(paidInFull({ ...ticket, totalPaid }), false);
-  assert.throws(() => validateWork({ ...ticket, totalPaid }, "in_progress", [{ email: "tech@example.com" }]));
+  assert.doesNotThrow(() => validateWork({ ...ticket, totalPaid }, "ready_for_assignment", [{ email: "tech@example.com" }]));
 });
-test("full payment unlocks multiple technicians for quotation and LPO", () => {
+test("repair work can start before payment for quotation and LPO", () => {
   for (const billingType of ["quotation", "lpo"]) {
     const totalPaid = paymentTotal({ ...ticket, billingType, totalPaid: 40000 }, 60000);
     assert.equal(paidInFull({ ...ticket, totalPaid }), true);
-    assert.doesNotThrow(() => validateWork({ ...ticket, status: "ready_for_assignment", totalPaid }, "in_progress", [{ email: "a@example.com" }, { email: "b@example.com" }]));
+    assert.doesNotThrow(() => validateWork({ ...ticket, status: "ready_for_assignment", totalPaid: 0 }, "in_progress", [{ email: "a@example.com" }, { email: "b@example.com" }]));
   }
 });
 test("rejects invalid money and overpayments", () => {
   for (const amount of [0, -1, 1.5, NaN, Infinity, "50", 100001]) assert.throws(() => paymentTotal(ticket, amount));
 });
-test("unpaid repairs cannot skip to technical stages", () => {
-  for (const status of ["ready_for_assignment", "in_progress", "awaiting_parts", "completed", "collected"]) assert.throws(() => validateWork(ticket, status, []));
+test("unpaid repairs can be assigned but cannot skip workflow stages", () => {
+  assert.doesNotThrow(() => validateWork(ticket, "ready_for_assignment", [{ email: "tech@example.com" }]));
+  for (const status of ["in_progress", "awaiting_parts", "completed", "collected"]) assert.throws(() => validateWork(ticket, status, []));
   assert.throws(() => validateWork(ticket, "received", [{ email: "tech@example.com" }]));
 });
 test("work requires technicians and collection follows completion", () => {
-  const paid = { ...ticket, status: "ready_for_assignment", totalPaid: 100000 };
-  assert.throws(() => validateWork(paid, "in_progress", []));
-  assert.throws(() => validateWork(paid, "collected", [{}]));
-  assert.doesNotThrow(() => validateWork({ ...paid, status: "completed" }, "collected", [{}]));
-  assert.throws(() => validateWork({ ...paid, status: "collected" }, "in_progress", [{}]));
+  const assigned = { ...ticket, status: "ready_for_assignment" };
+  assert.throws(() => validateWork(assigned, "in_progress", []));
+  assert.throws(() => validateWork(assigned, "collected", [{}]));
+  assert.throws(() => validateWork({ ...assigned, status: "completed" }, "collected", [{}]), /Full payment/);
+  assert.doesNotThrow(() => validateWork({ ...assigned, status: "completed", totalPaid: 100000 }, "collected", [{}]));
+  assert.throws(() => validateWork({ ...assigned, status: "collected" }, "in_progress", [{}]));
 });
 test("status transitions follow the repair workflow", () => {
   const paid = { ...ticket, status: "ready_for_assignment", totalPaid: 100000 };
@@ -37,6 +39,17 @@ test("status transitions follow the repair workflow", () => {
   assert.doesNotThrow(() => validateWork({ ...paid, status: "in_progress" }, "awaiting_parts", [{}]));
   assert.doesNotThrow(() => validateWork({ ...paid, status: "awaiting_parts" }, "completed", [{}]));
   assert.doesNotThrow(() => validateWork({ ...paid, status: "completed" }, "collected", [{}]));
+});
+test("version two work starts before payment and payment unlocks collection", () => {
+  const approved = { workflowVersion: 2, status: "approved_for_repair", amountDue: 100000, totalPaid: 0 };
+  assert.doesNotThrow(() => validateWork(approved, "in_progress", [{ id: "tech-1" }]));
+  assert.doesNotThrow(() => validateWork({ ...approved, status: "in_progress" }, "completed_awaiting_payment", [{ id: "tech-1" }]));
+  assert.throws(() => validateWork({ ...approved, status: "completed_awaiting_payment" }, "ready_for_collection", [{ id: "tech-1" }]), /Full payment/);
+  assert.doesNotThrow(() => validateWork({ ...approved, status: "completed_awaiting_payment", totalPaid: 100000 }, "ready_for_collection", [{ id: "tech-1" }]));
+});
+test("version two collection requires the exact original job-card number", () => {
+  assert.throws(() => validateCollectionProof("ticket-1", { collectorName: "Pat", collectorPhone: "0700000000" }, "JC-2026-000001"), /original job-card/i);
+  assert.doesNotThrow(() => validateCollectionProof("ticket-1", { jobCardPresented: true, presentedJobCardNumber: "jc-2026-000001", collectorName: "Pat", collectorPhone: "0700000000" }, "JC-2026-000001"));
 });
 test("collection requires a matching job-card photo or collector identity", () => {
   assert.throws(() => validateCollectionProof("ticket-1", {}), /job card.*name and telephone/i);

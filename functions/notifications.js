@@ -259,13 +259,20 @@ export const onRepairStatusChanged = onDocumentUpdated({
   });
 });
 
-export const onRepairAssignmentsChanged = onDocumentUpdated("repair_tickets/{ticketId}", async (event) => {
+export const onRepairAssignmentsChanged = onDocumentUpdated({
+  document: "repair_tickets/{ticketId}",
+  secrets: [KACYBER_APP_ID, KACYBER_API_KEY],
+  retry: true,
+}, async (event) => {
   const before = event.data?.before.data();
   const after = event.data?.after.data();
   if (!before || !after) return;
 
   const assignments = newRepairAssignments(before, after);
-  if (!assignments.length) return;
+  const previousTechnicianIds = new Set(Array.isArray(before.technicianIds) ? before.technicianIds : []);
+  const technicianAssignments = (Array.isArray(after.technicianSnapshots) ? after.technicianSnapshots : [])
+    .filter(technician => technician?.id && !previousTechnicianIds.has(technician.id));
+  if (!assignments.length && !technicianAssignments.length) return;
 
   const serviceId = after.trackingReference || event.params.ticketId;
   const assignedBy = after.assignedBy || after.assignedByEmail || "Mercury Computers";
@@ -288,6 +295,35 @@ export const onRepairAssignmentsChanged = onDocumentUpdated("repair_tickets/{tic
       });
     } catch (error) {
       console.error(`Repair assignment notification failed for ${assignment.email}`, error?.message || error);
+    }
+  }));
+
+  await Promise.all(technicianAssignments.map(async technician => {
+    if (technician.authUid) {
+      await notifyUser(technician.authUid, {
+        title: "New repair assignment",
+        body: `${serviceId} has been assigned to you${after.device ? ` for ${after.device}` : ""}.`,
+        type: "repair_assignment",
+        prefKey: "repairAssignments",
+        data: { ticketId: event.params.ticketId, serviceId, role: "Technician", assignedBy, href: "/workshop/assignments" },
+      });
+      return;
+    }
+    const recipient = normalizeWhatsAppMsisdn(technician.phone);
+    const key = repairWhatsAppIdempotencyKey(event.id, `${event.params.ticketId}-${technician.id}`, "technician_assignment");
+    const logRef = getFirestore().collection("technician_whatsapp_notifications").doc(key);
+    if (!recipient) {
+      await logRef.set({ ticketId: event.params.ticketId, technicianId: technician.id, providerStatus: "skipped", failureReason: "invalid_or_missing_phone", updatedAt: FieldValue.serverTimestamp() }, { merge: true });
+      return;
+    }
+    const automaticStart = after.status === "in_progress" && after.startedByMode === "automatic_assignment" && after.startedByTechnicianId === technician.id;
+    const text = `Hello ${technician.name || "Technician"}, repair ${serviceId}${after.jobCardNumber ? ` (${after.jobCardNumber})` : ""} has been assigned to you. Device: ${after.device || "Device"}. Issue: ${after.issue || "See coordinator for details"}.${automaticStart ? " The job has started automatically because your profile is WhatsApp-only." : ""} Assigned by: ${assignedBy}.`;
+    try {
+      const result = await sendKacyberWhatsApp({ appId: KACYBER_APP_ID.value(), apiKey: KACYBER_API_KEY.value(), to: recipient, text: text.slice(0, 1024), idempotencyKey: key });
+      await logRef.set({ ticketId: event.params.ticketId, technicianId: technician.id, recipient, providerStatus: result.status || "accepted", messageId: result.messageId || "", updatedAt: FieldValue.serverTimestamp() }, { merge: true });
+    } catch (error) {
+      await logRef.set({ ticketId: event.params.ticketId, technicianId: technician.id, recipient, providerStatus: "failed", failureReason: String(error?.message || error).slice(0, 500), updatedAt: FieldValue.serverTimestamp() }, { merge: true });
+      if (error instanceof KacyberWhatsAppError && error.retryable) throw error;
     }
   }));
 });

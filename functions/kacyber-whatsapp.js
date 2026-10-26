@@ -9,11 +9,17 @@ const TRACKING_URL = "https://www.mercurycomputerslimited.com/repair-status";
 
 const REPAIR_STATUS_COPY = {
   received: { title: "Repair checked in", body: "We have received your device and opened your repair ticket." },
+  request_submitted: { title: "Repair request received", body: "We have received your request and will update you when the device is picked up." },
+  under_diagnosis: { title: "Device under diagnosis", body: "Your job card has been issued. Diagnosis normally takes 24 to 48 hours." },
+  quotation_sent: { title: "Diagnosis complete", body: "Your diagnosis and repair quotation are ready for review." },
+  approved_for_repair: { title: "Repair approved", body: "Your approval has been recorded and the job is ready for the workshop." },
   awaiting_payment: { title: "Repair awaiting payment", body: "Your repair document is ready and payment is pending." },
-  ready_for_assignment: { title: "Payment confirmed", body: "We have confirmed full payment and your repair is ready for technician assignment." },
+  ready_for_assignment: { title: "Repair approved", body: "Your repair is approved and ready for technician assignment." },
   in_progress: { title: "Repair started", body: "A technician has started working on your device." },
   awaiting_parts: { title: "Repair awaiting parts", body: "Your repair is paused while we arrange the required parts." },
   completed: { title: "Ready for pickup", body: "Your device repair is complete and ready for pickup." },
+  completed_awaiting_payment: { title: "Repair completed", body: "The approved work is complete. Payment is now due." },
+  ready_for_collection: { title: "Ready for collection", body: "Payment is complete. Bring the original job card when collecting your device." },
   collected: { title: "Device picked up", body: "Your device has been picked up. Thank you for choosing Mercury Computers." },
 };
 
@@ -41,6 +47,9 @@ function ugx(value) {
 }
 
 function changedTechnicians(before, after) {
+  const previousIds = new Set(Array.isArray(before?.technicianIds) ? before.technicianIds : []);
+  const currentIds = Array.isArray(after?.technicianIds) ? after.technicianIds : [];
+  if (currentIds.some(id => !previousIds.has(id))) return true;
   const previous = new Set(Array.isArray(before?.technicianEmails) ? before.technicianEmails : []);
   const current = Array.isArray(after?.technicianEmails) ? after.technicianEmails : [];
   return current.some(email => !previous.has(email));
@@ -62,14 +71,14 @@ export function repairWhatsAppCopy(after, before = null) {
   if (before && !statusChanged && !billingChanged && !paymentAdded && !assignmentAdded) return null;
 
   if (statusChanged || !before) {
-    if (after.status === "awaiting_payment" && after.billingType) {
+    if (["awaiting_payment", "quotation_sent"].includes(after.status) && after.billingType) {
       const documentName = after.billingType === "lpo" ? "LPO" : "Quotation";
       const documentLabel = after.billingType === "lpo" ? "LPO" : "quotation";
       const reference = after.billingReference ? ` ${after.billingReference}` : "";
       const amount = after.amountDue ? ` for ${ugx(after.amountDue)}` : "";
       return {
         title: `${documentName} sent`,
-        body: `Your ${documentLabel}${reference}${amount} has been sent. Payment is pending.`,
+        body: after.status === "quotation_sent" ? `Your ${documentLabel}${reference}${amount} is ready after diagnosis. Please confirm approval.` : `Your ${documentLabel}${reference}${amount} has been sent. Payment is pending.`,
       };
     }
     return REPAIR_STATUS_COPY[after.status] || null;
@@ -79,7 +88,7 @@ export function repairWhatsAppCopy(after, before = null) {
     const amountReceived = currentPaid - previousPaid;
     const amountDue = Number(after.amountDue) || 0;
     const balance = Math.max(0, amountDue - currentPaid);
-    if (amountDue > 0 && balance === 0) return REPAIR_STATUS_COPY.ready_for_assignment;
+    if (amountDue > 0 && balance === 0) return after.workflowVersion >= 2 ? REPAIR_STATUS_COPY.ready_for_collection : REPAIR_STATUS_COPY.ready_for_assignment;
     return {
       title: "Payment received",
       body: `We have confirmed ${ugx(amountReceived)} for your repair. Remaining balance: ${ugx(balance)}.`,
@@ -93,7 +102,7 @@ export function repairWhatsAppCopy(after, before = null) {
     const amount = after.amountDue ? ` for ${ugx(after.amountDue)}` : "";
     return {
       title: `${documentName} sent`,
-      body: `Your ${documentLabel}${reference}${amount} has been sent. Payment is pending.`,
+      body: after.workflowVersion >= 2 ? `Your ${documentLabel}${reference}${amount} is ready after diagnosis. Please confirm approval.` : `Your ${documentLabel}${reference}${amount} has been sent. Payment is pending.`,
     };
   }
 

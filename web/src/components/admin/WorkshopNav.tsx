@@ -14,6 +14,7 @@ export const workshopLinks = [
   { slug: "", label: "Overview", icon: Home2 },
   { slug: "assignments", label: "My assignments", icon: ClipboardList },
   { slug: "repairs", label: "Repairs & services", icon: Setting2 },
+  { slug: "technicians", label: "Technicians", icon: People },
   { slug: "reminders", label: "Customer reminders", icon: Mail },
   { slug: "customers", label: "Customers", icon: People },
   { slug: "customer-care", label: "Customer service", icon: Headphone },
@@ -34,7 +35,7 @@ export default function WorkshopNav() {
   if (hasPageAccess(adminEntry, "repairs") || hasPageAccess(adminEntry, "assignments") || hasPageAccess(adminEntry, "payments")) {
    const unattendedRepairs = query(
     collection(db, "repair_tickets"),
-    where("status", "in", ["received", "ready_for_assignment", "awaiting_payment"])
+    where("status", "in", ["received", "request_submitted", "ready_for_assignment", "approved_for_repair", "awaiting_payment", "completed_awaiting_payment"])
    );
    unsubs.push(onSnapshot(unattendedRepairs, snapshot => {
     let repairs = 0;
@@ -45,9 +46,9 @@ export default function WorkshopNav() {
      const technicians = Array.isArray(ticket.technicianEmails)
       ? ticket.technicianEmails.map((value: unknown) => String(value).toLowerCase())
       : [];
-     if (ticket.status === "received" || (ticket.status === "ready_for_assignment" && technicians.length === 0)) repairs += 1;
-     if (ticket.status === "ready_for_assignment" && email && technicians.includes(email)) assignments += 1;
-     if (ticket.status === "awaiting_payment") payments += 1;
+     if (["received", "request_submitted"].includes(ticket.status) || (["ready_for_assignment", "approved_for_repair"].includes(ticket.status) && technicians.length === 0 && !(ticket.technicianIds || []).length)) repairs += 1;
+     if (["ready_for_assignment", "approved_for_repair"].includes(ticket.status) && email && technicians.includes(email)) assignments += 1;
+     if (["awaiting_payment", "completed_awaiting_payment"].includes(ticket.status)) payments += 1;
     }
     setBadges(previous => ({ ...previous, repairs, assignments, payments }));
    }, () => {}));

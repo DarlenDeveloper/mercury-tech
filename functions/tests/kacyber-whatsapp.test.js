@@ -63,7 +63,7 @@ test("uses specific text updates for LPOs, payments, assignments and pickup", ()
       { status: "ready_for_assignment", amountDue: 250000, totalPaid: 250000 },
       { status: "awaiting_payment", amountDue: 250000, totalPaid: 100000 },
     ).title,
-    "Payment confirmed",
+    "Repair approved",
   );
 
   assert.equal(

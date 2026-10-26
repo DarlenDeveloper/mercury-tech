@@ -32,21 +32,21 @@ type JourneyStep = {
 
 const JOURNEY_STEPS: JourneyStep[] = [
   {
-    statuses: ["received"],
-    label: "Repair received",
-    description: "Your device has been checked in and the repair order is open.",
+    statuses: ["received", "request_submitted"],
+    label: "Request submitted",
+    description: "Your repair request has been recorded.",
     icon: ClipboardList,
   },
   {
-    statuses: ["awaiting_payment"],
-    label: "Quotation & payment",
-    description: "The quotation or LPO is prepared and payment is confirmed.",
-    icon: Wallet,
+    statuses: ["under_diagnosis"],
+    label: "Under diagnosis",
+    description: "Your job card has been issued. Diagnosis normally takes 24 to 48 hours.",
+    icon: Search,
   },
   {
-    statuses: ["ready_for_assignment"],
-    label: "Ready for workshop",
-    description: "Your device is cleared and ready for a technician.",
+    statuses: ["awaiting_payment", "ready_for_assignment", "quotation_sent", "approved_for_repair"],
+    label: "Quotation & approval",
+    description: "The diagnosis and amount are shared before repair work begins.",
     icon: ShieldCheck,
   },
   {
@@ -56,7 +56,13 @@ const JOURNEY_STEPS: JourneyStep[] = [
     icon: Wrench,
   },
   {
-    statuses: ["completed"],
+    statuses: ["completed_awaiting_payment"],
+    label: "Repair completed",
+    description: "The approved work is complete and payment is now due.",
+    icon: Wallet,
+  },
+  {
+    statuses: ["completed", "ready_for_collection"],
     label: "Ready for collection",
     description: "The repair is complete and your device is ready for you.",
     icon: Check,
@@ -71,6 +77,7 @@ const JOURNEY_STEPS: JourneyStep[] = [
 
 const STATUS_DESCRIPTION: Partial<Record<RepairStatus, string>> = {
   awaiting_parts: "Work is paused while the required parts are being arranged.",
+  completed_awaiting_payment: "The repair is complete. Payment must be confirmed before collection.",
 };
 
 function formatStatusDate(value: string | null | undefined) {

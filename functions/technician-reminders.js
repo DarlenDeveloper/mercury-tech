@@ -5,7 +5,7 @@ import { FieldValue, getFirestore } from "firebase-admin/firestore";
 import { getMessaging } from "firebase-admin/messaging";
 import { adminHasDashboard } from "./admin-access.js";
 
-const ACTIVE_STATUSES = ["ready_for_assignment", "in_progress", "awaiting_parts"];
+const ACTIVE_STATUSES = ["ready_for_assignment", "approved_for_repair", "in_progress", "awaiting_parts"];
 const CHANNEL_ID = "mercury_notifications";
 
 export function kampalaDate(date = new Date()) {
@@ -21,7 +21,7 @@ export function kampalaDate(date = new Date()) {
 
 export function technicianReminderCopy(ticket, ticketId) {
   const serviceId = ticket.trackingReference || ticketId;
-  if (ticket.status === "ready_for_assignment") {
+  if (["ready_for_assignment", "approved_for_repair"].includes(ticket.status)) {
     return { title: "Repair ready to start", body: `${serviceId} is assigned to you and ready to start.` };
   }
   if (ticket.status === "awaiting_parts") {

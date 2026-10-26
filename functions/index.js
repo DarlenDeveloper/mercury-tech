@@ -25,6 +25,14 @@ export {
   getApiActivity,
 } from "./apikeys-admin.js";
 
+// Workshop technicians exist independently of Firebase Auth accounts.
+export {
+  manageTechnician,
+  listTechnicians,
+  onUserTechnicianMatch,
+} from "./technicians-admin.js";
+export { downloadRepairJobCard } from "./repair-job-card.js";
+
 // Transactional notifications: order / quotation / repair status changes
 // (per-user push + in-app feed) plus admin alerts on new activity.
 export {

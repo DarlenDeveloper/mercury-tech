@@ -48,6 +48,7 @@ export const ALL_PAGES = [
   "customers",
   "repairs",
   "assignments",
+  "technicians",
   "reminders",
   "payments",
   "user-tracking",

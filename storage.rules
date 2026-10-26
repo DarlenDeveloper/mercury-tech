@@ -32,6 +32,11 @@ service firebase.storage {
       allow update, delete: if false;
     }
 
+    // Generated PDFs are written and downloaded only through admin-gated functions.
+    match /repair-job-cards/{ticketId}/{fileName} {
+      allow read, write: if false;
+    }
+
     // Deny access to every path that has not been explicitly allowed above.
     match /{allPaths=**} {
       allow read, write: if false;

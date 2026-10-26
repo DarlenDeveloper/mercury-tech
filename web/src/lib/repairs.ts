@@ -15,7 +15,7 @@ import { db } from "./firestore";
 import { getFunctions, httpsCallable } from "firebase/functions";
 import { firebaseApp } from "./firebase";
 
-export type RepairStatus = "received" | "awaiting_payment" | "ready_for_assignment" | "in_progress" | "awaiting_parts" | "completed" | "collected";
+export type RepairStatus = "received" | "awaiting_payment" | "ready_for_assignment" | "completed" | "request_submitted" | "under_diagnosis" | "quotation_sent" | "approved_for_repair" | "in_progress" | "awaiting_parts" | "completed_awaiting_payment" | "ready_for_collection" | "collected";
 
 export type RepairTicket = {
   id: string;
@@ -37,6 +37,23 @@ export type RepairTicket = {
   totalPaid?: number;
   coordinatorEmail?: string;
   technicianEmails?: string[];
+  technicianIds?: string[];
+  leadTechnicianId?: string;
+  technicianSnapshots?: { id: string; name: string; phone: string; authUid: string; email: string }[];
+  technicianAuthUids?: string[];
+  jobCardNumber?: string;
+  jobCardPath?: string;
+  jobCardGenerationStatus?: string;
+  pickedUpAt?: Date | null;
+  pickedUpBy?: string;
+  diagnosisStartedAt?: Date | null;
+  diagnosisDueAt?: Date | null;
+  diagnosisSummary?: string;
+  recommendedWork?: string;
+  diagnosedAt?: Date | null;
+  diagnosedBy?: string;
+  customerApprovalStatus?: string;
+  approvedAt?: Date | null;
   assignedBy?: string;
   assignedByEmail?: string;
   assignedAt?: Date | null;
@@ -85,6 +102,23 @@ function toRepairTicket(id: string, data: DocumentData): RepairTicket {
     totalPaid: data.totalPaid || 0,
     coordinatorEmail: data.coordinatorEmail || "",
     technicianEmails: data.technicianEmails || [],
+    technicianIds: data.technicianIds || [],
+    leadTechnicianId: data.leadTechnicianId || "",
+    technicianSnapshots: data.technicianSnapshots || [],
+    technicianAuthUids: data.technicianAuthUids || [],
+    jobCardNumber: data.jobCardNumber || "",
+    jobCardPath: data.jobCardPath || "",
+    jobCardGenerationStatus: data.jobCardGenerationStatus || "",
+    pickedUpAt: data.pickedUpAt instanceof Timestamp ? data.pickedUpAt.toDate() : null,
+    pickedUpBy: data.pickedUpBy || "",
+    diagnosisStartedAt: data.diagnosisStartedAt instanceof Timestamp ? data.diagnosisStartedAt.toDate() : null,
+    diagnosisDueAt: data.diagnosisDueAt instanceof Timestamp ? data.diagnosisDueAt.toDate() : null,
+    diagnosisSummary: data.diagnosisSummary || "",
+    recommendedWork: data.recommendedWork || "",
+    diagnosedAt: data.diagnosedAt instanceof Timestamp ? data.diagnosedAt.toDate() : null,
+    diagnosedBy: data.diagnosedBy || "",
+    customerApprovalStatus: data.customerApprovalStatus || "",
+    approvedAt: data.approvedAt instanceof Timestamp ? data.approvedAt.toDate() : null,
     assignedBy: data.assignedBy || "",
     assignedByEmail: data.assignedByEmail || "",
     assignedAt: data.assignedAt instanceof Timestamp ? data.assignedAt.toDate() : null,
@@ -137,10 +171,11 @@ export async function submitRepairRequest({
     device,
     issue,
     service,
-    status: "received",
-    workflowVersion: 1,
+    status: "request_submitted",
+    workflowVersion: 2,
     totalPaid: 0,
     technicianEmails: [],
+    technicianIds: [],
     coordinatorEmail: "",
     technician: "",
     notes: "",
@@ -165,26 +200,36 @@ export async function fetchMyRepairTickets(userId: string): Promise<RepairTicket
 }
 
 /** Fetch only repair jobs assigned to one technician. */
-export async function fetchTechnicianAssignments(email: string): Promise<RepairTicket[]> {
+export async function fetchTechnicianAssignments(email: string, uid = ""): Promise<RepairTicket[]> {
   const normalizedEmail = email.trim().toLowerCase();
-  if (!normalizedEmail) return [];
-  const q = query(collection(db, COL), where("technicianEmails", "array-contains", normalizedEmail));
-  const snap = await getDocs(q);
-  return snap.docs
+  if (!normalizedEmail && !uid) return [];
+  const snapshots = await Promise.all([
+    normalizedEmail ? getDocs(query(collection(db, COL), where("technicianEmails", "array-contains", normalizedEmail))) : null,
+    uid ? getDocs(query(collection(db, COL), where("technicianAuthUids", "array-contains", uid))) : null,
+  ]);
+  const docs = new Map(snapshots.flatMap(snapshot => snapshot?.docs || []).map(document => [document.id, document]));
+  return [...docs.values()]
     .map((d) => toRepairTicket(d.id, d.data()))
     .sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
 }
 
 export const REPAIR_STATUS_LABELS: Record<RepairStatus, string> = {
+  request_submitted: "Request submitted", under_diagnosis: "Under diagnosis", quotation_sent: "Quotation sent", approved_for_repair: "Approved for repair",
   received: "Received", awaiting_payment: "Awaiting payment", ready_for_assignment: "Ready for assignment",
-  in_progress: "In progress", awaiting_parts: "Awaiting parts", completed: "Ready for collection", collected: "Collected",
+  in_progress: "In progress", awaiting_parts: "Awaiting parts", completed: "Ready for collection", completed_awaiting_payment: "Completed — payment due", ready_for_collection: "Ready for collection", collected: "Collected",
 };
 const REPAIR_STATUS_TRANSITIONS: Record<RepairStatus, RepairStatus[]> = {
+  request_submitted: ["request_submitted"],
+  under_diagnosis: ["under_diagnosis"],
+  quotation_sent: ["quotation_sent"],
+  approved_for_repair: ["approved_for_repair"],
   received: ["received"],
-  awaiting_payment: ["awaiting_payment"],
+  awaiting_payment: ["awaiting_payment", "ready_for_assignment"],
   ready_for_assignment: ["ready_for_assignment", "in_progress"],
   in_progress: ["in_progress", "awaiting_parts", "completed"],
   awaiting_parts: ["awaiting_parts", "in_progress", "completed"],
+  completed_awaiting_payment: ["completed_awaiting_payment"],
+  ready_for_collection: ["ready_for_collection", "collected"],
   completed: ["completed", "in_progress", "collected"],
   collected: ["collected"],
 };
@@ -195,11 +240,36 @@ export function paymentLabel(ticket: RepairTicket) {
   if (repairPaid(ticket)) return "Paid";
   return ticket.totalPaid ? "Part paid" : "Unpaid";
 }
-export async function manageRepair(id: string, action: string, fields: Record<string, unknown>) {
-  await httpsCallable(getFunctions(firebaseApp), "manageRepair")({ id, action, ...fields });
+export async function manageRepair<T = { ok: true }>(id: string, action: string, fields: Record<string, unknown>) {
+  const response = await httpsCallable<Record<string, unknown>, T>(getFunctions(firebaseApp), "manageRepair")({ id, action, ...fields });
+  return response.data;
 }
-export async function updateRepairTicket(id: string, fields: { status: RepairStatus; notes: string; coordinatorEmail: string; technicianEmails: string[] }) {
+export async function updateRepairTicket(id: string, fields: { status: RepairStatus; notes: string; coordinatorEmail: string; technicianEmails?: string[]; technicianIds?: string[]; leadTechnicianId?: string }) {
   await manageRepair(id, "update", fields);
+}
+export type JobCardIntake = {
+  serialNumber: string;
+  specification: string;
+  intakeRemarks: string;
+  accessories: Record<string, boolean | string>;
+  chargeable: boolean | null;
+  warrantyType: string;
+  amc: boolean | null;
+  proofOfPurchase: boolean | null;
+};
+export async function pickupRepairTicket(id: string, intake: JobCardIntake) {
+  return manageRepair<{ ok: true; jobCardNumber: string; pdfBase64: string }>(id, "pickup", intake);
+}
+export async function downloadRepairJobCard(id: string) {
+  const response = await httpsCallable<{ id: string }, { fileName: string; pdfBase64: string }>(getFunctions(firebaseApp), "downloadRepairJobCard")({ id });
+  return response.data;
+}
+export function openPdfBase64(pdfBase64: string, fileName: string) {
+  const bytes = Uint8Array.from(atob(pdfBase64), character => character.charCodeAt(0));
+  const url = URL.createObjectURL(new Blob([bytes], { type: "application/pdf" }));
+  const anchor = document.createElement("a");
+  anchor.href = url; anchor.download = fileName; anchor.click();
+  window.setTimeout(() => URL.revokeObjectURL(url), 30_000);
 }
 /** Super admins permanently remove a repair ticket through the audited workflow. */
 export async function deleteRepairTicket(id: string): Promise<void> {
@@ -212,6 +282,8 @@ export async function collectRepairTicket(id: string, fields: {
   collectorName: string;
   collectorPhone: string;
   collectionNotes: string;
+  jobCardPresented?: boolean;
+  presentedJobCardNumber?: string;
 }) {
   await manageRepair(id, "collect", fields);
 }

@@ -9,7 +9,7 @@ export const SALES_PAGES = [
   "analytics", "orders", "products", "categories", "website", "user-tracking",
   "finance", "ai", "notifications", "audit-logs", "settings", "api-keys", "help",
 ];
-export const WORKSHOP_PAGES = [...SHARED_PAGES, "repairs", "assignments", "reminders"];
+export const WORKSHOP_PAGES = [...SHARED_PAGES, "repairs", "assignments", "technicians", "reminders"];
 
 function text(value, max = 320) {
   return typeof value === "string" ? value.trim().slice(0, max) : "";

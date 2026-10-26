@@ -1,6 +1,6 @@
 import type { StaffRole } from "./adminAccess";
 
-export type RepairAssignee = { email: string; name: string; role: StaffRole };
+export type RepairAssignee = { id: string; email: string; name: string; role: StaffRole; phone?: string; authUid?: string };
 export type AssignmentFields = { technician: string; assigneeEmail: string; assigneeRole: StaffRole | "" };
 
 // Empty selection explicitly clears every assignment field, including legacy names.

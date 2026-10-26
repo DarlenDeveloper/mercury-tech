@@ -38,6 +38,11 @@ function database() {
 }
 const request = (action, data = {}, email = "sales@example.com") => ({ auth: { uid: email, token: { email } }, data: { action, id: "ticket-1", ...data } });
 async function billed(db) { await handleRepairRequest(request("billing", { billingType: "lpo", billingReference: "LPO-1", amountDue: 100000 }), db); }
+async function completed(db) {
+  await billed(db);
+  const ticket = db.docs.get("repair_tickets/ticket-1");
+  db.docs.set("repair_tickets/ticket-1", { ...ticket, status: "completed", technicianEmails: ["tech@example.com"] });
+}
 const receipt = (amount, paymentId = "payment-request-0001", reference = "RECEIPT-1") => request("payment", { amount, paymentId, reference, method: "cash" });
 test("payment permission is separate from repair permission", async () => {
   const db = database();
@@ -54,7 +59,7 @@ test("only super admins can delete repair tickets", async () => {
   assert.equal(audit?.[1].target, "Repair ticket-1");
 });
 test("receipt retries are idempotent, including a new request ID with the same receipt", async () => {
-  const db = database(); await billed(db);
+  const db = database(); await completed(db);
   await handleRepairRequest(receipt(40000), db);
   await handleRepairRequest(receipt(40000), db);
   assert.equal(db.docs.get("repair_tickets/ticket-1").totalPaid, 40000);
@@ -62,27 +67,29 @@ test("receipt retries are idempotent, including a new request ID with the same r
   assert.equal([...db.docs.keys()].filter(key => key.startsWith("repair_payments/")).length, 1);
 });
 test("competing payments cannot exceed the outstanding balance", async () => {
-  const db = database(); await billed(db);
+  const db = database(); await completed(db);
   const results = await Promise.allSettled([handleRepairRequest(receipt(70000), db), handleRepairRequest(receipt(70000, "payment-request-0002", "RECEIPT-2"), db)]);
   assert.equal(results.filter(result => result.status === "fulfilled").length, 1);
   assert.equal(db.docs.get("repair_tickets/ticket-1").totalPaid, 70000);
 });
-test("coordinator before payment, multiple validated technicians after payment", async () => {
+test("coordinator and technicians can be assigned before payment", async () => {
   const db = database();
   await handleRepairRequest(request("update", { status: "received", coordinatorEmail: "sales@example.com", technicianEmails: [], notes: "Private" }), db);
   assert.equal(db.docs.get("repair_tickets/ticket-1").assignedBy, "sales@example.com");
   assert.equal(db.docs.get("repair_tickets/ticket-1").assignedByEmail, "sales@example.com");
   await assert.rejects(handleRepairRequest(request("update", { status: "in_progress", technicianEmails: ["tech@example.com"] }), db), /workflow|Full payment/);
-  await billed(db); await handleRepairRequest(receipt(100000), db);
+  await billed(db);
+  await handleRepairRequest(request("update", { status: "awaiting_payment", technicianEmails: ["tech@example.com", "tech2@example.com"], coordinatorEmail: "sales@example.com" }), db);
   await handleRepairRequest(request("update", { status: "in_progress", technicianEmails: ["tech@example.com", "tech2@example.com"], coordinatorEmail: "sales@example.com" }), db);
   const ticket = db.docs.get("repair_tickets/ticket-1");
   assert.equal(ticket.status, "in_progress");
   assert.equal(ticket.technicianEmails.length, 2);
   assert.equal(ticket.technician, "2 technicians assigned");
   assert.equal(ticket.assigneeEmail, "");
+  assert.equal(ticket.totalPaid, 0);
   assert.deepEqual(ticket.statusHistory.map(event => event.status), ["received", "awaiting_payment", "ready_for_assignment", "in_progress"]);
   await assert.rejects(handleRepairRequest(request("update", { status: "in_progress", technicianEmails: ["sales@example.com"] }), db), /no longer tagged/);
-  await assert.rejects(handleRepairRequest(request("billing", { billingType: "lpo", billingReference: "LPO-2", amountDue: 1 }), db), /locked/);
+  await assert.rejects(handleRepairRequest(request("billing", { billingType: "lpo", billingReference: "LPO-2", amountDue: 1 }), db), /repair work begins/);
 });
 test("legacy technician names survive a notes-only edit", async () => {
   const db = database(); db.docs.set("repair_tickets/ticket-1", { status: "in_progress", technician: "Existing technician" });
@@ -90,17 +97,17 @@ test("legacy technician names survive a notes-only edit", async () => {
   assert.equal(db.docs.get("repair_tickets/ticket-1").technician, "Existing technician");
   assert.equal(db.docs.get("repair_tickets/ticket-1").notes, "Updated note");
 });
-test("walk-in intake starts unpaid and returns the tracking reference", async () => {
+test("walk-in intake starts as a version-two submitted request", async () => {
   const db = database();
   const data = request("create", { id: "walk-in-1", userName: "Pat", userPhone: "0700000000", device: "Laptop", issue: "Broken screen" });
   await handleRepairRequest(data, db);
   const ticket = db.docs.get("repair_tickets/walk-in-1");
-  assert.equal(ticket.totalPaid, 0); assert.equal(ticket.trackingReference, "walk-in-1"); assert.equal(ticket.status, "received");
+  assert.equal(ticket.totalPaid, 0); assert.equal(ticket.trackingReference, "walk-in-1"); assert.equal(ticket.status, "request_submitted"); assert.equal(ticket.workflowVersion, 2);
 });
-test("only an assigned technician can start and complete a paid job", async () => {
+test("only an assigned technician can work before payment, then payment unlocks collection", async () => {
   const db = database();
-  await billed(db); await handleRepairRequest(receipt(100000), db);
-  await handleRepairRequest(request("update", { status: "ready_for_assignment", coordinatorEmail: "sales@example.com", technicianEmails: ["tech@example.com"], notes: "" }), db);
+  await billed(db);
+  await handleRepairRequest(request("update", { status: "awaiting_payment", coordinatorEmail: "sales@example.com", technicianEmails: ["tech@example.com"], notes: "" }), db);
 
   await assert.rejects(
     handleRepairRequest(request("technician_update", { jobAction: "start" }, "tech2@example.com"), db),
@@ -123,11 +130,15 @@ test("only an assigned technician can start and complete a paid job", async () =
   assert.equal(ticket.completedByEmail, "tech@example.com");
   assert.deepEqual(ticket.statusHistory.map(event => event.status), ["received", "awaiting_payment", "ready_for_assignment", "in_progress", "completed"]);
 
+  await assert.rejects(handleRepairRequest(request("payment", { amount: 1, paymentId: "payment-before-completion", reference: "EARLY", method: "cash" }), database()), /after the repair is completed/);
+
   await assert.rejects(
     handleRepairRequest(request("update", { status: "collected", coordinatorEmail: "sales@example.com", technicianEmails: ["tech@example.com"], notes: "" }), db),
     /collection proof/i,
   );
   await assert.rejects(handleRepairRequest(request("collect"), db), /job card.*name and telephone/i);
+  await assert.rejects(handleRepairRequest(request("collect", { collectorName: "Pat Customer", collectorPhone: "0700 000 000" }), db), /Full payment/);
+  await handleRepairRequest(receipt(100000), db);
   await handleRepairRequest(request("collect", { collectorName: "Pat Customer", collectorPhone: "0700 000 000", collectionNotes: "ID checked", notes: "" }), db);
   ticket = db.docs.get("repair_tickets/ticket-1");
   assert.equal(ticket.status, "collected");
@@ -139,4 +150,15 @@ test("only an assigned technician can start and complete a paid job", async () =
 
   const retry = await handleRepairRequest(request("collect", { collectorName: "Pat Customer", collectorPhone: "0700 000 000", collectionNotes: "ID checked", notes: "" }), db);
   assert.equal(retry.duplicate, true);
+});
+test("assigning a WhatsApp-only lead automatically starts approved version-two work", async () => {
+  const db = database();
+  db.docs.set("repair_tickets/ticket-1", { userName: "Customer", status: "approved_for_repair", totalPaid: 0, amountDue: 100000, workflowVersion: 2, technicianIds: [], technicianEmails: [], statusHistory: [{ status: "approved_for_repair", at: 1 }] });
+  db.docs.set("technicians/offline-tech", { name: "Offline Tech", phone: "0700000000", authUid: "", email: "", active: true });
+  await handleRepairRequest(request("update", { status: "approved_for_repair", coordinatorEmail: "sales@example.com", technicianIds: ["offline-tech"], leadTechnicianId: "offline-tech", notes: "" }), db);
+  const ticket = db.docs.get("repair_tickets/ticket-1");
+  assert.equal(ticket.status, "in_progress");
+  assert.equal(ticket.startedByMode, "automatic_assignment");
+  assert.equal(ticket.startedByTechnicianId, "offline-tech");
+  assert.equal(ticket.totalPaid, 0);
 });

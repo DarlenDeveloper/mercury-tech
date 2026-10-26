@@ -14,12 +14,18 @@ import {
 type Filter = "active" | "completed" | "all";
 
 const STATUS_STYLES: Record<RepairTicket["status"], string> = {
+  request_submitted: "bg-slate-100 text-slate-600",
+  under_diagnosis: "bg-cyan-50 text-cyan-700",
+  quotation_sent: "bg-violet-50 text-violet-700",
+  approved_for_repair: "bg-teal-50 text-teal-700",
   received: "bg-slate-100 text-slate-600",
   awaiting_payment: "bg-amber-50 text-amber-700",
   ready_for_assignment: "bg-teal-50 text-teal-700",
   in_progress: "bg-[#e8eefc] text-mercury",
   awaiting_parts: "bg-[#fff3dc] text-[#b45309]",
   completed: "bg-[#e7f6ee] text-[#16845a]",
+  completed_awaiting_payment: "bg-amber-50 text-amber-700",
+  ready_for_collection: "bg-[#e7f6ee] text-[#16845a]",
   collected: "bg-slate-100 text-slate-600",
 };
 
@@ -38,7 +44,7 @@ export default function AssignmentsPage() {
     if (!user?.email) return;
     setLoading(true);
     try {
-      setAssignments(await fetchTechnicianAssignments(user.email));
+      setAssignments(await fetchTechnicianAssignments(user.email, user.uid));
     } catch {
       setError("We could not load your assignments. Refresh and try again.");
     } finally {
@@ -53,14 +59,14 @@ export default function AssignmentsPage() {
   }, [user?.email]);
 
   const counts = useMemo(() => ({
-    ready: assignments.filter(item => item.status === "ready_for_assignment").length,
+    ready: assignments.filter(item => ["ready_for_assignment", "approved_for_repair"].includes(item.status)).length,
     active: assignments.filter(item => ["in_progress", "awaiting_parts"].includes(item.status)).length,
-    completed: assignments.filter(item => ["completed", "collected"].includes(item.status)).length,
+    completed: assignments.filter(item => ["completed", "completed_awaiting_payment", "ready_for_collection", "collected"].includes(item.status)).length,
   }), [assignments]);
 
   const visible = assignments.filter(item => {
-    if (filter === "completed") return ["completed", "collected"].includes(item.status);
-    if (filter === "active") return !["completed", "collected"].includes(item.status);
+    if (filter === "completed") return ["completed", "completed_awaiting_payment", "ready_for_collection", "collected"].includes(item.status);
+    if (filter === "active") return !["completed", "completed_awaiting_payment", "ready_for_collection", "collected"].includes(item.status);
     return true;
   });
 
@@ -173,7 +179,7 @@ export default function AssignmentsPage() {
               )}
 
               <div className="mt-6 flex gap-3">
-                {ticket.status === "ready_for_assignment" && (
+                {["ready_for_assignment", "approved_for_repair"].includes(ticket.status) && (
                   <button type="button" disabled={busyId === ticket.id} onClick={() => startJob(ticket)} className="flex h-11 flex-1 items-center justify-center gap-2 rounded-xl bg-mercury text-sm font-semibold text-white transition hover:bg-mercury-dark disabled:opacity-50">
                     <Clock size={18} variant="Bold" />{busyId === ticket.id ? "Starting…" : "Start job"}
                   </button>
@@ -183,7 +189,7 @@ export default function AssignmentsPage() {
                     <Check size={18} variant="Bold" />Complete job
                   </button>
                 )}
-                {["completed", "collected"].includes(ticket.status) && <p className="flex h-11 flex-1 items-center justify-center gap-2 rounded-xl bg-emerald-50 text-sm font-semibold text-emerald-800"><Check size={18} variant="Bold" />Work completed</p>}
+                {["completed", "completed_awaiting_payment", "ready_for_collection", "collected"].includes(ticket.status) && <p className="flex h-11 flex-1 items-center justify-center gap-2 rounded-xl bg-emerald-50 text-sm font-semibold text-emerald-800"><Check size={18} variant="Bold" />Work completed</p>}
               </div>
             </article>
           ))}
