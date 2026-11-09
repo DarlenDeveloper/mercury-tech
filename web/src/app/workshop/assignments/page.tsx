@@ -179,6 +179,7 @@ export default function AssignmentsPage() {
               )}
 
               <div className="mt-6 flex gap-3">
+                {["request_submitted", "received", "under_diagnosis", "quotation_sent", "awaiting_payment"].includes(ticket.status) && <p className="flex min-h-11 flex-1 items-center rounded-xl bg-amber-50 px-4 text-xs font-medium leading-5 text-amber-900">Assigned to you. Repair start is available after customer approval.</p>}
                 {["ready_for_assignment", "approved_for_repair"].includes(ticket.status) && (
                   <button type="button" disabled={busyId === ticket.id} onClick={() => startJob(ticket)} className="flex h-11 flex-1 items-center justify-center gap-2 rounded-xl bg-mercury text-sm font-semibold text-white transition hover:bg-mercury-dark disabled:opacity-50">
                     <Clock size={18} variant="Bold" />{busyId === ticket.id ? "Starting…" : "Start job"}

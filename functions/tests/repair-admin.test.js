@@ -175,3 +175,17 @@ test("assigning a WhatsApp-only lead automatically starts approved version-two w
   assert.equal(ticket.startedByTechnicianId, "offline-tech");
   assert.equal(ticket.totalPaid, 0);
 });
+test("a technician may be assigned during diagnosis and an offline lead starts on approval", async () => {
+  const db = database();
+  db.docs.set("repair_tickets/ticket-1", { status: "under_diagnosis", workflowVersion: 2, technicianIds: [], technicianEmails: [], totalPaid: 0, amountDue: 0, statusHistory: [{ status: "under_diagnosis", at: 1 }] });
+  db.docs.set("technicians/diagnosis-tech", { name: "Diagnosis Tech", phone: "0700000000", authUid: "", email: "", active: true });
+  await handleRepairRequest(request("update", { status: "under_diagnosis", technicianIds: ["diagnosis-tech"], leadTechnicianId: "diagnosis-tech", coordinatorEmail: "", notes: "" }), db);
+  assert.equal(db.docs.get("repair_tickets/ticket-1").status, "under_diagnosis");
+  await handleRepairRequest(request("billing", { billingType: "quotation", billingReference: "Q-42", amountDue: 100000, diagnosisSummary: "Faulty power circuit" }), db);
+  assert.equal(db.docs.get("repair_tickets/ticket-1").status, "quotation_sent");
+  await handleRepairRequest(request("approve"), db);
+  const ticket = db.docs.get("repair_tickets/ticket-1");
+  assert.equal(ticket.status, "in_progress");
+  assert.equal(ticket.startedByTechnicianId, "diagnosis-tech");
+  assert.equal(ticket.totalPaid, 0);
+});

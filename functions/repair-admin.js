@@ -120,6 +120,8 @@ export async function handleRepairRequest(request, db) {
     if (action === "approve") {
       if (ticket.workflowVersion < 2 || ticket.status !== "quotation_sent" || !ticket.amountDue) fail("Send the diagnosed quotation before recording approval.");
       Object.assign(patch, { status: "approved_for_repair", customerApprovalStatus: "approved", approvedAt: now, approvedBy: text(request.auth.token.name, 150) || email, approvalReference: text(input.approvalReference, 300) });
+      const lead = (ticket.technicianSnapshots || []).find(item => item.id === ticket.leadTechnicianId);
+      if (lead && !lead.authUid) Object.assign(patch, { status: "in_progress", startedAt: now, startedBy: text(lead.name, 150), startedByTechnicianId: lead.id, startedByMode: "automatic_assignment" });
     }
     if (action === "payment") {
       const paymentStatuses = ticket.workflowVersion >= 2 ? ["completed_awaiting_payment", "ready_for_collection"] : ["completed"];

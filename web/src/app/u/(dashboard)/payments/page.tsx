@@ -52,7 +52,7 @@ export default function PaymentsPage() {
     setBusy(true); setError("");
     try {
       await manageRepair(selected.id, action, action === "billing" ? { billingType, billingReference, amountDue: Number(due), diagnosisSummary, recommendedWork } : action === "approve" ? {} : { amount: Number(amount), method, reference, paymentId });
-      setSelected(null); setSuccess(action === "billing" ? "Diagnosis saved and quotation sent for approval." : action === "approve" ? "Customer approval recorded. The repair can now be assigned." : "Payment recorded. Fully paid repairs are ready for collection.");
+      setSelected(null); setSuccess(action === "billing" ? "Diagnosis saved and quotation sent for approval." : action === "approve" ? "Customer approval recorded. An assigned WhatsApp-only lead starts automatically; linked technicians can now start the job." : "Payment recorded. Fully paid repairs are ready for collection.");
       await load();
     } catch (error) { setError(error instanceof Error ? error.message : "Could not save. Please try again."); } finally { setBusy(false); }
   }
