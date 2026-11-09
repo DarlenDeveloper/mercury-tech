@@ -15,7 +15,7 @@ export async function handleRepairRequest(request, db) {
   const id = text(input.id, 150);
   if (!id || id.includes("/")) throw new HttpsError("invalid-argument", "A repair reference is required.");
   const action = input.action;
-  if (!["create", "pickup", "billing", "approve", "payment", "update", "technician_update", "collect", "delete"].includes(action)) throw new HttpsError("invalid-argument", "Unknown action.");
+  if (!["create", "pickup", "save_intake_draft", "billing", "approve", "payment", "update", "technician_update", "collect", "delete"].includes(action)) throw new HttpsError("invalid-argument", "Unknown action.");
   const email = text(request.auth.token.email).toLowerCase();
   const ref = db.collection("repair_tickets").doc(id);
   return db.runTransaction(async tx => {
@@ -24,7 +24,7 @@ export async function handleRepairRequest(request, db) {
     const entries = config.admins || [];
     const admin = entries.find(entry => entry.email?.toLowerCase() === email);
     const legacy = !admin && (config.emails || []).some(item => item.toLowerCase() === email);
-    const repairAction = ["create", "pickup", "approve", "update", "collect", "delete"].includes(action);
+    const repairAction = ["create", "pickup", "save_intake_draft", "approve", "update", "collect", "delete"].includes(action);
     const page = repairAction ? "repairs" : "payments";
     if (action === "technician_update") {
       if (!admin || admin.jobRole !== "Technician" || !adminHasDashboard(admin, "workshop")) throw new HttpsError("permission-denied", "Only assigned technicians with Workshop access can update this job.");
@@ -58,6 +58,26 @@ export async function handleRepairRequest(request, db) {
       return { ok: true, deleted: true };
     }
     const patch = { updatedAt: FieldValue.serverTimestamp(), trackingReference: ticket.trackingReference || id, workflowVersion: ticket.workflowVersion || 1 };
+    if (action === "save_intake_draft") {
+      if (!["request_submitted", "received"].includes(ticket.status) || ticket.jobCardNumber) fail("Intake can only be edited before the job card is created.");
+      const accessories = input.accessories || {};
+      tx.update(ref, {
+        serialNumber: text(input.serialNumber, 150),
+        specification: text(input.specification, 500),
+        intakeRemarks: text(input.intakeRemarks, 1000),
+        accessories: {
+          keyboard: accessories.keyboard === true,
+          battery: accessories.battery === true,
+          adapter: accessories.adapter === true,
+          bag: accessories.bag === true,
+          storage: accessories.storage === true,
+          other: text(accessories.other, 100),
+        },
+        intakeDraftUpdatedAt: now,
+        updatedAt: FieldValue.serverTimestamp(),
+      });
+      return { ok: true };
+    }
     if (action === "pickup") {
       if (!input._trustedJobCard || !text(input.jobCardNumber) || !text(input.jobCardPath)) fail("Generate the job card before marking this device as picked up.");
       if (!["request_submitted", "received"].includes(ticket.status)) {

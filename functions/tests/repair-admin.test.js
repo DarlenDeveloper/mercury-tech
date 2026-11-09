@@ -104,6 +104,19 @@ test("walk-in intake starts as a version-two submitted request", async () => {
   const ticket = db.docs.get("repair_tickets/walk-in-1");
   assert.equal(ticket.totalPaid, 0); assert.equal(ticket.trackingReference, "walk-in-1"); assert.equal(ticket.status, "request_submitted"); assert.equal(ticket.workflowVersion, 2);
 });
+test("pickup intake drafts persist without starting diagnosis and stop after pickup", async () => {
+  const db = database();
+  db.docs.set("repair_tickets/ticket-1", { status: "request_submitted", workflowVersion: 2, totalPaid: 0, technicianIds: [] });
+  await handleRepairRequest(request("save_intake_draft", { serialNumber: "SN-42", specification: "16 GB RAM", intakeRemarks: "Scratch on lid", accessories: { adapter: true, keyboard: false, unexpected: true } }), db);
+  const draft = db.docs.get("repair_tickets/ticket-1");
+  assert.equal(draft.status, "request_submitted");
+  assert.equal(draft.jobCardNumber, undefined);
+  assert.equal(draft.serialNumber, "SN-42");
+  assert.deepEqual(draft.accessories, { keyboard: false, battery: false, adapter: true, bag: false, storage: false, other: "" });
+  db.docs.set("repair_tickets/ticket-1", { ...draft, status: "under_diagnosis", jobCardNumber: "JC-2026-000001" });
+  await assert.rejects(handleRepairRequest(request("save_intake_draft", { serialNumber: "LATE" }), db), /before the job card/);
+  assert.equal(db.docs.get("repair_tickets/ticket-1").serialNumber, "SN-42");
+});
 test("only an assigned technician can work before payment, then payment unlocks collection", async () => {
   const db = database();
   await billed(db);

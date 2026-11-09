@@ -44,6 +44,10 @@ export type RepairTicket = {
   jobCardNumber?: string;
   jobCardPath?: string;
   jobCardGenerationStatus?: string;
+  serialNumber?: string;
+  specification?: string;
+  intakeRemarks?: string;
+  accessories?: { keyboard?: boolean; battery?: boolean; adapter?: boolean; bag?: boolean; storage?: boolean; other?: string };
   pickedUpAt?: Date | null;
   pickedUpBy?: string;
   diagnosisStartedAt?: Date | null;
@@ -109,6 +113,10 @@ function toRepairTicket(id: string, data: DocumentData): RepairTicket {
     jobCardNumber: data.jobCardNumber || "",
     jobCardPath: data.jobCardPath || "",
     jobCardGenerationStatus: data.jobCardGenerationStatus || "",
+    serialNumber: data.serialNumber || "",
+    specification: data.specification || "",
+    intakeRemarks: data.intakeRemarks || "",
+    accessories: data.accessories || {},
     pickedUpAt: data.pickedUpAt instanceof Timestamp ? data.pickedUpAt.toDate() : null,
     pickedUpBy: data.pickedUpBy || "",
     diagnosisStartedAt: data.diagnosisStartedAt instanceof Timestamp ? data.diagnosisStartedAt.toDate() : null,
@@ -257,6 +265,9 @@ export type JobCardIntake = {
   amc: boolean | null;
   proofOfPurchase: boolean | null;
 };
+export async function saveJobCardIntakeDraft(id: string, intake: JobCardIntake) {
+  await manageRepair(id, "save_intake_draft", intake);
+}
 export async function pickupRepairTicket(id: string, intake: JobCardIntake) {
   return manageRepair<{ ok: true; jobCardNumber: string; pdfBase64: string }>(id, "pickup", intake);
 }
