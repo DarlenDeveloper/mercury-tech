@@ -9,7 +9,7 @@ const TRACKING_URL = "https://www.mercurycomputerslimited.com/repair-status";
 
 const REPAIR_STATUS_COPY = {
   received: { title: "Repair checked in", body: "We have received your device and opened your repair ticket." },
-  request_submitted: { title: "Repair request received", body: "We have received your request and will update you when the device is picked up." },
+  request_submitted: { title: "Repair request received", body: "Please bring your device to Mercury Computers Limited so we can receive it and create your job card. We will then begin diagnosis." },
   under_diagnosis: { title: "Device under diagnosis", body: "Your job card has been issued. Diagnosis normally takes 24 to 48 hours." },
   quotation_sent: { title: "Diagnosis complete", body: "Your diagnosis and repair quotation are ready for review." },
   approved_for_repair: { title: "Repair approved", body: "Your approval has been recorded and the job is ready for the workshop." },

@@ -73,7 +73,7 @@ also support wishlist and compare actions.
 - **Address:** Plot 91, Kamwokya, Kira Road, Kampala, Uganda · P.O. Box 14813
 - **Phone:** 0414256136 / 0414347229 / 0707749506 / 0757346747
 - **Email:** customercare@mercurycomputerslimited.com · sales@mercurycomputerslimited.com
-- **WhatsApp:** +256 704 823 800
+- **WhatsApp:** 0707749506
 - **Social:** Facebook, Instagram, Twitter/X, YouTube (@mercuryuganda)
 
 ## Relevance to Mercury Mobile (App)

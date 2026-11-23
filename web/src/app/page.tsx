@@ -33,7 +33,7 @@ export default async function Home() {
 
         <ProductDepartmentNav />
 
-        <PromotionCarousel starlinkWhatsAppNumber="256704823800" />
+        <PromotionCarousel starlinkWhatsAppNumber="256707749506" />
 
         <section className="px-4 pb-12 pt-14 lg:px-6 lg:pb-16 lg:pt-16">
           <EnterpriseSolutions />

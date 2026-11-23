@@ -60,7 +60,7 @@ class HelpSupportScreen extends StatelessWidget {
               const Text('Choose a number', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: _ink)),
               const SizedBox(height: 8),
               _waTile(ctx, '0707 749 501', '256707749501'),
-              _waTile(ctx, '0704 823 800', '256704823800'),
+              _waTile(ctx, '0707749506', '256707749506'),
             ],
           ),
         ),

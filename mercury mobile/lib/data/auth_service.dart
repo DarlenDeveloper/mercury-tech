@@ -81,7 +81,7 @@ class AuthService {
   /// SMS is dispatched; [verificationCompleted] may fire for instant/auto
   /// verification (Android). [verificationFailed] surfaces errors.
   Future<void> verifyPhone({
-    required String phoneNumber, // E.164, e.g. +256704823800
+    required String phoneNumber, // E.164, e.g. +256700000000
     required void Function(String verificationId) codeSent,
     required void Function(FirebaseAuthException e) verificationFailed,
     void Function()? autoVerified,

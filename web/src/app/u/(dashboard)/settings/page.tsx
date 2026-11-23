@@ -78,7 +78,7 @@ export default function SettingsPage() {
             <Field label="Store name" value="Mercury Computers Limited" />
             <Field label="Support email" value="customercare@mercurycomputerslimited.com" />
             <Field label="Phone" value="0707 749 501" />
-            <Field label="WhatsApp" value="0704 823 800" />
+            <Field label="WhatsApp" value="0707749506" />
             <Field label="Address" value="Plot 91, Kamwokya, Kira Road, Kampala" />
           </div>
         </Card>

@@ -41,6 +41,12 @@ test("creates a stable idempotency key for trigger retries", () => {
   assert.notEqual(first, repairWhatsAppIdempotencyKey("event-2", "ticket-1", "completed"));
 });
 
+test("first repair message asks the client to bring the device in for a job card", () => {
+  const copy = repairWhatsAppCopy({ status: "request_submitted" });
+  assert.match(copy.body, /bring your device to Mercury Computers Limited/i);
+  assert.match(copy.body, /create your job card/i);
+});
+
 test("uses specific text updates for LPOs, payments, assignments and pickup", () => {
   assert.deepEqual(
     repairWhatsAppCopy(

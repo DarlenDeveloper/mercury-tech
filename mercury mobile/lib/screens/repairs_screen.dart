@@ -316,7 +316,7 @@ class _NewRepairScreenState extends State<_NewRepairScreen> {
               children: [
                 _Label('Phone number'),
                 const SizedBox(height: 6),
-                _InputField(controller: _phoneCtrl, hint: 'e.g. 0704 823800', keyboardType: TextInputType.phone),
+                _InputField(controller: _phoneCtrl, hint: 'e.g. 0700 000 000', keyboardType: TextInputType.phone),
 
                 const SizedBox(height: 20),
 

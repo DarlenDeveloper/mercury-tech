@@ -56,7 +56,7 @@ export default function ProductInfo({
     : "No reviews yet";
 
   // Direct WhatsApp chat with an autofilled message containing product details.
-  const WHATSAPP_NUMBER = "256704823800";
+  const WHATSAPP_NUMBER = "256707749506";
   const productUrl = `https://mercurycomputerslimited.com/product/${product.id}`;
   const whatsappMessage =
     `Hello Mercury Computers 👋\n\n` +

@@ -213,10 +213,10 @@ class _DraggableSupportButtonState extends State<DraggableSupportButton> {
               ),
               ListTile(
                 leading: const Icon(Icons.chat, color: _whatsappGreen, size: 22),
-                title: const Text('0704 823 800', style: TextStyle(fontWeight: FontWeight.w600)),
+                title: const Text('0707749506', style: TextStyle(fontWeight: FontWeight.w600)),
                 onTap: () {
                   Navigator.pop(ctx);
-                  _launchUrl('https://wa.me/256704823800?text=Hi!%20I%20need%20help.');
+                  _launchUrl('https://wa.me/256707749506?text=Hi!%20I%20need%20help.');
                 },
               ),
             ],

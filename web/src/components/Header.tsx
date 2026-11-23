@@ -164,13 +164,13 @@ export default function Header({ productId }: { productId?: string }) {
               Services
             </Link>
             <a
-              href="tel:+256704823800"
+              href="tel:+256707749506"
               className="hidden items-center gap-2 rounded-full px-2 py-1.5 text-ink transition hover:bg-surface-soft xl:flex"
             >
               <Headphones size={19} className="text-mercury" />
               <span className="leading-tight">
                 <span className="block text-[10px] text-muted">Contact us</span>
-                <span className="block text-[12px] font-semibold">+256 704 823800</span>
+                <span className="block text-[12px] font-semibold">0707749506</span>
               </span>
             </a>
           </div>

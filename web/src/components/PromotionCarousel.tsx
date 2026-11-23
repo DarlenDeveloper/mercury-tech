@@ -12,7 +12,7 @@ export default function PromotionCarousel({ starlinkWhatsAppNumber }: { starlink
       name: "ASUS ExpertBook flash sale",
       src: "/asus-expertbook-flash-sale.jpeg",
       alt: "ASUS ExpertBook B1 B1503CBA: USh 2,200,000 with backpack, 15.6-inch FHD display, 8GB DDR5 RAM, 256GB SSD, Windows 11 Home, Microsoft Office and 3-year warranty included.",
-      number: "256704823800",
+      number: "256707749506",
       message: "Hi Mercury, I'm interested in the ASUS ExpertBook B1 flash sale with backpack for USh 2,200,000. Is it available?",
     },
     {
